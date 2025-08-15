@@ -340,6 +340,11 @@
   margin-bottom: 12px;
 }
 
+/* Control de visibilidad de botones */
+.calc-mobile-buttons {
+  display: none;
+}
+
 /* Responsive mejorado */
 @media (max-width: 768px) {
   .calculadora-container {
@@ -417,6 +422,15 @@
   .calc-table-mobile {
     display: block;
     margin-top: 16px;
+  }
+
+  /* Ocultar botones desktop y mostrar botones mobile */
+  .calc-desktop-buttons {
+    display: none !important;
+  }
+
+  .calc-mobile-buttons {
+    display: flex !important;
   }
 
   .calc-flex-between {
