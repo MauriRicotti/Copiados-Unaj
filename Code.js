@@ -11,6 +11,7 @@ let calcRegistroVentas = {
 // Inicialización
 document.addEventListener("DOMContentLoaded", () => {
   calcCargarDatos()
+  calcCargarTema()
   calcAgregarArchivo()
   calcActualizarTabla()
 })
@@ -30,39 +31,18 @@ function calcGuardarDatos() {
   localStorage.setItem("calcRegistroVentas", JSON.stringify(calcRegistroVentas))
 }
 
-// Nueva función para restablecer datos
-function calcRestablecerDatos() {
-  const confirmacion = confirm(
-    "⚠️ ADVERTENCIA ⚠️\n\n" +
-    "Esta acción eliminará PERMANENTEMENTE todos los datos de ventas del día:\n\n" +
-    "• Todas las ventas en efectivo\n" +
-    "• Todas las ventas por transferencia\n" +
-    "• Todo el historial de transacciones\n" +
-    "• Los totales acumulados se reiniciarán a $0\n\n" +
-    "¿Está seguro de que desea continuar?\n\n" +
-    "Esta acción NO se puede deshacer."
-  )
+// Funciones de tema
+function calcCargarTema() {
+  const temaGuardado = localStorage.getItem("calcTema") || "light"
+  document.documentElement.setAttribute("data-theme", temaGuardado)
+}
+
+function calcToggleTheme() {
+  const temaActual = document.documentElement.getAttribute("data-theme")
+  const nuevoTema = temaActual === "dark" ? "light" : "dark"
   
-  if (confirmacion) {
-    // Restablecer todos los datos
-    calcRegistroVentas = {
-      efectivo: 0,
-      transferencia: 0,
-      ventas: [],
-    }
-    
-    // Guardar los datos restablecidos
-    calcGuardarDatos()
-    
-    // Actualizar la tabla
-    calcActualizarTabla()
-    
-    // Ocultar detalles si están abiertos
-    calcOcultarDetalles()
-    
-    // Mostrar confirmación
-    alert("✅ Datos restablecidos correctamente.\n\nTodos los registros de ventas han sido eliminados.")
-  }
+  document.documentElement.setAttribute("data-theme", nuevoTema)
+  localStorage.setItem("calcTema", nuevoTema)
 }
 
 function calcAgregarArchivo() {
@@ -75,7 +55,7 @@ function calcAgregarArchivo() {
   div.innerHTML = `
         <div class="calc-card-content">
             <div class="calc-flex-between" style="margin-bottom: 24px;">
-                <div style="font-size: 1.2rem; font-weight: 600; color: #1f2937;">Archivo ${calcContadorArchivos}</div>
+                <div style="font-size: 1.2rem; font-weight: 600; color: var(--text-heading);">Archivo ${calcContadorArchivos}</div>
                 <button onclick="calcEliminarArchivo(${calcContadorArchivos})" class="calc-btn calc-btn-danger">
                     Eliminar
                 </button>
@@ -104,7 +84,7 @@ function calcAgregarArchivo() {
                 
                 <div>
                     <div style="text-align: right;">
-                        <div style="font-size: 0.9rem; color: #6b7280; margin-bottom: 4px;" id="calcDesc${calcContadorArchivos}">
+                        <div style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 4px;" id="calcDesc${calcContadorArchivos}">
                             1 hojas × 1 copias
                         </div>
                         <div class="calc-badge calc-badge-large" id="calcSubtotal${calcContadorArchivos}">
@@ -366,7 +346,7 @@ function calcMostrarDetalles(metodo) {
 
   if (ventas.length === 0) {
     content.innerHTML = `
-            <div style="text-align: center; padding: 40px; color: #6b7280;">
+            <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
                 No hay ventas registradas para este método de pago.
             </div>
         `
@@ -378,7 +358,7 @@ function calcMostrarDetalles(metodo) {
                 <div class="calc-flex-between" style="margin-bottom: 12px;">
                     <div>
                         <span style="font-size: 1.2rem; font-weight: 600;">$${venta.total}</span>
-                        <span style="font-size: 0.9rem; color: #6b7280; margin-left: 12px;">
+                        <span style="font-size: 0.9rem; color: var(--text-secondary); margin-left: 12px;">
                             ${venta.fecha} - ${venta.hora}
                         </span>
                     </div>
@@ -389,7 +369,7 @@ function calcMostrarDetalles(metodo) {
                         </button>
                     </div>
                 </div>
-                <div style="font-size: 0.9rem; color: #4b5563;">
+                <div style="font-size: 0.9rem; color: var(--text-secondary);">
                     <strong>Archivos:</strong>
                     <ul style="margin-top: 8px; margin-left: 20px;">
                         ${venta.archivos
@@ -466,4 +446,4 @@ document.addEventListener("change", (e) => {
       calcActualizarSubtotal(archivo.id)
     })
   }
-})
+}) 
