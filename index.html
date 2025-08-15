@@ -31,10 +31,23 @@
                         </div>
                     </div>
                     <div class="calc-card-content">
+                        <div class="calc-grid calc-grid-cols-2" style="margin-bottom: 20px;">
+                            <div>
+                                <label class="calc-label">Precio hoja blanco y negro:</label>
+                                <div class="calc-flex">
+                                    <input type="number" id="calcPrecioHoja" value="40" min="1" class="calc-input calc-input-small">
+                                    <span style="color: var(--text-secondary);">pesos</span>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="calc-label">Precio hoja a color:</label>
+                                <div class="calc-flex">
+                                    <input type="number" id="calcPrecioHojaColor" value="80" min="1" class="calc-input calc-input-small">
+                                    <span style="color: var(--text-secondary);">pesos</span>
+                                </div>
+                            </div>
+                        </div>
                         <div class="calc-flex">
-                            <label class="calc-label">Precio por hoja:</label>
-                            <input type="number" id="calcPrecioHoja" value="40" min="1" class="calc-input calc-input-small">
-                            <span style="color: var(--text-secondary);">pesos</span>
                             <button onclick="calcAgregarArchivo()" class="calc-btn calc-btn-primary">
                                 Agregar Archivo
                             </button>
@@ -102,9 +115,11 @@
                         <div class="calc-card-title">
                             Registro de Ventas del Día
                         </div>
-                        <button onclick="calcExportarExcel()" class="calc-btn calc-btn-outline">
-                            Exportar Excel
-                        </button>
+                        <div class="calc-flex" style="gap: 12px;">
+                            <button onclick="calcExportarExcel()" class="calc-btn calc-btn-outline">
+                                Exportar Excel
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="calc-card-content">
@@ -179,6 +194,13 @@
                             </div>
                             <div style="text-align: center; font-size: 0.9rem; color: var(--text-secondary);" id="calcTotalVentasMobile">0 ventas</div>
                         </div>
+                    </div>
+
+                    <!-- Agregado el botón Restablecer al final de la tarjeta -->
+                    <div style="text-align: center; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+                        <button onclick="calcRestablecerVentas()" class="calc-btn calc-btn-danger" style="padding: 12px 24px; font-size: 1rem;">
+                            Restablecer
+                        </button>
                     </div>
                 </div>
             </div>

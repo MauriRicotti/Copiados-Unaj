@@ -1,7 +1,7 @@
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 /* Variables CSS para temas */
@@ -159,7 +159,8 @@
   color: var(--text-heading);
   display: flex;
   align-items: center;
-  gap: 8px;margin-bottom: 5px;
+  gap: 8px;
+  margin-bottom: 5px;
 }
 
 .calc-card-content {
@@ -256,7 +257,7 @@
 }
 
 .calc-input-small {
-  width: 120px;
+  width: 100%;
 }
 
 /* Labels */
@@ -278,17 +279,12 @@
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
 }
 
-.calc-flex {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
+.calc-grid-cols-5 {
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
 }
 
-.calc-flex-between {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.calc-grid-cols-2 {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
 }
 
 /* Archivo individual */
@@ -489,6 +485,16 @@
   }
 
   .calc-grid-cols-4 {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .calc-grid-cols-5 {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .calc-grid-cols-2 {
     grid-template-columns: 1fr;
     gap: 12px;
   }

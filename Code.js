@@ -40,7 +40,7 @@ function calcCargarTema() {
 function calcToggleTheme() {
   const temaActual = document.documentElement.getAttribute("data-theme")
   const nuevoTema = temaActual === "dark" ? "light" : "dark"
-  
+
   document.documentElement.setAttribute("data-theme", nuevoTema)
   localStorage.setItem("calcTema", nuevoTema)
 }
@@ -54,14 +54,16 @@ function calcAgregarArchivo() {
 
   div.innerHTML = `
         <div class="calc-card-content">
-            <div class="calc-flex-between" style="margin-bottom: 24px;">
-                <div style="font-size: 1.2rem; font-weight: 600; color: var(--text-heading);">Archivo ${calcContadorArchivos}</div>
-                <button onclick="calcEliminarArchivo(${calcContadorArchivos})" class="calc-btn calc-btn-danger">
-                    Eliminar
-                </button>
+            <div class="calc-flex-between" style="margin-bottom: 24px; align-items: center;">
+                <div style="font-size: 1.2rem; font-weight: 600; color: var(--text-heading);">
+                    Archivo ${calcContadorArchivos}
+                    <button onclick="calcEliminarArchivo(${calcContadorArchivos})" class="calc-btn calc-btn-danger" style="margin-left: 16px; padding: 6px 12px; font-size: 0.9rem;">
+                        Eliminar
+                    </button>
+                </div>
             </div>
             
-            <div class="calc-grid calc-grid-cols-4" style="align-items: end;">
+            <div class="calc-grid calc-grid-cols-5" style="align-items: end;">
                 <div>
                     <label class="calc-label">Páginas</label>
                     <input type="number" id="calcPaginas${calcContadorArchivos}" value="1" min="1" 
@@ -79,6 +81,14 @@ function calcAgregarArchivo() {
                     <select id="calcTipo${calcContadorArchivos}" class="calc-select" onchange="calcActualizarSubtotal(${calcContadorArchivos})">
                         <option value="normal">Normal</option>
                         <option value="simple2">Simple faz (2 pág/carilla)</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="calc-label">Color</label>
+                    <select id="calcColor${calcContadorArchivos}" class="calc-select" onchange="calcActualizarSubtotal(${calcContadorArchivos})">
+                        <option value="bn">Blanco y Negro</option>
+                        <option value="color">Color</option>
                     </select>
                 </div>
                 
@@ -103,6 +113,7 @@ function calcAgregarArchivo() {
     paginas: 1,
     copias: 1,
     tipo: "normal",
+    color: "bn",
   })
 
   calcActualizarSubtotal(calcContadorArchivos)
@@ -123,18 +134,21 @@ function calcEliminarArchivo(id) {
 }
 
 function calcActualizarSubtotal(numeroArchivo) {
-  const precioHoja = Number.parseFloat(document.getElementById("calcPrecioHoja").value) || 0
+  const precioHojaBN = Number.parseFloat(document.getElementById("calcPrecioHoja").value) || 0
+  const precioHojaColor = Number.parseFloat(document.getElementById("calcPrecioHojaColor").value) || 0
   const paginas = Number.parseInt(document.getElementById(`calcPaginas${numeroArchivo}`).value) || 0
   const copias = Number.parseInt(document.getElementById(`calcCopias${numeroArchivo}`).value) || 1
   const tipo = document.getElementById(`calcTipo${numeroArchivo}`).value
+  const color = document.getElementById(`calcColor${numeroArchivo}`).value
 
   // Actualizar array de archivos
   const archivoIndex = calcArchivos.findIndex((a) => a.id === numeroArchivo)
   if (archivoIndex !== -1) {
-    calcArchivos[archivoIndex] = { id: numeroArchivo, paginas, copias, tipo }
+    calcArchivos[archivoIndex] = { id: numeroArchivo, paginas, copias, tipo, color }
   }
 
   const hojasNecesarias = tipo === "simple2" ? Math.ceil(paginas / 2) : paginas
+  const precioHoja = color === "color" ? precioHojaColor : precioHojaBN
   const subtotal = hojasNecesarias * precioHoja * copias
 
   const descElement = document.getElementById(`calcDesc${numeroArchivo}`)
@@ -147,15 +161,16 @@ function calcActualizarSubtotal(numeroArchivo) {
 }
 
 function calcCalcularTotal() {
-  const precioHoja = Number.parseFloat(document.getElementById("calcPrecioHoja").value)
+  const precioHojaBN = Number.parseFloat(document.getElementById("calcPrecioHoja").value)
+  const precioHojaColor = Number.parseFloat(document.getElementById("calcPrecioHojaColor").value)
 
   if (calcArchivos.length === 0) {
     alert("Agrega al menos un archivo.")
     return
   }
 
-  if (!precioHoja || precioHoja <= 0) {
-    alert("Ingresa un precio válido por hoja.")
+  if (!precioHojaBN || precioHojaBN <= 0 || !precioHojaColor || precioHojaColor <= 0) {
+    alert("Ingresa precios válidos para las hojas.")
     return
   }
 
@@ -163,6 +178,7 @@ function calcCalcularTotal() {
 
   calcArchivos.forEach((archivo) => {
     const hojasNecesarias = archivo.tipo === "simple2" ? Math.ceil(archivo.paginas / 2) : archivo.paginas
+    const precioHoja = archivo.color === "color" ? precioHojaColor : precioHojaBN
     totalCalculado += hojasNecesarias * precioHoja * archivo.copias
   })
 
@@ -251,7 +267,8 @@ function calcFinalizarVenta() {
     total: calcTotal,
     metodoPago: calcMetodoPago,
     archivos: [...calcArchivos],
-    precioHoja: Number.parseFloat(document.getElementById("calcPrecioHoja").value),
+    precioHojaBN: Number.parseFloat(document.getElementById("calcPrecioHoja").value),
+    precioHojaColor: Number.parseFloat(document.getElementById("calcPrecioHojaColor").value),
   }
 
   // Actualizar registro
@@ -276,6 +293,20 @@ function calcFinalizarVenta() {
 
   calcAgregarArchivo()
   window.scrollTo({ top: 0, behavior: "smooth" })
+}
+
+function calcRestablecerVentas() {
+  if (confirm("¿Estás seguro de que quieres restablecer todas las ventas del día? Esta acción no se puede deshacer.")) {
+    calcRegistroVentas = {
+      efectivo: 0,
+      transferencia: 0,
+      ventas: [],
+    }
+    calcGuardarDatos()
+    calcActualizarTabla()
+    calcOcultarDetalles()
+    alert("Todas las ventas han sido restablecidas.")
+  }
 }
 
 function calcCambiarMetodoPago(ventaId, nuevoMetodo) {
@@ -363,7 +394,8 @@ function calcMostrarDetalles(metodo) {
                         </span>
                     </div>
                     <div style="display: flex; align-items: center; gap: 8px;">
-                        <div class="calc-badge">Precio/hoja: $${venta.precioHoja}</div>
+                        <div class="calc-badge">B/N: $${venta.precioHojaBN || venta.precioHoja || 40}</div>
+                        <div class="calc-badge">Color: $${venta.precioHojaColor || 80}</div>
                         <button onclick="if(confirm('¿Cambiar método de pago a ${venta.metodoPago === "efectivo" ? "transferencia" : "efectivo"}?')) calcCambiarMetodoPago('${venta.id}', '${venta.metodoPago === "efectivo" ? "transferencia" : "efectivo"}')" class="calc-btn calc-btn-outline" style="padding: 4px 8px; font-size: 0.8rem;">
                             Cambiar
                         </button>
@@ -376,7 +408,12 @@ function calcMostrarDetalles(metodo) {
                           .map((archivo) => {
                             const hojas = archivo.tipo === "simple2" ? Math.ceil(archivo.paginas / 2) : archivo.paginas
                             const tipoLabel = archivo.tipo === "simple2" ? "Simple faz (2 pág/carilla)" : "Normal"
-                            return `<li style="margin-bottom: 4px;">• ${archivo.paginas} páginas × ${archivo.copias} copias (${tipoLabel}) = $${hojas * venta.precioHoja * archivo.copias}</li>`
+                            const colorLabel = archivo.color === "color" ? "Color" : "B/N"
+                            const precioUsado =
+                              archivo.color === "color"
+                                ? venta.precioHojaColor || 80
+                                : venta.precioHojaBN || venta.precioHoja || 40
+                            return `<li style="margin-bottom: 4px;">• ${archivo.paginas} páginas × ${archivo.copias} copias (${tipoLabel} - ${colorLabel}) = $${hojas * precioUsado * archivo.copias}</li>`
                           })
                           .join("")}
                     </ul>
@@ -412,10 +449,12 @@ function calcExportarExcel() {
   // Detalles de efectivo
   if (ventasEfectivo.length > 0) {
     csvContent += "VENTAS EN EFECTIVO\n"
-    csvContent += "Fecha,Hora,Total,Archivos,Precio por Hoja\n"
+    csvContent += "Fecha,Hora,Total,Archivos,Precio B/N,Precio Color\n"
     ventasEfectivo.forEach((venta) => {
-      const archivosDesc = venta.archivos.map((a) => `${a.paginas}pág-${a.copias}cop-${a.tipo}`).join(";")
-      csvContent += `${venta.fecha},${venta.hora},$${venta.total},"${archivosDesc}",$${venta.precioHoja}\n`
+      const archivosDesc = venta.archivos
+        .map((a) => `${a.paginas}pág-${a.copias}cop-${a.tipo}-${a.color || "bn"}`)
+        .join(";")
+      csvContent += `${venta.fecha},${venta.hora},$${venta.total},"${archivosDesc}",$${venta.precioHojaBN || venta.precioHoja || 40},$${venta.precioHojaColor || 80}\n`
     })
     csvContent += "\n"
   }
@@ -423,10 +462,12 @@ function calcExportarExcel() {
   // Detalles de transferencia
   if (ventasTransferencia.length > 0) {
     csvContent += "VENTAS POR TRANSFERENCIA\n"
-    csvContent += "Fecha,Hora,Total,Archivos,Precio por Hoja\n"
+    csvContent += "Fecha,Hora,Total,Archivos,Precio B/N,Precio Color\n"
     ventasTransferencia.forEach((venta) => {
-      const archivosDesc = venta.archivos.map((a) => `${a.paginas}pág-${a.copias}cop-${a.tipo}`).join(";")
-      csvContent += `${venta.fecha},${venta.hora},$${venta.total},"${archivosDesc}",$${venta.precioHoja}\n`
+      const archivosDesc = venta.archivos
+        .map((a) => `${a.paginas}pág-${a.copias}cop-${a.tipo}-${a.color || "bn"}`)
+        .join(";")
+      csvContent += `${venta.fecha},${venta.hora},$${venta.total},"${archivosDesc}",$${venta.precioHojaBN || venta.precioHoja || 40},$${venta.precioHojaColor || 40}\n`
     })
   }
 
@@ -439,11 +480,11 @@ function calcExportarExcel() {
   document.body.removeChild(link)
 }
 
-// Actualizar subtotales cuando cambie el precio
+// Actualizar subtotales cuando cambien los precios
 document.addEventListener("change", (e) => {
-  if (e.target.id === "calcPrecioHoja") {
+  if (e.target.id === "calcPrecioHoja" || e.target.id === "calcPrecioHojaColor") {
     calcArchivos.forEach((archivo) => {
       calcActualizarSubtotal(archivo.id)
     })
   }
-}) 
+})
