@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Cobro - Fotocopiado Universitario</title>
+    <link rel="stylesheet" href="/Style.css">
+</head>
+<body>
+    <div class="calculadora-container">
+        <div class="calculadora-wrapper">
+            <header class="calc-header">
+                <h1>Calculadora de cobro</h1>
+                <p>Sistema para empleados - Cálculo de impresiones</p>
+            </header>
+
+            <div id="calcMainContent">
+                <!-- Configuración de precio -->
+                <div class="calc-card">
+                    <div class="calc-card-header">
+                        <div class="calc-card-title">
+                            Configuración de Precios
+                        </div>
+                    </div>
+                    <div class="calc-card-content">
+                        <div class="calc-flex">
+                            <label class="calc-label">Precio por hoja:</label>
+                            <input type="number" id="calcPrecioHoja" value="40" min="1" class="calc-input calc-input-small">
+                            <span style="color: #6b7280;">pesos</span>
+                            <button onclick="calcAgregarArchivo()" class="calc-btn calc-btn-primary">
+                                Agregar Archivo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Container de archivos -->
+                <div id="calcArchivosContainer"></div>
+
+                <!-- Botón calcular total -->
+                <div style="text-align: center; margin: 30px 0;">
+                    <button onclick="calcCalcularTotal()" class="calc-btn calc-btn-primary" style="padding: 16px 32px; font-size: 1.1rem;">
+                       Calcular Total
+                    </button>
+                </div>
+
+                <!-- Resultado y pago -->
+                <div id="calcPagoContainer" class="calc-card calc-pago-card" style="display:none;">
+                    <div class="calc-card-header">
+                        <div class="calc-card-title" style="color: #059669;">
+                            Resumen de Venta
+                        </div>
+                    </div>
+                    <div class="calc-card-content">
+                        <div id="calcTotalDisplay" class="calc-total-display"></div>
+                        
+                        <div style="border-top: 1px solid #d1d5db; padding-top: 20px;">
+                            <label class="calc-label">Método de pago:</label>
+                            <div class="calc-checkbox-group">
+                                <label class="calc-checkbox-item">
+                                    <input type="checkbox" id="calcEfectivo" class="calc-checkbox" onchange="calcSeleccionarMetodo('efectivo')">
+                                    <span>Efectivo</span>
+                                </label>
+                                <label class="calc-checkbox-item">
+                                    <input type="checkbox" id="calcTransferencia" class="calc-checkbox" onchange="calcSeleccionarMetodo('transferencia')">
+                                    <span>Transferencia</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="calc-flex" style="margin: 20px 0;">
+                            <label class="calc-label">Dinero que entrega el cliente:</label>
+                            <input type="number" id="calcDineroCliente" placeholder="Ingrese el monto" class="calc-input calc-input-small">
+                            <button onclick="calcCalcularCambio()" class="calc-btn calc-btn-secondary">
+                                Calcular Cambio
+                            </button>
+                        </div>
+
+                        <div id="calcResultadoCambio" style="display:none;"></div>
+
+                        <div style="text-align: center; margin-top: 20px;">
+                            <button onclick="calcFinalizarVenta()" class="calc-btn calc-btn-success" style="padding: 12px 24px; font-size: 1.1rem;" id="calcBtnFinalizar" disabled>
+                                Finalizar Venta
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla de registro de ventas -->
+            <div class="calc-card">
+                <div class="calc-card-header">
+                    <div class="calc-flex-between">
+                        <div class="calc-card-title">
+                            Registro de Ventas del Día
+                        </div>
+                        <button onclick="calcExportarExcel()" class="calc-btn calc-btn-outline">
+                            Exportar Excel
+                        </button>
+                    </div>
+                </div>
+                <div class="calc-card-content">
+                    <!-- Tabla Desktop -->
+                    <table class="calc-table">
+                        <thead>
+                            <tr>
+                                <th>Método de Pago</th>
+                                <th style="text-align: right;">Total Acumulado</th>
+                                <th style="text-align: center;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Efectivo</td>
+                                <td style="text-align: right; font-family: monospace; font-size: 1.1rem;" id="calcTotalEfectivo">$0</td>
+                                <td style="text-align: center;">
+                                    <button onclick="calcMostrarDetalles('efectivo')" class="calc-btn calc-btn-outline" style="padding: 6px 12px; font-size: 0.9rem;">
+                                        Ver (<span id="calcCountEfectivo">0</span>)
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Transferencia</td>
+                                <td style="text-align: right; font-family: monospace; font-size: 1.1rem;" id="calcTotalTransferencia">$0</td>
+                                <td style="text-align: center;">
+                                    <button onclick="calcMostrarDetalles('transferencia')" class="calc-btn calc-btn-outline" style="padding: 6px 12px; font-size: 0.9rem;">
+                                        Ver (<span id="calcCountTransferencia">0</span>)
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr class="calc-table-total">
+                                <td>Total General</td>
+                                <td style="text-align: right; font-family: monospace; font-size: 1.2rem;" id="calcTotalGeneral">$0</td>
+                                <td style="text-align: center;">
+                                    <span style="font-size: 0.9rem; color: #6b7280;" id="calcTotalVentas">0 ventas</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Cards Mobile -->
+                    <div class="calc-table-mobile">
+                        <div class="calc-mobile-card">
+                            <div class="calc-mobile-card-header">
+                                <span>Efectivo</span>
+                                <span class="calc-mobile-card-total" id="calcTotalEfectivoMobile">$0</span>
+                            </div>
+                            <div class="calc-mobile-card-actions">
+                                <button onclick="calcMostrarDetalles('efectivo')" class="calc-btn calc-btn-outline" style="padding: 8px 16px; font-size: 0.9rem;">
+                                    Ver detalles (<span id="calcCountEfectivoMobile">0</span>)
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="calc-mobile-card">
+                            <div class="calc-mobile-card-header">
+                                <span>Transferencia</span>
+                                <span class="calc-mobile-card-total" id="calcTotalTransferenciaMobile">$0</span>
+                            </div>
+                            <div class="calc-mobile-card-actions">
+                                <button onclick="calcMostrarDetalles('transferencia')" class="calc-btn calc-btn-outline" style="padding: 8px 16px; font-size: 0.9rem;">
+                                    Ver detalles (<span id="calcCountTransferenciaMobile">0</span>)
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="calc-mobile-card calc-mobile-total-card">
+                            <div class="calc-mobile-card-header">
+                                <span>Total General</span>
+                                <span class="calc-mobile-card-total" id="calcTotalGeneralMobile">$0</span>
+                            </div>
+                            <div style="text-align: center; font-size: 0.9rem; color: #6b7280;" id="calcTotalVentasMobile">0 ventas</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detalles de ventas -->
+            <div id="calcDetallesContainer" class="calc-card" style="display:none;">
+                <div class="calc-card-header">
+                    <div class="calc-flex-between">
+                        <div class="calc-card-title" id="calcDetallesTitle">Detalles de Ventas</div>
+                        <button onclick="calcOcultarDetalles()" class="calc-btn calc-btn-outline" style="padding: 6px 12px;">
+                            Cerrar
+                        </button>
+                    </div>
+                </div>
+                <div class="calc-card-content">
+                    <div id="calcDetallesContent" class="calc-detalles"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/Code.js"></script>
+</body>
+</html>

@@ -1,0 +1,434 @@
+let calcContadorArchivos = 0
+let calcArchivos = []
+let calcTotal = 0
+let calcMetodoPago = null
+let calcRegistroVentas = {
+  efectivo: 0,
+  transferencia: 0,
+  ventas: [],
+}
+
+// Inicialización
+document.addEventListener("DOMContentLoaded", () => {
+  calcCargarDatos()
+  calcAgregarArchivo()
+  calcActualizarTabla()
+})
+
+function calcCargarDatos() {
+  const datosGuardados = localStorage.getItem("calcRegistroVentas")
+  if (datosGuardados) {
+    try {
+      calcRegistroVentas = JSON.parse(datosGuardados)
+    } catch (error) {
+      console.error("Error al cargar datos:", error)
+    }
+  }
+}
+
+function calcGuardarDatos() {
+  localStorage.setItem("calcRegistroVentas", JSON.stringify(calcRegistroVentas))
+}
+
+function calcAgregarArchivo() {
+  calcContadorArchivos++
+  const container = document.getElementById("calcArchivosContainer")
+  const div = document.createElement("div")
+  div.className = "calc-card calc-archivo"
+  div.id = `calcArchivo${calcContadorArchivos}`
+
+  div.innerHTML = `
+        <div class="calc-card-content">
+            <div class="calc-flex-between" style="margin-bottom: 24px;">
+                <div style="font-size: 1.2rem; font-weight: 600; color: #1f2937;">Archivo ${calcContadorArchivos}</div>
+                <button onclick="calcEliminarArchivo(${calcContadorArchivos})" class="calc-btn calc-btn-danger">
+                    Eliminar
+                </button>
+            </div>
+            
+            <div class="calc-grid calc-grid-cols-4" style="align-items: end;">
+                <div>
+                    <label class="calc-label">Páginas</label>
+                    <input type="number" id="calcPaginas${calcContadorArchivos}" value="1" min="1" 
+                           class="calc-input" onchange="calcActualizarSubtotal(${calcContadorArchivos})">
+                </div>
+                
+                <div>
+                    <label class="calc-label">Copias</label>
+                    <input type="number" id="calcCopias${calcContadorArchivos}" value="1" min="1"
+                           class="calc-input" onchange="calcActualizarSubtotal(${calcContadorArchivos})">
+                </div>
+                
+                <div>
+                    <label class="calc-label">Tipo de impresión</label>
+                    <select id="calcTipo${calcContadorArchivos}" class="calc-select" onchange="calcActualizarSubtotal(${calcContadorArchivos})">
+                        <option value="normal">Normal</option>
+                        <option value="simple2">Simple faz (2 pág/carilla)</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 0.9rem; color: #6b7280; margin-bottom: 4px;" id="calcDesc${calcContadorArchivos}">
+                            1 hojas × 1 copias
+                        </div>
+                        <div class="calc-badge calc-badge-large" id="calcSubtotal${calcContadorArchivos}">
+                            $40
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `
+
+  container.appendChild(div)
+
+  calcArchivos.push({
+    id: calcContadorArchivos,
+    paginas: 1,
+    copias: 1,
+    tipo: "normal",
+  })
+
+  calcActualizarSubtotal(calcContadorArchivos)
+}
+
+function calcEliminarArchivo(id) {
+  if (calcArchivos.length === 1) return
+
+  const elemento = document.getElementById(`calcArchivo${id}`)
+  if (elemento) {
+    elemento.style.transition = "opacity 0.3s ease"
+    elemento.style.opacity = "0"
+    setTimeout(() => {
+      elemento.remove()
+      calcArchivos = calcArchivos.filter((archivo) => archivo.id !== id)
+    }, 300)
+  }
+}
+
+function calcActualizarSubtotal(numeroArchivo) {
+  const precioHoja = Number.parseFloat(document.getElementById("calcPrecioHoja").value) || 0
+  const paginas = Number.parseInt(document.getElementById(`calcPaginas${numeroArchivo}`).value) || 0
+  const copias = Number.parseInt(document.getElementById(`calcCopias${numeroArchivo}`).value) || 1
+  const tipo = document.getElementById(`calcTipo${numeroArchivo}`).value
+
+  // Actualizar array de archivos
+  const archivoIndex = calcArchivos.findIndex((a) => a.id === numeroArchivo)
+  if (archivoIndex !== -1) {
+    calcArchivos[archivoIndex] = { id: numeroArchivo, paginas, copias, tipo }
+  }
+
+  const hojasNecesarias = tipo === "simple2" ? Math.ceil(paginas / 2) : paginas
+  const subtotal = hojasNecesarias * precioHoja * copias
+
+  const descElement = document.getElementById(`calcDesc${numeroArchivo}`)
+  const subtotalElement = document.getElementById(`calcSubtotal${numeroArchivo}`)
+
+  if (descElement && subtotalElement) {
+    descElement.textContent = `${hojasNecesarias} hojas × ${copias} copias`
+    subtotalElement.textContent = `$${subtotal}`
+  }
+}
+
+function calcCalcularTotal() {
+  const precioHoja = Number.parseFloat(document.getElementById("calcPrecioHoja").value)
+
+  if (calcArchivos.length === 0) {
+    alert("Agrega al menos un archivo.")
+    return
+  }
+
+  if (!precioHoja || precioHoja <= 0) {
+    alert("Ingresa un precio válido por hoja.")
+    return
+  }
+
+  let totalCalculado = 0
+
+  calcArchivos.forEach((archivo) => {
+    const hojasNecesarias = archivo.tipo === "simple2" ? Math.ceil(archivo.paginas / 2) : archivo.paginas
+    totalCalculado += hojasNecesarias * precioHoja * archivo.copias
+  })
+
+  calcTotal = totalCalculado
+  document.getElementById("calcTotalDisplay").textContent = `Total a cobrar: $${calcTotal}`
+  document.getElementById("calcPagoContainer").style.display = "block"
+
+  // Reset payment section
+  calcMetodoPago = null
+  document.getElementById("calcEfectivo").checked = false
+  document.getElementById("calcTransferencia").checked = false
+  document.getElementById("calcDineroCliente").value = ""
+  document.getElementById("calcResultadoCambio").style.display = "none"
+  document.getElementById("calcBtnFinalizar").disabled = true
+
+  // Scroll to payment section
+  document.getElementById("calcPagoContainer").scrollIntoView({ behavior: "smooth" })
+}
+
+function calcSeleccionarMetodo(metodo) {
+  const efectivoCheck = document.getElementById("calcEfectivo")
+  const transferenciaCheck = document.getElementById("calcTransferencia")
+  const btnFinalizar = document.getElementById("calcBtnFinalizar")
+
+  if (metodo === "efectivo") {
+    if (efectivoCheck.checked) {
+      calcMetodoPago = "efectivo"
+      transferenciaCheck.checked = false
+      btnFinalizar.disabled = false
+    } else {
+      calcMetodoPago = null
+      btnFinalizar.disabled = true
+    }
+  } else {
+    if (transferenciaCheck.checked) {
+      calcMetodoPago = "transferencia"
+      efectivoCheck.checked = false
+      btnFinalizar.disabled = false
+    } else {
+      calcMetodoPago = null
+      btnFinalizar.disabled = true
+    }
+  }
+}
+
+function calcCalcularCambio() {
+  const dinero = Number.parseFloat(document.getElementById("calcDineroCliente").value)
+  const resultado = document.getElementById("calcResultadoCambio")
+
+  if (!dinero || dinero < 0) {
+    alert("Ingresa una cantidad válida de dinero.")
+    return
+  }
+
+  resultado.style.display = "block"
+  const cambio = dinero - calcTotal
+
+  if (cambio < 0) {
+    resultado.innerHTML = `
+            <div style="text-align: center; padding: 20px; background: #fef2f2; border: 2px solid #fca5a5; border-radius: 8px; color: #dc2626;">
+                <div style="font-size: 1.2rem; font-weight: 600;">Falta dinero: $${Math.abs(cambio)}</div>
+            </div>
+        `
+  } else {
+    resultado.innerHTML = `
+            <div style="text-align: center; padding: 20px; background: #f0fdf4; border: 2px solid #86efac; border-radius: 8px;">
+                <div style="font-size: 1.2rem; font-weight: 600; color: #059669;">
+                    Cambio a devolver: $${cambio}
+                </div>
+            </div>
+        `
+  }
+}
+
+function calcFinalizarVenta() {
+  if (!calcMetodoPago) {
+    alert("Por favor selecciona un método de pago.")
+    return
+  }
+
+  const ahora = new Date()
+  const ventaDetalle = {
+    id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    fecha: ahora.toLocaleDateString("es-ES"),
+    hora: ahora.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }),
+    total: calcTotal,
+    metodoPago: calcMetodoPago,
+    archivos: [...calcArchivos],
+    precioHoja: Number.parseFloat(document.getElementById("calcPrecioHoja").value),
+  }
+
+  // Actualizar registro
+  if (calcMetodoPago === "efectivo") {
+    calcRegistroVentas.efectivo += calcTotal
+  } else {
+    calcRegistroVentas.transferencia += calcTotal
+  }
+  calcRegistroVentas.ventas.push(ventaDetalle)
+
+  calcGuardarDatos()
+  calcActualizarTabla()
+
+  // Reset everything immediately
+  document.getElementById("calcArchivosContainer").innerHTML = ""
+  document.getElementById("calcPagoContainer").style.display = "none"
+
+  calcArchivos = []
+  calcContadorArchivos = 0
+  calcTotal = 0
+  calcMetodoPago = null
+
+  calcAgregarArchivo()
+  window.scrollTo({ top: 0, behavior: "smooth" })
+}
+
+function calcCambiarMetodoPago(ventaId, nuevoMetodo) {
+  const venta = calcRegistroVentas.ventas.find((v) => v.id === ventaId)
+  if (!venta) return
+
+  const metodoAnterior = venta.metodoPago
+  const montoVenta = venta.total
+
+  // Actualizar totales
+  if (metodoAnterior === "efectivo") {
+    calcRegistroVentas.efectivo -= montoVenta
+  } else {
+    calcRegistroVentas.transferencia -= montoVenta
+  }
+
+  if (nuevoMetodo === "efectivo") {
+    calcRegistroVentas.efectivo += montoVenta
+  } else {
+    calcRegistroVentas.transferencia += montoVenta
+  }
+
+  // Actualizar venta
+  venta.metodoPago = nuevoMetodo
+
+  calcGuardarDatos()
+  calcActualizarTabla()
+
+  // Actualizar vista de detalles si está abierta
+  const detallesContainer = document.getElementById("calcDetallesContainer")
+  if (detallesContainer.style.display !== "none") {
+    calcOcultarDetalles()
+  }
+}
+
+function calcActualizarTabla() {
+  const ventasEfectivo = calcRegistroVentas.ventas.filter((v) => v.metodoPago === "efectivo")
+  const ventasTransferencia = calcRegistroVentas.ventas.filter((v) => v.metodoPago === "transferencia")
+
+  // Desktop
+  document.getElementById("calcTotalEfectivo").textContent = `$${calcRegistroVentas.efectivo.toLocaleString()}`
+  document.getElementById("calcTotalTransferencia").textContent =
+    `$${calcRegistroVentas.transferencia.toLocaleString()}`
+  document.getElementById("calcTotalGeneral").textContent =
+    `$${(calcRegistroVentas.efectivo + calcRegistroVentas.transferencia).toLocaleString()}`
+  document.getElementById("calcCountEfectivo").textContent = ventasEfectivo.length
+  document.getElementById("calcCountTransferencia").textContent = ventasTransferencia.length
+  document.getElementById("calcTotalVentas").textContent = `${calcRegistroVentas.ventas.length} ventas`
+
+  // Mobile
+  document.getElementById("calcTotalEfectivoMobile").textContent = `$${calcRegistroVentas.efectivo.toLocaleString()}`
+  document.getElementById("calcTotalTransferenciaMobile").textContent =
+    `$${calcRegistroVentas.transferencia.toLocaleString()}`
+  document.getElementById("calcTotalGeneralMobile").textContent =
+    `$${(calcRegistroVentas.efectivo + calcRegistroVentas.transferencia).toLocaleString()}`
+  document.getElementById("calcCountEfectivoMobile").textContent = ventasEfectivo.length
+  document.getElementById("calcCountTransferenciaMobile").textContent = ventasTransferencia.length
+  document.getElementById("calcTotalVentasMobile").textContent = `${calcRegistroVentas.ventas.length} ventas`
+}
+
+function calcMostrarDetalles(metodo) {
+  const ventas = calcRegistroVentas.ventas.filter((v) => v.metodoPago === metodo)
+  const container = document.getElementById("calcDetallesContainer")
+  const content = document.getElementById("calcDetallesContent")
+  const title = document.getElementById("calcDetallesTitle")
+
+  title.textContent = `Detalles de Ventas - ${metodo === "efectivo" ? "Efectivo" : "Transferencia"}`
+
+  if (ventas.length === 0) {
+    content.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: #6b7280;">
+                No hay ventas registradas para este método de pago.
+            </div>
+        `
+  } else {
+    content.innerHTML = ventas
+      .map(
+        (venta) => `
+            <div class="calc-venta-item">
+                <div class="calc-flex-between" style="margin-bottom: 12px;">
+                    <div>
+                        <span style="font-size: 1.2rem; font-weight: 600;">$${venta.total}</span>
+                        <span style="font-size: 0.9rem; color: #6b7280; margin-left: 12px;">
+                            ${venta.fecha} - ${venta.hora}
+                        </span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <div class="calc-badge">Precio/hoja: $${venta.precioHoja}</div>
+                        <button onclick="if(confirm('¿Cambiar método de pago a ${venta.metodoPago === "efectivo" ? "transferencia" : "efectivo"}?')) calcCambiarMetodoPago('${venta.id}', '${venta.metodoPago === "efectivo" ? "transferencia" : "efectivo"}')" class="calc-btn calc-btn-outline" style="padding: 4px 8px; font-size: 0.8rem;">
+                            Cambiar
+                        </button>
+                    </div>
+                </div>
+                <div style="font-size: 0.9rem; color: #4b5563;">
+                    <strong>Archivos:</strong>
+                    <ul style="margin-top: 8px; margin-left: 20px;">
+                        ${venta.archivos
+                          .map((archivo) => {
+                            const hojas = archivo.tipo === "simple2" ? Math.ceil(archivo.paginas / 2) : archivo.paginas
+                            const tipoLabel = archivo.tipo === "simple2" ? "Simple faz (2 pág/carilla)" : "Normal"
+                            return `<li style="margin-bottom: 4px;">• ${archivo.paginas} páginas × ${archivo.copias} copias (${tipoLabel}) = $${hojas * venta.precioHoja * archivo.copias}</li>`
+                          })
+                          .join("")}
+                    </ul>
+                </div>
+            </div>
+        `,
+      )
+      .join("")
+  }
+
+  container.style.display = "block"
+  container.scrollIntoView({ behavior: "smooth" })
+}
+
+function calcOcultarDetalles() {
+  document.getElementById("calcDetallesContainer").style.display = "none"
+}
+
+function calcExportarExcel() {
+  const ventasEfectivo = calcRegistroVentas.ventas.filter((v) => v.metodoPago === "efectivo")
+  const ventasTransferencia = calcRegistroVentas.ventas.filter((v) => v.metodoPago === "transferencia")
+
+  let csvContent = "data:text/csv;charset=utf-8,"
+  csvContent += "REPORTE DE VENTAS DEL DÍA\n\n"
+
+  // Resumen
+  csvContent += "RESUMEN\n"
+  csvContent += "Método de Pago,Total Acumulado\n"
+  csvContent += `Efectivo,$${calcRegistroVentas.efectivo}\n`
+  csvContent += `Transferencia,$${calcRegistroVentas.transferencia}\n`
+  csvContent += `Total General,$${calcRegistroVentas.efectivo + calcRegistroVentas.transferencia}\n\n`
+
+  // Detalles de efectivo
+  if (ventasEfectivo.length > 0) {
+    csvContent += "VENTAS EN EFECTIVO\n"
+    csvContent += "Fecha,Hora,Total,Archivos,Precio por Hoja\n"
+    ventasEfectivo.forEach((venta) => {
+      const archivosDesc = venta.archivos.map((a) => `${a.paginas}pág-${a.copias}cop-${a.tipo}`).join(";")
+      csvContent += `${venta.fecha},${venta.hora},$${venta.total},"${archivosDesc}",$${venta.precioHoja}\n`
+    })
+    csvContent += "\n"
+  }
+
+  // Detalles de transferencia
+  if (ventasTransferencia.length > 0) {
+    csvContent += "VENTAS POR TRANSFERENCIA\n"
+    csvContent += "Fecha,Hora,Total,Archivos,Precio por Hoja\n"
+    ventasTransferencia.forEach((venta) => {
+      const archivosDesc = venta.archivos.map((a) => `${a.paginas}pág-${a.copias}cop-${a.tipo}`).join(";")
+      csvContent += `${venta.fecha},${venta.hora},$${venta.total},"${archivosDesc}",$${venta.precioHoja}\n`
+    })
+  }
+
+  const encodedUri = encodeURI(csvContent)
+  const link = document.createElement("a")
+  link.setAttribute("href", encodedUri)
+  link.setAttribute("download", `ventas_${new Date().toLocaleDateString("es-ES").replace(/\//g, "-")}.csv`)
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+}
+
+// Actualizar subtotales cuando cambie el precio
+document.addEventListener("change", (e) => {
+  if (e.target.id === "calcPrecioHoja") {
+    calcArchivos.forEach((archivo) => {
+      calcActualizarSubtotal(archivo.id)
+    })
+  }
+})
