@@ -94,9 +94,14 @@
                         <div class="calc-card-title">
                             Registro de Ventas del Día
                         </div>
-                        <button onclick="calcExportarExcel()" class="calc-btn calc-btn-outline">
-                            Exportar Excel
-                        </button>
+                        <div style="display: flex; gap: 12px;">
+                            <button onclick="calcRestablecerDatos()" class="calc-btn calc-btn-danger">
+                                Restablecer
+                            </button>
+                            <button onclick="calcExportarExcel()" class="calc-btn calc-btn-outline">
+                                Exportar Excel
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="calc-card-content">
@@ -170,6 +175,16 @@
                                 <span class="calc-mobile-card-total" id="calcTotalGeneralMobile">$0</span>
                             </div>
                             <div style="text-align: center; font-size: 0.9rem; color: #6b7280;" id="calcTotalVentasMobile">0 ventas</div>
+                        </div>
+
+                        <!-- Botones mobile -->
+                        <div style="display: flex; gap: 8px; margin-top: 16px;">
+                            <button onclick="calcRestablecerDatos()" class="calc-btn calc-btn-danger" style="flex: 1;">
+                                Restablecer
+                            </button>
+                            <button onclick="calcExportarExcel()" class="calc-btn calc-btn-outline" style="flex: 1;">
+                                Exportar Excel
+                            </button>
                         </div>
                     </div>
                 </div>

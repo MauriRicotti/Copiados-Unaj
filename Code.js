@@ -30,6 +30,41 @@ function calcGuardarDatos() {
   localStorage.setItem("calcRegistroVentas", JSON.stringify(calcRegistroVentas))
 }
 
+// Nueva función para restablecer datos
+function calcRestablecerDatos() {
+  const confirmacion = confirm(
+    "⚠️ ADVERTENCIA ⚠️\n\n" +
+    "Esta acción eliminará PERMANENTEMENTE todos los datos de ventas del día:\n\n" +
+    "• Todas las ventas en efectivo\n" +
+    "• Todas las ventas por transferencia\n" +
+    "• Todo el historial de transacciones\n" +
+    "• Los totales acumulados se reiniciarán a $0\n\n" +
+    "¿Está seguro de que desea continuar?\n\n" +
+    "Esta acción NO se puede deshacer."
+  )
+  
+  if (confirmacion) {
+    // Restablecer todos los datos
+    calcRegistroVentas = {
+      efectivo: 0,
+      transferencia: 0,
+      ventas: [],
+    }
+    
+    // Guardar los datos restablecidos
+    calcGuardarDatos()
+    
+    // Actualizar la tabla
+    calcActualizarTabla()
+    
+    // Ocultar detalles si están abiertos
+    calcOcultarDetalles()
+    
+    // Mostrar confirmación
+    alert("✅ Datos restablecidos correctamente.\n\nTodos los registros de ventas han sido eliminados.")
+  }
+}
+
 function calcAgregarArchivo() {
   calcContadorArchivos++
   const container = document.getElementById("calcArchivosContainer")

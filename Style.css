@@ -28,6 +28,7 @@
 .calc-header {
   text-align: center;
   margin-bottom: 30px;
+  margin-top: 20px;
 }
 
 .calc-header h1 {
@@ -380,6 +381,20 @@
     padding: 14px 20px;
   }
 
+  /* Excepción específica para el botón eliminar en las tarjetas de archivos */
+  .calc-archivo .calc-flex-between {
+    flex-direction: row !important;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .calc-archivo .calc-btn-danger {
+    width: auto !important;
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+
   .calc-checkbox-group {
     flex-direction: column;
     gap: 12px;
@@ -436,5 +451,11 @@
 
   .calc-mobile-card-header {
     font-size: 1rem;
+  }
+
+  /* Mantener el botón eliminar compacto en pantallas muy pequeñas */
+  .calc-archivo .calc-btn-danger {
+    padding: 6px 12px;
+    font-size: 0.8rem;
   }
 }
