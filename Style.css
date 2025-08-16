@@ -415,7 +415,7 @@ body {
 }
 
 .calc-input-small {
-  max-width: 120px;
+  max-width: 100%;
 }
 
 .calc-select {
@@ -683,7 +683,7 @@ body {
   text-align: center;
   z-index: 1000;
   pointer-events: none;
-  margin-top: 30px;
+  margin-top: -50px;
 }
 
 .login-screen ~ .watermark-footer,
