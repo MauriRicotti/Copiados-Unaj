@@ -301,7 +301,9 @@ function showCalculatorScreen() {
 
   // Cargar datos específicos del fotocopiado
   loadFromFirebase().then(() => {
-    calcAgregarArchivo()
+    if (calcArchivos.length === 0) {
+      calcAgregarArchivo()
+    }
     calcActualizarTabla()
     listenToFirebaseChanges()
   })
@@ -499,11 +501,13 @@ function calcAgregarArchivo() {
   div.className = "calc-card calc-archivo"
   div.id = `calcArchivo${calcContadorArchivos}`
 
+  const numeroArchivo = calcArchivos.length + 1
+
   div.innerHTML = `
         <div class="calc-card-content">
             <div class="calc-flex-between" style="margin-bottom: 24px; align-items: center;">
                 <div style="font-size: 1.2rem; font-weight: 600; color: var(--text-heading);">
-                    Archivo ${calcContadorArchivos}
+                    Archivo ${numeroArchivo}
                     <button onclick="calcEliminarArchivo(${calcContadorArchivos})" class="calc-btn calc-btn-danger" style="margin-left: 16px; padding: 6px 12px; font-size: 0.9rem;">
                         Eliminar
                     </button>
@@ -567,7 +571,10 @@ function calcAgregarArchivo() {
 }
 
 function calcEliminarArchivo(id) {
-  if (calcArchivos.length === 1) return
+  if (calcArchivos.length <= 1) {
+    alert("Debe haber al menos un archivo.")
+    return
+  }
 
   const elemento = document.getElementById(`calcArchivo${id}`)
   if (elemento) {
@@ -576,8 +583,25 @@ function calcEliminarArchivo(id) {
     setTimeout(() => {
       elemento.remove()
       calcArchivos = calcArchivos.filter((archivo) => archivo.id !== id)
+      calcReorganizarNombresArchivos()
     }, 300)
   }
+}
+
+function calcReorganizarNombresArchivos() {
+  const container = document.getElementById("calcArchivosContainer")
+  const tarjetas = container.querySelectorAll(".calc-card.calc-archivo")
+
+  tarjetas.forEach((tarjeta, index) => {
+    const numeroNuevo = index + 1
+    const titulo = tarjeta.querySelector('div[style*="font-size: 1.2rem"]')
+    if (titulo) {
+      // Mantener el botón eliminar pero actualizar el texto
+      const botonEliminar = titulo.querySelector("button")
+      const textoBoton = botonEliminar ? botonEliminar.outerHTML : ""
+      titulo.innerHTML = `Archivo ${numeroNuevo} ${textoBoton}`
+    }
+  })
 }
 
 function calcActualizarSubtotal(numeroArchivo) {
@@ -659,7 +683,6 @@ function calcCancelarVenta() {
     calcTotal = 0
     calcMetodoPago = null
 
-    // Agregar un archivo inicial
     calcAgregarArchivo()
 
     // Scroll al inicio
@@ -913,48 +936,54 @@ function calcExportarExcel() {
   const ventasEfectivo = calcRegistroVentas.ventas.filter((v) => v.metodoPago === "efectivo")
   const ventasTransferencia = calcRegistroVentas.ventas.filter((v) => v.metodoPago === "transferencia")
 
-  let csvContent = "data:text/csv;charset=utf-8,"
-  csvContent += "REPORTE DE VENTAS DEL DÍA\n\n"
+  // Crear datos para Excel con dos columnas
+  const data = [
+    ["Efectivo", "Transferencia"], // Headers
+  ]
 
-  // Resumen
-  csvContent += "RESUMEN\n"
-  csvContent += "Método de Pago,Total Acumulado\n"
-  csvContent += `Efectivo,$${calcRegistroVentas.efectivo}\n`
-  csvContent += `Transferencia,$${calcRegistroVentas.transferencia}\n`
-  csvContent += `Total General,$${calcRegistroVentas.efectivo + calcRegistroVentas.transferencia}\n\n`
+  // Obtener el máximo número de filas necesarias
+  const maxRows = Math.max(ventasEfectivo.length, ventasTransferencia.length)
 
-  // Detalles de efectivo
-  if (ventasEfectivo.length > 0) {
-    csvContent += "VENTAS EN EFECTIVO\n"
-    csvContent += "Fecha,Hora,Total,Archivos,Precio B/N,Precio Color\n"
-    ventasEfectivo.forEach((venta) => {
-      const archivosDesc = venta.archivos
-        .map((a) => `${a.paginas}pág-${a.copias}cop-${a.tipo}-${a.color || "bn"}`)
-        .join(";")
-      csvContent += `${venta.fecha},${venta.hora},$${venta.total},"${archivosDesc}",$${venta.precioHojaBN || venta.precioHoja || 40},$${venta.precioHojaColor || 80}\n`
-    })
-    csvContent += "\n"
+  // Llenar las filas con los precios de cada venta
+  for (let i = 0; i < maxRows; i++) {
+    const efectivoValue = i < ventasEfectivo.length ? ventasEfectivo[i].total : ""
+    const transferenciaValue = i < ventasTransferencia.length ? ventasTransferencia[i].total : ""
+    data.push([efectivoValue, transferenciaValue])
   }
 
-  // Detalles de transferencia
-  if (ventasTransferencia.length > 0) {
-    csvContent += "VENTAS POR TRANSFERENCIA\n"
-    csvContent += "Fecha,Hora,Total,Archivos,Precio B/N,Precio Color\n"
-    ventasTransferencia.forEach((venta) => {
-      const archivosDesc = venta.archivos
-        .map((a) => `${a.paginas}pág-${a.copias}cop-${a.tipo}-${a.color || "bn"}`)
-        .join(";")
-      csvContent += `${venta.fecha},${venta.hora},$${venta.total},"${archivosDesc}",$${venta.precioHojaBN || venta.precioHoja || 40},$${venta.precioHojaColor || 40}\n`
-    })
-  }
+  // Importar SheetJS
+  const XLSX = window.XLSX
 
-  const encodedUri = encodeURI(csvContent)
-  const link = document.createElement("a")
-  link.setAttribute("href", encodedUri)
-  link.setAttribute("download", `ventas_${new Date().toLocaleDateString("es-ES").replace(/\//g, "-")}.csv`)
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
+  // Crear workbook y worksheet usando SheetJS
+  const wb = XLSX.utils.book_new()
+  const ws = XLSX.utils.aoa_to_sheet(data)
+
+  // Agregar el worksheet al workbook
+  XLSX.utils.book_append_sheet(wb, ws, "Registro de Ventas")
+
+  const ahora = new Date()
+  const meses = [
+    "Enero",
+    "Febrero",
+    "Marzo",
+    "Abril",
+    "Mayo",
+    "Junio",
+    "Julio",
+    "Agosto",
+    "Septiembre",
+    "Octubre",
+    "Noviembre",
+    "Diciembre",
+  ]
+  const mes = meses[ahora.getMonth()]
+  const año = ahora.getFullYear()
+  const nombreFotocopiado = currentFotocopiado
+    ? fotocopiados[currentFotocopiado].name.replace(/\s+/g, "_")
+    : "Fotocopiado"
+
+  const fileName = `${nombreFotocopiado}_${mes}_${año}.xlsx`
+  XLSX.writeFile(wb, fileName)
 }
 
 // Actualizar subtotales cuando cambien los precios
