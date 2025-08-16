@@ -32,19 +32,19 @@ const firebaseConfig = {
 const fotocopiados = {
   salud: {
     name: "Copiados Salud",
-    fullName: "Facultad de Ciencias de la Salud",
+    fullName: "Calculadora de cobro y registro de ventas",
     password: "salud123",
     icon: "🏥",
   },
   sociales: {
     name: "Copiados Sociales",
-    fullName: "Facultad de Ciencias Sociales",
+    fullName: "Calculadora de cobro y registro de ventas",
     password: "sociales123",
     icon: "👥",
   },
   ingenieria: {
     name: "Copiados Ingeniería",
-    fullName: "Facultad de Ingeniería",
+    fullName: "Calculadora de cobro y registro de ventas",
     password: "ingenieria123",
     icon: "⚙️",
   },
