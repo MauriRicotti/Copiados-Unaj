@@ -5,6 +5,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Fotocopiados - UNAJ</title>
     <link rel="stylesheet" href="/Style.css">
+    <!-- Cambiando a Firebase v9+ moderno con módulos ES6 -->
+    <script type="module">
+        // Importar Firebase v9+
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
+        import { getDatabase, ref, set, get, onValue, off } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js';
+        
+        // Configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyC0YFv49AUWjZtEl2KxgiytnFG4bzv5sMA",
+            authDomain: "fotocopiado-unaj.firebaseapp.com",
+            databaseURL: "https://fotocopiado-unaj-default-rtdb.firebaseio.com/",
+            projectId: "fotocopiado-unaj",
+            storageBucket: "fotocopiado-unaj.firebasestorage.app",
+            messagingSenderId: "198572714385",
+            appId: "1:198572714385:web:2ec73dfa4386daa47a5230",
+            measurementId: "G-SNQ58PSQJ2"
+        };
+        
+        // Inicializar Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        
+        // Hacer Firebase disponible globalmente
+        window.firebaseApp = app;
+        window.firebaseDatabase = database;
+        window.firebaseRef = ref;
+        window.firebaseSet = set;
+        window.firebaseGet = get;
+        window.firebaseOnValue = onValue;
+        window.firebaseOff = off;
+        window.firebaseInitialized = true;
+        
+        console.log("[v0] Firebase v9+ inicializado correctamente");
+    </script>
 </head>
 <body>
     <!-- Pantalla de selección de fotocopiado -->
@@ -19,7 +53,7 @@
                 <div class="fotocopiado-card" onclick="selectFotocopiado('salud')">
                     <div class="fotocopiado-icon">🏥</div>
                     <h3>Copiados Salud</h3>
-                    <p>Instituto de salud</p>
+                    <p>Instituto de Salud</p>
                     <!-- Agregando sección de contraseña inline para cada perfil -->
                     <div id="passwordSection-salud" class="password-section-inline" style="display: none;">
                         <div class="password-card-inline">
@@ -180,6 +214,8 @@
                     <div class="calc-flex-between">
                         <div class="calc-card-title">
                             Registro de Ventas del Día
+                            <!-- Agregando indicador de sincronización -->
+                            <span id="syncStatus" class="sync-indicator" title="Estado de sincronización">🔄</span>
                         </div>
                         <div class="calc-flex" style="gap: 12px;">
                             <button onclick="calcExportarExcel()" class="calc-btn calc-btn-outline">

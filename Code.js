@@ -75,18 +75,19 @@ document.addEventListener("DOMContentLoaded", () => {
 function initializeFirebase() {
   try {
     console.log("[v0] Intentando inicializar Firebase...")
-    console.log("[v0] window.firebase disponible:", typeof window.firebase !== "undefined")
+    console.log("[v0] window.firebaseInitialized disponible:", typeof window.firebaseInitialized !== "undefined")
 
-    if (typeof window.firebase !== "undefined") {
-      console.log("[v0] Firebase detectado, inicializando...")
-      firebaseApp = window.firebase.initializeApp(firebaseConfig)
-      database = window.firebase.database()
+    if (typeof window.firebaseInitialized !== "undefined" && window.firebaseInitialized) {
+      console.log("[v0] Firebase v9+ detectado, inicializando...")
+      firebaseApp = window.firebaseApp
+      database = window.firebaseDatabase
       isFirebaseEnabled = true
       updateSyncStatus("🟢", "Conectado a Firebase")
-      console.log("[v0] Firebase inicializado correctamente")
+      console.log("[v0] Firebase v9+ inicializado correctamente")
 
-      const connectedRef = database.ref(".info/connected")
-      connectedRef.on("value", (snap) => {
+      // Verificar conexión usando la nueva API
+      const connectedRef = window.firebaseRef(database, ".info/connected")
+      window.firebaseOnValue(connectedRef, (snap) => {
         if (snap.val() === true) {
           console.log("[v0] Conexión a Firebase confirmada")
           updateSyncStatus("🟢", "Conectado a Firebase")
@@ -144,18 +145,20 @@ function syncToFirebase() {
       console.log("[v0] Sincronizando a Firebase:", dataToSync)
       console.log("[v0] Ruta Firebase:", `fotocopiados/${currentFotocopiado}`)
 
-      database.ref(`fotocopiados/${currentFotocopiado}`).set(dataToSync, (error) => {
-        if (error) {
-          console.error("[v0] Error sincronizando a Firebase:", error)
-          updateSyncStatus("🔴", "Error de sincronización")
-          reject(error)
-        } else {
+      const fotocopiadoRef = window.firebaseRef(database, `fotocopiados/${currentFotocopiado}`)
+      window
+        .firebaseSet(fotocopiadoRef, dataToSync)
+        .then(() => {
           updateSyncStatus("🟢", "Sincronizado")
           console.log("[v0] Datos sincronizados a Firebase correctamente")
           calcRegistroVentas.lastUpdated = dataToSync.lastUpdated
           resolve()
-        }
-      })
+        })
+        .catch((error) => {
+          console.error("[v0] Error sincronizando a Firebase:", error)
+          updateSyncStatus("🔴", "Error de sincronización")
+          reject(error)
+        })
     } catch (error) {
       console.error("[v0] Error sincronizando a Firebase:", error)
       updateSyncStatus("🔴", "Error de sincronización")
@@ -170,10 +173,10 @@ function listenToFirebaseChanges() {
     return
   }
 
-  const fotocopiadoRef = database.ref(`fotocopiados/${currentFotocopiado}`)
+  const fotocopiadoRef = window.firebaseRef(database, `fotocopiados/${currentFotocopiado}`)
 
-  fotocopiadoRef.on(
-    "value",
+  window.firebaseOnValue(
+    fotocopiadoRef,
     (snapshot) => {
       try {
         const data = snapshot.val()
@@ -376,7 +379,8 @@ function cancelLogin(tipo = null) {
 function logout() {
   if (confirm("¿Estás seguro de que quieres cerrar sesión?")) {
     if (isFirebaseEnabled && database && currentFotocopiado) {
-      database.ref(`fotocopiados/${currentFotocopiado}/ventas`).off()
+      const fotocopiadoRef = window.firebaseRef(database, `fotocopiados/${currentFotocopiado}`)
+      window.firebaseOff(fotocopiadoRef)
     }
 
     currentFotocopiado = null
@@ -422,11 +426,11 @@ function loadFromFirebase() {
     console.log("[v0] Cargando datos iniciales desde Firebase...")
     updateSyncStatus("🔄", "Cargando datos...")
 
-    const fotocopiadoRef = database.ref(`fotocopiados/${currentFotocopiado}`)
+    const fotocopiadoRef = window.firebaseRef(database, `fotocopiados/${currentFotocopiado}`)
 
-    fotocopiadoRef.once(
-      "value",
-      (snapshot) => {
+    window
+      .firebaseGet(fotocopiadoRef)
+      .then((snapshot) => {
         try {
           const firebaseData = snapshot.val()
           console.log("[v0] Datos de Firebase recibidos:", firebaseData)
@@ -461,14 +465,13 @@ function loadFromFirebase() {
           updateSyncStatus("🔴", "Error cargando datos")
           resolve()
         }
-      },
-      (error) => {
+      })
+      .catch((error) => {
         console.error("[v0] Error accediendo a Firebase:", error)
         calcCargarDatos() // Fallback a localStorage
         updateSyncStatus("🔴", "Error de conexión")
         resolve()
-      },
-    )
+      })
   })
 }
 
