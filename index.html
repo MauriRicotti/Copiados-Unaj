@@ -178,13 +178,12 @@
 
                 <!-- Botón calcular total -->
                 <div style="text-align: center; margin: 30px 0;">
-                    <!-- Agregando contenedor flex para botones Calcular Total y Cancelar Venta -->
-                    <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
-                        <button onclick="calcCalcularTotal()" class="calc-btn calc-btn-primary" style="padding: 16px 32px; font-size: 1.1rem;">
-                           Calcular Total
+                    <div class="calc-botones-venta">
+                        <button onclick="calcCalcularTotal()" class="calc-btn calc-btn-primary">
+                            Calcular Total
                         </button>
-                        <button onclick="calcCancelarVenta()" class="calc-btn calc-btn-secondary" style="padding: 16px 32px; font-size: 1.1rem;">
-                           Cancelar Venta
+                        <button onclick="calcCancelarVenta()" class="calc-btn calc-btn-secondary">
+                            Cancelar Venta
                         </button>
                     </div>
                 </div>
@@ -244,6 +243,10 @@
                         <div class="calc-flex" style="gap: 12px;">
                             <button onclick="calcExportarExcel()" class="calc-btn calc-btn-outline">
                                 Exportar Excel
+                            </button>
+                            <!-- Nueva opción de exportar a PDF -->
+                            <button onclick="calcExportarPDF()" class="calc-btn calc-btn-outline">
+                                Exportar PDF
                             </button>
                         </div>
                     </div>
@@ -436,5 +439,7 @@
     </footer>
 
     <script src="/Code.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 </body>
 </html>

@@ -310,58 +310,53 @@ function calcAgregarArchivo() {
   const numeroArchivo = calcArchivos.length + 1
 
   div.innerHTML = `
-        <div class="calc-card-content">
-            <div class="calc-flex-between" style="margin-bottom: 24px; align-items: center;">
-                <div style="font-size: 1.2rem; font-weight: 600; color: var(--text-heading);">
-                    Archivo ${numeroArchivo}
-                    <button onclick="calcEliminarArchivo(${calcContadorArchivos})" class="calc-btn calc-btn-danger" style="margin-left: 16px; padding: 6px 12px; font-size: 0.9rem;">
-                        Eliminar
-                    </button>
-                </div>
+    <div class="calc-card-content">
+        <div class="calc-flex-between" style="margin-bottom: 24px; align-items: center;">
+            <div style="font-size: 1.2rem; font-weight: 600; color: var(--text-heading);">
+                Archivo ${numeroArchivo}
+                <button onclick="calcEliminarArchivo(${calcContadorArchivos})" class="calc-btn calc-btn-danger" style="margin-left: 16px; padding: 6px 12px; font-size: 0.9rem;">
+                    Eliminar
+                </button>
             </div>
-            
-            <div class="calc-grid calc-grid-cols-5" style="align-items: end;">
+        </div>
+        <div class="calc-archivo-form">
+            <div class="calc-archivo-row">
                 <div>
                     <label class="calc-label">Páginas</label>
                     <input type="number" id="calcPaginas${calcContadorArchivos}" value="1" min="1" 
-                           class="calc-input" onchange="calcActualizarSubtotal(${calcContadorArchivos})">
+                        class="calc-input" onchange="calcActualizarSubtotal(${calcContadorArchivos})">
                 </div>
-                
                 <div>
                     <label class="calc-label">Copias</label>
                     <input type="number" id="calcCopias${calcContadorArchivos}" value="1" min="1"
-                           class="calc-input" onchange="calcActualizarSubtotal(${calcContadorArchivos})">
+                        class="calc-input" onchange="calcActualizarSubtotal(${calcContadorArchivos})">
                 </div>
-                
-                <div>
-                    <label class="calc-label">Ajustes</label>
-                    <select id="calcTipo${calcContadorArchivos}" class="calc-select" onchange="calcActualizarSubtotal(${calcContadorArchivos})">
-                        <option value="normal">Simple/Doble faz</option>
-                        <option value="simple2">Doble faz (2 pág/carilla)</option>
-                    </select>
-                </div>
-                
-                <div>
-                    <label class="calc-label">Tipo de impresion</label>
-                    <select id="calcColor${calcContadorArchivos}" class="calc-select" onchange="calcActualizarSubtotal(${calcContadorArchivos})">
-                        <option value="bn">Blanco y Negro</option>
-                        <option value="color">Color</option>
-                    </select>
-                </div>
-                
-                <div>
-                    <div style="text-align: right;">
-                        <div style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 4px;" id="calcDesc${calcContadorArchivos}">
-                            1 hojas × 1 copias
-                        </div>
-                        <div class="calc-badge calc-badge-large" id="calcSubtotal${calcContadorArchivos}">
-                            $40
-                        </div>
-                    </div>
+            </div>
+            <div class="calc-archivo-ajustes">
+                <label class="calc-label">Ajustes</label>
+                <select id="calcTipo${calcContadorArchivos}" class="calc-select" onchange="calcActualizarSubtotal(${calcContadorArchivos})">
+                    <option value="normal">Simple/Doble faz</option>
+                    <option value="simple2">Doble faz (2 pág/carilla)</option>
+                </select>
+            </div>
+            <div class="calc-archivo-tipo">
+                <label class="calc-label">Tipo de impresion</label>
+                <select id="calcColor${calcContadorArchivos}" class="calc-select" onchange="calcActualizarSubtotal(${calcContadorArchivos})">
+                    <option value="bn">Blanco y Negro</option>
+                    <option value="color">Color</option>
+                </select>
+            </div>
+            <div class="calc-archivo-resumen" id="calcDesc${calcContadorArchivos}" style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 4px;">
+                1 hojas × 1 copias
+            </div>
+            <div class="calc-precio-container">
+                <div class="calc-badge calc-badge-large" id="calcSubtotal${calcContadorArchivos}">
+                    $40
                 </div>
             </div>
         </div>
-    `
+    </div>
+`
 
   container.appendChild(div)
 
@@ -829,6 +824,81 @@ function calcExportarExcel() {
 
   const fileName = `${nombreFotocopiado}_${mes}_${año}.xlsx`
   XLSX.writeFile(wb, fileName)
+}
+
+function calcExportarPDF() {
+  const ventasEfectivo = calcRegistroVentas.ventas.filter((v) => v.metodoPago === "efectivo");
+  const ventasTransferencia = calcRegistroVentas.ventas.filter((v) => v.metodoPago === "transferencia");
+
+  // Crear datos para la tabla
+  const maxRows = Math.max(ventasEfectivo.length, ventasTransferencia.length);
+  const rows = [];
+  for (let i = 0; i < maxRows; i++) {
+    rows.push([
+      ventasEfectivo[i] ? `$${ventasEfectivo[i].total}` : "",
+      ventasTransferencia[i] ? `$${ventasTransferencia[i].total}` : ""
+    ]);
+  }
+
+  // Obtener nombre del copiado
+  const nombreFotocopiado = currentFotocopiado
+    ? calcInstitutos[currentFotocopiado].name
+    : "Fotocopiado";
+
+  // Obtener fechas de las ventas
+  const fechas = calcRegistroVentas.ventas.map(v => {
+    // v.fecha puede ser "dd/mm/yyyy" o "dd/mm/yy"
+    const partes = v.fecha.split("/");
+    let año = partes[2];
+    if (año.length === 2) año = "20" + año;
+    return new Date(`${año}-${partes[1].padStart(2, "0")}-${partes[0].padStart(2, "0")}`);
+  }).sort((a, b) => a - b);
+
+  let rangoFechas = "";
+  if (fechas.length > 0) {
+    const desde = fechas[0];
+    const hasta = fechas[fechas.length - 1];
+    const opciones = { day: "2-digit", month: "2-digit", year: "numeric" };
+    rangoFechas = `Desde: ${desde.toLocaleDateString("es-AR", opciones)}  Hasta: ${hasta.toLocaleDateString("es-AR", opciones)}`;
+  } else {
+    rangoFechas = "Sin ventas registradas";
+  }
+
+  // Mes y año del registro
+  const ahora = new Date();
+  const meses = [
+    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+  ];
+  const mes = meses[ahora.getMonth()];
+  const año = ahora.getFullYear();
+
+  // Crear PDF
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  doc.setFontSize(16);
+  doc.text(`Registro de ventas: ${nombreFotocopiado}`, 14, 18);
+
+  doc.setFontSize(12);
+  doc.text(`Mes: ${mes}  Año: ${año}`, 14, 26);
+  doc.text(rangoFechas, 14, 34);
+
+  doc.autoTable({
+    head: [["Efectivo", "Transferencia"]],
+    body: rows,
+    startY: 40,
+    styles: { halign: 'center' }
+  });
+
+  const nombreArchivo = nombreFotocopiado.replace(/\s+/g, "_");
+  const fileName = `${nombreArchivo}_${mes}_${año}.pdf`;
+
+  doc.save(fileName);
+
+  // Ocultar menú después de exportar
+  const menu = document.getElementById("menuExportar");
+  if (menu) menu.style.display = "none";
 }
 
 // Funciones para la comparativa entre institutos
