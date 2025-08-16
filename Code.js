@@ -114,10 +114,15 @@ function syncToFirebase() {
 
   try {
     const dataToSync = {
-      ...calcRegistroVentas,
+      efectivo: calcRegistroVentas.efectivo || 0,
+      transferencia: calcRegistroVentas.transferencia || 0,
+      ventas: calcRegistroVentas.ventas || [],
       lastUpdated: Date.now(),
       deviceId: deviceId,
     }
+
+    console.log("[v0] Sincronizando a Firebase:", dataToSync)
+    console.log("[v0] Ruta Firebase:", `fotocopiados/${currentFotocopiado}/ventas`)
 
     database.ref(`fotocopiados/${currentFotocopiado}/ventas`).set(dataToSync, (error) => {
       if (error) {
@@ -126,6 +131,8 @@ function syncToFirebase() {
       } else {
         updateSyncStatus("🟢", "Sincronizado")
         console.log("[v0] Datos sincronizados a Firebase correctamente")
+
+        calcRegistroVentas.lastUpdated = dataToSync.lastUpdated
       }
     })
   } catch (error) {
@@ -147,7 +154,7 @@ function listenToFirebaseChanges() {
     (snapshot) => {
       try {
         const data = snapshot.val()
-        console.log("[v0] Datos recibidos de Firebase:", data)
+        console.log("[v0] Cambio detectado en Firebase:", data)
 
         if (data && data.deviceId !== deviceId) {
           // Solo actualizar si los datos vienen de otro dispositivo
@@ -157,11 +164,14 @@ function listenToFirebaseChanges() {
             ventas: data.ventas || [],
           }
 
-          // Verificar si hay cambios reales
-          if (JSON.stringify(newData) !== JSON.stringify(calcRegistroVentas)) {
+          const currentTimestamp = calcRegistroVentas.lastUpdated || 0
+          const newTimestamp = data.lastUpdated || 0
+
+          if (newTimestamp > currentTimestamp) {
             console.log("[v0] Actualizando datos desde otro dispositivo")
             calcRegistroVentas = newData
-            calcGuardarDatos() // Guardar también en localStorage
+            calcRegistroVentas.lastUpdated = newTimestamp
+            calcGuardarDatosLocal() // Guardar también en localStorage
             calcActualizarTabla()
             updateSyncStatus("🔄", "Datos actualizados desde otro dispositivo")
 
@@ -264,11 +274,11 @@ function showCalculatorScreen() {
   document.getElementById("fotocopiadoSubtitle").textContent = fotocopiado.fullName
 
   // Cargar datos específicos del fotocopiado
-  calcCargarDatos()
-  calcAgregarArchivo()
-  calcActualizarTabla()
-
-  listenToFirebaseChanges()
+  loadFromFirebase().then(() => {
+    calcAgregarArchivo()
+    calcActualizarTabla()
+    listenToFirebaseChanges()
+  })
 }
 
 function selectFotocopiado(tipo) {
@@ -377,25 +387,82 @@ function calcCargarDatos() {
   }
 }
 
-function calcGuardarDatos() {
+function loadFromFirebase() {
+  return new Promise((resolve) => {
+    if (!isFirebaseEnabled || !database || !currentFotocopiado) {
+      console.log("[v0] Firebase no disponible, cargando desde localStorage")
+      calcCargarDatos()
+      resolve()
+      return
+    }
+
+    console.log("[v0] Cargando datos iniciales desde Firebase...")
+    updateSyncStatus("🔄", "Cargando datos...")
+
+    const ventasRef = database.ref(`fotocopiados/${currentFotocopiado}/ventas`)
+
+    ventasRef.once(
+      "value",
+      (snapshot) => {
+        try {
+          const firebaseData = snapshot.val()
+          console.log("[v0] Datos de Firebase recibidos:", firebaseData)
+
+          if (firebaseData && (firebaseData.ventas || firebaseData.efectivo || firebaseData.transferencia)) {
+            // Hay datos en Firebase, usarlos
+            calcRegistroVentas = {
+              efectivo: firebaseData.efectivo || 0,
+              transferencia: firebaseData.transferencia || 0,
+              ventas: firebaseData.ventas || [],
+            }
+            console.log("[v0] Datos cargados desde Firebase:", calcRegistroVentas)
+            updateSyncStatus("🟢", "Datos sincronizados desde Firebase")
+
+            // También guardar en localStorage para backup
+            calcGuardarDatosLocal()
+          } else {
+            // No hay datos en Firebase, cargar desde localStorage
+            console.log("[v0] No hay datos en Firebase, cargando desde localStorage")
+            calcCargarDatos()
+
+            // Si hay datos en localStorage, sincronizarlos a Firebase
+            if (calcRegistroVentas.ventas.length > 0) {
+              console.log("[v0] Sincronizando datos locales a Firebase")
+              syncToFirebase()
+            }
+          }
+          resolve()
+        } catch (error) {
+          console.error("[v0] Error cargando desde Firebase:", error)
+          calcCargarDatos() // Fallback a localStorage
+          updateSyncStatus("🔴", "Error cargando datos")
+          resolve()
+        }
+      },
+      (error) => {
+        console.error("[v0] Error accediendo a Firebase:", error)
+        calcCargarDatos() // Fallback a localStorage
+        updateSyncStatus("🔴", "Error de conexión")
+        resolve()
+      },
+    )
+  })
+}
+
+function calcGuardarDatosLocal() {
   if (!currentFotocopiado) return
   localStorage.setItem(`calcRegistroVentas_${currentFotocopiado}`, JSON.stringify(calcRegistroVentas))
+}
 
+function calcGuardarDatos() {
+  if (!currentFotocopiado) return
+
+  calcRegistroVentas.lastUpdated = Date.now()
+
+  localStorage.setItem(`calcRegistroVentas_${currentFotocopiado}`, JSON.stringify(calcRegistroVentas))
+
+  console.log("[v0] Guardando datos y sincronizando...")
   syncToFirebase()
-}
-
-// Funciones de tema
-function calcCargarTema() {
-  const temaGuardado = localStorage.getItem("calcTema") || "light"
-  document.documentElement.setAttribute("data-theme", temaGuardado)
-}
-
-function calcToggleTheme() {
-  const temaActual = document.documentElement.getAttribute("data-theme")
-  const nuevoTema = temaActual === "dark" ? "light" : "dark"
-
-  document.documentElement.setAttribute("data-theme", nuevoTema)
-  localStorage.setItem("calcTema", nuevoTema)
 }
 
 function calcAgregarArchivo() {
@@ -626,6 +693,8 @@ function calcFinalizarVenta() {
     timestamp: Date.now(),
   }
 
+  console.log("[v0] Finalizando venta:", ventaDetalle)
+
   // Actualizar registro
   if (calcMetodoPago === "efectivo") {
     calcRegistroVentas.efectivo += calcTotal
@@ -634,7 +703,9 @@ function calcFinalizarVenta() {
   }
   calcRegistroVentas.ventas.push(ventaDetalle)
 
-  calcGuardarDatos() // Esto ahora también sincroniza con Firebase
+  console.log("[v0] Registro actualizado:", calcRegistroVentas)
+
+  calcGuardarDatos() // Esto ahora también sincroniza con Firebase inmediatamente
   calcActualizarTabla()
 
   // Reset everything immediately
@@ -854,3 +925,17 @@ document.addEventListener("keypress", (e) => {
     }
   }
 })
+
+// Funciones de tema
+function calcCargarTema() {
+  const temaGuardado = localStorage.getItem("calcTema") || "light"
+  document.documentElement.setAttribute("data-theme", temaGuardado)
+}
+
+function calcToggleTheme() {
+  const temaActual = document.documentElement.getAttribute("data-theme")
+  const nuevoTema = temaActual === "dark" ? "light" : "dark"
+
+  document.documentElement.setAttribute("data-theme", nuevoTema)
+  localStorage.setItem("calcTema", nuevoTema)
+}
