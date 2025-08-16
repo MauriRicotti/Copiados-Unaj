@@ -60,15 +60,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function initializeFirebase() {
   try {
-    if (typeof window.firebase !== "undefined") {
-      firebaseApp = window.firebase.initializeApp(firebaseConfig)
-      database = window.firebase.database()
+    // Declare the firebase variable here
+    const firebase = window.firebase
+    if (typeof firebase !== "undefined") {
+      firebaseApp = firebase.initializeApp(firebaseConfig)
+      database = firebase.database()
       isFirebaseEnabled = true
       updateSyncStatus("🟢", "Conectado a Firebase")
       console.log("[v0] Firebase inicializado correctamente")
+
+      const connectedRef = database.ref(".info/connected")
+      connectedRef.on("value", (snap) => {
+        if (snap.val() === true) {
+          updateSyncStatus("🟢", "Conectado a Firebase")
+        } else {
+          updateSyncStatus("🟡", "Reconectando...")
+        }
+      })
     } else {
       console.warn("[v0] Firebase no disponible, usando localStorage")
       updateSyncStatus("🔴", "Sin conexión - Solo local")
+      isFirebaseEnabled = false
     }
   } catch (error) {
     console.error("[v0] Error inicializando Firebase:", error)
@@ -95,7 +107,10 @@ function updateSyncStatus(icon, title) {
 }
 
 function syncToFirebase() {
-  if (!isFirebaseEnabled || !database || !currentFotocopiado) return
+  if (!isFirebaseEnabled || !database || !currentFotocopiado) {
+    console.log("[v0] Firebase no disponible para sincronización")
+    return
+  }
 
   try {
     const dataToSync = {
@@ -104,9 +119,15 @@ function syncToFirebase() {
       deviceId: deviceId,
     }
 
-    database.ref(`fotocopiados/${currentFotocopiado}/ventas`).set(dataToSync)
-    updateSyncStatus("🟢", "Sincronizado")
-    console.log("[v0] Datos sincronizados a Firebase")
+    database.ref(`fotocopiados/${currentFotocopiado}/ventas`).set(dataToSync, (error) => {
+      if (error) {
+        console.error("[v0] Error sincronizando a Firebase:", error)
+        updateSyncStatus("🔴", "Error de sincronización")
+      } else {
+        updateSyncStatus("🟢", "Sincronizado")
+        console.log("[v0] Datos sincronizados a Firebase correctamente")
+      }
+    })
   } catch (error) {
     console.error("[v0] Error sincronizando a Firebase:", error)
     updateSyncStatus("🔴", "Error de sincronización")
@@ -114,33 +135,49 @@ function syncToFirebase() {
 }
 
 function listenToFirebaseChanges() {
-  if (!isFirebaseEnabled || !database || !currentFotocopiado) return
+  if (!isFirebaseEnabled || !database || !currentFotocopiado) {
+    console.log("[v0] Firebase no disponible para escuchar cambios")
+    return
+  }
 
   const ventasRef = database.ref(`fotocopiados/${currentFotocopiado}/ventas`)
 
-  ventasRef.on("value", (snapshot) => {
-    const data = snapshot.val()
-    if (data && data.deviceId !== deviceId) {
-      // Solo actualizar si los datos vienen de otro dispositivo
-      const newData = {
-        efectivo: data.efectivo || 0,
-        transferencia: data.transferencia || 0,
-        ventas: data.ventas || [],
-      }
+  ventasRef.on(
+    "value",
+    (snapshot) => {
+      try {
+        const data = snapshot.val()
+        console.log("[v0] Datos recibidos de Firebase:", data)
 
-      // Verificar si hay cambios reales
-      if (JSON.stringify(newData) !== JSON.stringify(calcRegistroVentas)) {
-        calcRegistroVentas = newData
-        calcGuardarDatos() // Guardar también en localStorage
-        calcActualizarTabla()
-        updateSyncStatus("🔄", "Datos actualizados desde otro dispositivo")
-        console.log("[v0] Datos actualizados desde Firebase")
+        if (data && data.deviceId !== deviceId) {
+          // Solo actualizar si los datos vienen de otro dispositivo
+          const newData = {
+            efectivo: data.efectivo || 0,
+            transferencia: data.transferencia || 0,
+            ventas: data.ventas || [],
+          }
 
-        // Mostrar notificación visual
-        showSyncNotification("Datos actualizados desde otro dispositivo")
+          // Verificar si hay cambios reales
+          if (JSON.stringify(newData) !== JSON.stringify(calcRegistroVentas)) {
+            console.log("[v0] Actualizando datos desde otro dispositivo")
+            calcRegistroVentas = newData
+            calcGuardarDatos() // Guardar también en localStorage
+            calcActualizarTabla()
+            updateSyncStatus("🔄", "Datos actualizados desde otro dispositivo")
+
+            // Mostrar notificación visual
+            showSyncNotification("Datos actualizados desde otro dispositivo")
+          }
+        }
+      } catch (error) {
+        console.error("[v0] Error procesando datos de Firebase:", error)
       }
-    }
-  })
+    },
+    (error) => {
+      console.error("[v0] Error escuchando cambios de Firebase:", error)
+      updateSyncStatus("🔴", "Error de conexión")
+    },
+  )
 }
 
 function showSyncNotification(message) {
