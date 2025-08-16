@@ -53,9 +53,9 @@
             
             <div class="fotocopiados-grid">
                 <div class="fotocopiado-card" onclick="selectFotocopiado('salud')">
-                    <!-- Reemplazando emoji con imagen específica del Instituto de Salud -->
+                    <!-- Corrigiendo ruta de imagen del Instituto de Salud -->
                     <div class="fotocopiado-icon">
-                        <img src="/imagenes/institutodesaludperfil.jpg" alt="Instituto de Ciencias de la Salud" class="instituto-logo">
+                        <img src="/images/instituto-salud.png" alt="Instituto de Ciencias de la Salud" class="instituto-logo">
                     </div>
                     <h3>Copiados Salud</h3>
                     <p>Instituto de Salud</p>
@@ -72,9 +72,9 @@
                 </div>
                 
                 <div class="fotocopiado-card" onclick="selectFotocopiado('sociales')">
-                    <!-- Reemplazando emoji con imagen específica del Instituto de Ciencias Sociales -->
+                    <!-- Corrigiendo ruta de imagen del Instituto de Ciencias Sociales -->
                     <div class="fotocopiado-icon">
-                        <img src="/imagenes/intitutodecienciassocialesperfil.png" alt="Instituto de Ciencias Sociales y Administración" class="instituto-logo">
+                        <img src="/images/instituto-sociales.png" alt="Instituto de Ciencias Sociales y Administración" class="instituto-logo">
                     </div>
                     <h3>Copiados Sociales</h3>
                     <p>Instituto de Ciencias Sociales</p>
@@ -91,9 +91,9 @@
                 </div>
                 
                 <div class="fotocopiado-card" onclick="selectFotocopiado('ingenieria')">
-                    <!-- Reemplazando emoji con imagen específica del Instituto de Ingeniería -->
+                    <!-- Corrigiendo ruta de imagen del Instituto de Ingeniería -->
                     <div class="fotocopiado-icon">
-                        <img src="/imagenes/institutodeingenieriayagronomiaperfil.jpg" alt="Instituto de Ingeniería y Agronomía" class="instituto-logo">
+                        <img src="/images/instituto-ingenieria.png" alt="Instituto de Ingeniería y Agronomía" class="instituto-logo">
                     </div>
                     <h3>Copiados Ingeniería</h3>
                     <p>Instituto de Ingeniería</p>
@@ -128,7 +128,7 @@
                             <span class="calc-theme-icon calc-moon-icon"></span>
                         </button>
                         <button onclick="logout()" class="logout-btn" title="Cerrar sesión">
-                             Salir
+                            <span>🚪</span> Salir
                         </button>
                     </div>
                 </div>
@@ -148,14 +148,14 @@
                                 <label class="calc-label">Precio hoja blanco y negro:</label>
                                 <div class="calc-flex">
                                     <input type="number" id="calcPrecioHoja" value="40" min="1" class="calc-input calc-input-small">
-                                    <span style="color: var(--text-secondary);"></span>
+                                    <span style="color: var(--text-secondary);">pesos</span>
                                 </div>
                             </div>
                             <div>
                                 <label class="calc-label">Precio hoja a color:</label>
                                 <div class="calc-flex">
                                     <input type="number" id="calcPrecioHojaColor" value="80" min="1" class="calc-input calc-input-small">
-                                    <span style="color: var(--text-secondary);"></span>
+                                    <span style="color: var(--text-secondary);">pesos</span>
                                 </div>
                             </div>
                         </div>
