@@ -126,317 +126,86 @@ function updateSyncStatus(icon, title) {
   }
 }
 
+function areLocalDataValid() {
+  if (!isFirebaseEnabled || !database || !currentFotocopiado) {
+    return true // Si no hay Firebase, usar datos locales
+  }
+
+  return new Promise((resolve) => {
+    const fotocopiadoRef = window.firebaseRef(database, `fotocopiados/${currentFotocopiado}`)
+
+    window
+      .firebaseGet(fotocopiadoRef)
+      .then((snapshot) => {
+        const firebaseData = snapshot.val()
+        if (!firebaseData) {
+          resolve(true) // No hay datos en Firebase, los locales son válidos
+          return
+        }
+
+        const localResetTimestamp = calcRegistroVentas.resetTimestamp || 0
+        const firebaseResetTimestamp = firebaseData.resetTimestamp || 0
+
+        // Si el reset de Firebase es más reciente, los datos locales son inválidos
+        resolve(firebaseResetTimestamp <= localResetTimestamp)
+      })
+      .catch(() => {
+        resolve(true) // En caso de error, asumir que los datos locales son válidos
+      })
+  })
+}
+
 function syncToFirebase() {
   if (!isFirebaseEnabled || !database || !currentFotocopiado) {
     console.log("[v0] Firebase no disponible para sincronización")
     return Promise.resolve()
   }
 
-  return new Promise((resolve, reject) => {
-    try {
-      const dataToSync = {
-        efectivo: calcRegistroVentas.efectivo || 0,
-        transferencia: calcRegistroVentas.transferencia || 0,
-        ventas: calcRegistroVentas.ventas || [],
-        lastUpdated: Date.now(),
-        deviceId: deviceId,
-        resetTimestamp: calcRegistroVentas.resetTimestamp || 0, // Incluir timestamp de reset
-      }
-
-      console.log("[v0] Sincronizando a Firebase:", dataToSync)
-      console.log("[v0] Ruta Firebase:", `fotocopiados/${currentFotocopiado}`)
-
-      const fotocopiadoRef = window.firebaseRef(database, `fotocopiados/${currentFotocopiado}`)
-      window
-        .firebaseSet(fotocopiadoRef, dataToSync)
-        .then(() => {
-          updateSyncStatus("🟢", "Sincronizado")
-          console.log("[v0] Datos sincronizados a Firebase correctamente")
-          calcRegistroVentas.lastUpdated = dataToSync.lastUpdated
-          resolve()
-        })
-        .catch((error) => {
-          console.error("[v0] Error sincronizando a Firebase:", error)
-          updateSyncStatus("🔴", "Error de sincronización")
-          reject(error)
-        })
-    } catch (error) {
-      console.error("[v0] Error sincronizando a Firebase:", error)
-      updateSyncStatus("🔴", "Error de sincronización")
-      reject(error)
+  return areLocalDataValid().then((isValid) => {
+    if (!isValid) {
+      console.log("[v0] Datos locales obsoletos detectados, cancelando sincronización")
+      // Recargar datos desde Firebase en lugar de sincronizar datos obsoletos
+      return calcCargarDatosIniciales()
     }
-  })
-}
 
-function listenToFirebaseChanges() {
-  if (!isFirebaseEnabled || !database || !currentFotocopiado) {
-    console.log("[v0] Firebase no disponible para escuchar cambios")
-    return
-  }
-
-  const fotocopiadoRef = window.firebaseRef(database, `fotocopiados/${currentFotocopiado}`)
-
-  window.firebaseOnValue(
-    fotocopiadoRef,
-    (snapshot) => {
+    return new Promise((resolve, reject) => {
       try {
-        const data = snapshot.val()
-        console.log("[v0] Cambio detectado en Firebase:", data)
-
-        if (data && data.deviceId !== deviceId) {
-          const localResetTimestamp = calcRegistroVentas.resetTimestamp || 0
-          const firebaseResetTimestamp = data.resetTimestamp || 0
-
-          if (data.isReset || firebaseResetTimestamp > localResetTimestamp) {
-            console.log("[v0] Reset detectado desde otro dispositivo, invalidando datos locales")
-            calcRegistroVentas = {
-              efectivo: data.efectivo || 0,
-              transferencia: data.transferencia || 0,
-              ventas: data.ventas || [],
-              resetTimestamp: firebaseResetTimestamp,
-            }
-            calcGuardarDatosLocal() // Actualizar localStorage
-            calcActualizarTabla()
-            updateSyncStatus("🔄", "Datos restablecidos desde otro dispositivo")
-            showSyncNotification("Las ventas fueron restablecidas desde otro dispositivo")
-            return
-          }
-
-          // Solo actualizar si los datos vienen de otro dispositivo y son más recientes
-          const newData = {
-            efectivo: data.efectivo || 0,
-            transferencia: data.transferencia || 0,
-            ventas: data.ventas || [],
-            resetTimestamp: firebaseResetTimestamp,
-          }
-
-          const currentTimestamp = calcRegistroVentas.lastUpdated || 0
-          const newTimestamp = data.lastUpdated || 0
-
-          if (newTimestamp > currentTimestamp) {
-            console.log("[v0] Actualizando datos desde otro dispositivo")
-            calcRegistroVentas = newData
-            calcRegistroVentas.lastUpdated = newTimestamp
-            calcGuardarDatosLocal() // Guardar también en localStorage
-            calcActualizarTabla()
-            updateSyncStatus("🔄", "Datos actualizados desde otro dispositivo")
-
-            // Mostrar notificación visual
-            showSyncNotification("Datos actualizados desde otro dispositivo")
-          }
+        const dataToSync = {
+          efectivo: calcRegistroVentas.efectivo || 0,
+          transferencia: calcRegistroVentas.transferencia || 0,
+          ventas: calcRegistroVentas.ventas || [],
+          lastUpdated: Date.now(),
+          deviceId: deviceId,
+          resetTimestamp: calcRegistroVentas.resetTimestamp || 0,
         }
+
+        console.log("[v0] Sincronizando a Firebase:", dataToSync)
+        console.log("[v0] Ruta Firebase:", `fotocopiados/${currentFotocopiado}`)
+
+        const fotocopiadoRef = window.firebaseRef(database, `fotocopiados/${currentFotocopiado}`)
+        window
+          .firebaseSet(fotocopiadoRef, dataToSync)
+          .then(() => {
+            updateSyncStatus("🟢", "Sincronizado")
+            console.log("[v0] Datos sincronizados a Firebase correctamente")
+            calcRegistroVentas.lastUpdated = dataToSync.lastUpdated
+            resolve()
+          })
+          .catch((error) => {
+            console.error("[v0] Error sincronizando a Firebase:", error)
+            updateSyncStatus("🔴", "Error de sincronización")
+            reject(error)
+          })
       } catch (error) {
-        console.error("[v0] Error procesando datos de Firebase:", error)
-      }
-    },
-    (error) => {
-      console.error("[v0] Error escuchando cambios de Firebase:", error)
-      updateSyncStatus("🔴", "Error de conexión")
-    },
-  )
-}
-
-function showSyncNotification(message) {
-  // Crear notificación temporal
-  const notification = document.createElement("div")
-  notification.style.cssText = `
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: #10b981;
-    color: white;
-    padding: 12px 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    z-index: 10000;
-    font-size: 0.9rem;
-    max-width: 300px;
-    animation: slideIn 0.3s ease-out;
-  `
-  notification.textContent = message
-
-  // Agregar animación CSS
-  const style = document.createElement("style")
-  style.textContent = `
-    @keyframes slideIn {
-      from { transform: translateX(100%); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
-    }
-  `
-  document.head.appendChild(style)
-
-  document.body.appendChild(notification)
-
-  // Remover después de 3 segundos
-  setTimeout(() => {
-    notification.style.animation = "slideIn 0.3s ease-out reverse"
-    setTimeout(() => {
-      if (notification.parentNode) {
-        notification.parentNode.removeChild(notification)
-      }
-    }, 300)
-  }, 3000)
-}
-
-function addOutsideClickListener() {
-  document.addEventListener("click", (event) => {
-    // Solo aplicar en la pantalla de login
-    const loginScreen = document.getElementById("loginScreen")
-    if (!loginScreen || loginScreen.style.display === "none") return
-
-    // Verificar si el clic fue fuera de las tarjetas de fotocopiado
-    const clickedCard = event.target.closest(".fotocopiado-card")
-    const clickedPasswordSection = event.target.closest(".password-section-inline")
-
-    // Si no se hizo clic en una tarjeta ni en una sección de contraseña, deseleccionar
-    if (!clickedCard && !clickedPasswordSection) {
-      cancelLogin()
-    }
-  })
-}
-
-function checkExistingSession() {
-  const savedSession = localStorage.getItem("currentFotocopiado")
-  if (savedSession && fotocopiados[savedSession]) {
-    currentFotocopiado = savedSession
-    showCalculatorScreen()
-  } else {
-    showLoginScreen()
-  }
-}
-
-function showLoginScreen() {
-  document.getElementById("loginScreen").style.display = "flex"
-  document.getElementById("calculatorScreen").style.display = "none"
-}
-
-function showCalculatorScreen() {
-  document.getElementById("loginScreen").style.display = "none"
-  document.getElementById("calculatorScreen").style.display = "block"
-
-  // Actualizar título y subtítulo
-  const fotocopiado = fotocopiados[currentFotocopiado]
-  document.getElementById("fotocopiadoTitle").textContent = fotocopiado.name
-  document.getElementById("fotocopiadoSubtitle").textContent = fotocopiado.fullName
-
-  // Cargar datos específicos del fotocopiado
-  loadFromFirebase().then(() => {
-    if (calcArchivos.length === 0) {
-      calcAgregarArchivo()
-    }
-    calcActualizarTabla()
-    listenToFirebaseChanges()
-  })
-}
-
-function selectFotocopiado(tipo) {
-  document.querySelectorAll(".password-section-inline").forEach((section) => {
-    section.style.display = "none"
-  })
-
-  document.querySelectorAll(".fotocopiado-card").forEach((card) => {
-    card.classList.remove("selected")
-  })
-
-  event.target.closest(".fotocopiado-card").classList.add("selected")
-  selectedFotocopiado = tipo
-
-  const passwordSection = document.getElementById(`passwordSection-${tipo}`)
-  const passwordInput = document.getElementById(`passwordInput-${tipo}`)
-
-  if (passwordSection && passwordInput) {
-    passwordSection.style.display = "block"
-    passwordInput.value = ""
-    passwordInput.focus()
-  }
-}
-
-function login(tipo = null) {
-  const fotocopiadoType = tipo || selectedFotocopiado
-  const password = document.getElementById(`passwordInput-${fotocopiadoType}`).value
-
-  if (!fotocopiadoType) {
-    alert("Por favor selecciona un fotocopiado")
-    return
-  }
-
-  if (password === fotocopiados[fotocopiadoType].password) {
-    currentFotocopiado = fotocopiadoType
-    localStorage.setItem("currentFotocopiado", currentFotocopiado)
-    showCalculatorScreen()
-  } else {
-    alert("Contraseña incorrecta")
-    const passwordInput = document.getElementById(`passwordInput-${fotocopiadoType}`)
-    if (passwordInput) {
-      passwordInput.value = ""
-      passwordInput.focus()
-    }
-  }
-}
-
-function cancelLogin(tipo = null) {
-  if (tipo) {
-    const passwordSection = document.getElementById(`passwordSection-${tipo}`)
-    if (passwordSection) {
-      passwordSection.style.display = "none"
-    }
-    // Remover selección de la tarjeta específica
-    document.querySelectorAll(".fotocopiado-card").forEach((card) => {
-      if (card.onclick.toString().includes(tipo)) {
-        card.classList.remove("selected")
+        console.error("[v0] Error sincronizando a Firebase:", error)
+        updateSyncStatus("🔴", "Error de sincronización")
+        reject(error)
       }
     })
-  } else {
-    // Comportamiento original para compatibilidad
-    selectedFotocopiado = null
-    document.querySelectorAll(".password-section-inline").forEach((section) => {
-      section.style.display = "none"
-    })
-    document.querySelectorAll(".fotocopiado-card").forEach((card) => {
-      card.classList.remove("selected")
-    })
-  }
+  })
 }
 
-function logout() {
-  if (confirm("¿Estás seguro de que quieres cerrar sesión?")) {
-    if (isFirebaseEnabled && database && currentFotocopiado) {
-      const fotocopiadoRef = window.firebaseRef(database, `fotocopiados/${currentFotocopiado}`)
-      window.firebaseOff(fotocopiadoRef)
-    }
-
-    currentFotocopiado = null
-    selectedFotocopiado = null
-    localStorage.removeItem("currentFotocopiado")
-    showLoginScreen()
-  }
-}
-
-function calcCargarDatos() {
-  if (!currentFotocopiado) return
-
-  const datosGuardados = localStorage.getItem(`calcRegistroVentas_${currentFotocopiado}`)
-  if (datosGuardados) {
-    try {
-      calcRegistroVentas = JSON.parse(datosGuardados)
-    } catch (error) {
-      console.error("Error al cargar datos:", error)
-      calcRegistroVentas = {
-        efectivo: 0,
-        transferencia: 0,
-        ventas: [],
-      }
-    }
-  } else {
-    calcRegistroVentas = {
-      efectivo: 0,
-      transferencia: 0,
-      ventas: [],
-    }
-  }
-}
-
-function loadFromFirebase() {
+function calcCargarDatosIniciales() {
   return new Promise((resolve) => {
     if (!isFirebaseEnabled || !database || !currentFotocopiado) {
       console.log("[v0] Firebase no disponible, cargando desde localStorage")
@@ -831,44 +600,44 @@ function calcFinalizarVenta() {
 }
 
 function calcRestablecerVentas() {
-  if (confirm("¿Estás seguro de que quieres restablecer todas las ventas del día? Esta acción no se puede deshacer.")) {
+  if (confirm("¿Estás seguro de que deseas restablecer todas las ventas del día?")) {
     const resetTimestamp = Date.now()
 
     calcRegistroVentas = {
       efectivo: 0,
       transferencia: 0,
       ventas: [],
-      lastUpdated: resetTimestamp,
-      resetTimestamp: resetTimestamp, // Timestamp del último reset global
+      resetTimestamp: resetTimestamp,
+      isReset: true, // Flag adicional para identificar resets
     }
 
+    calcGuardarDatosLocal()
+    calcActualizarTabla()
+
     if (isFirebaseEnabled && database && currentFotocopiado) {
+      const fotocopiadoRef = window.firebaseRef(database, `fotocopiados/${currentFotocopiado}`)
       const resetData = {
         efectivo: 0,
         transferencia: 0,
         ventas: [],
-        lastUpdated: resetTimestamp,
         resetTimestamp: resetTimestamp,
+        isReset: true,
+        lastUpdated: resetTimestamp,
         deviceId: deviceId,
-        isReset: true, // Flag para identificar que es un reset
       }
 
-      const fotocopiadoRef = window.firebaseRef(database, `fotocopiados/${currentFotocopiado}`)
       window
         .firebaseSet(fotocopiadoRef, resetData)
         .then(() => {
-          console.log("[v0] Reset sincronizado a Firebase correctamente")
-          updateSyncStatus("🟢", "Reset sincronizado")
+          console.log("[v0] Reset sincronizado a Firebase")
+          updateSyncStatus("🟢", "Ventas restablecidas y sincronizadas")
         })
         .catch((error) => {
           console.error("[v0] Error sincronizando reset:", error)
         })
     }
 
-    calcGuardarDatosLocal()
-    calcActualizarTabla()
-    calcOcultarDetalles()
-    alert("Todas las ventas han sido restablecidas y sincronizadas en todos los dispositivos.")
+    alert("Las ventas han sido restablecidas correctamente")
   }
 }
 
@@ -1068,3 +837,335 @@ document.addEventListener("keypress", (e) => {
     }
   }
 })
+
+function listenToFirebaseChanges() {
+  if (!isFirebaseEnabled || !database || !currentFotocopiado) {
+    console.log("[v0] Firebase no disponible para escuchar cambios")
+    return
+  }
+
+  const fotocopiadoRef = window.firebaseRef(database, `fotocopiados/${currentFotocopiado}`)
+
+  window.firebaseOnValue(
+    fotocopiadoRef,
+    (snapshot) => {
+      try {
+        const data = snapshot.val()
+        console.log("[v0] Cambio detectado en Firebase:", data)
+
+        if (data && data.deviceId !== deviceId) {
+          const localResetTimestamp = calcRegistroVentas.resetTimestamp || 0
+          const firebaseResetTimestamp = data.resetTimestamp || 0
+
+          if (data.isReset || firebaseResetTimestamp > localResetTimestamp) {
+            console.log("[v0] Reset detectado desde otro dispositivo, invalidando datos locales")
+            calcRegistroVentas = {
+              efectivo: data.efectivo || 0,
+              transferencia: data.transferencia || 0,
+              ventas: data.ventas || [],
+              resetTimestamp: firebaseResetTimestamp,
+            }
+            calcGuardarDatosLocal() // Actualizar localStorage
+            calcActualizarTabla()
+            updateSyncStatus("🔄", "Datos restablecidos desde otro dispositivo")
+            showSyncNotification("Las ventas fueron restablecidas desde otro dispositivo")
+            return
+          }
+
+          // Solo actualizar si los datos vienen de otro dispositivo y son más recientes
+          const newData = {
+            efectivo: data.efectivo || 0,
+            transferencia: data.transferencia || 0,
+            ventas: data.ventas || [],
+            resetTimestamp: firebaseResetTimestamp,
+          }
+
+          const currentTimestamp = calcRegistroVentas.lastUpdated || 0
+          const newTimestamp = data.lastUpdated || 0
+
+          if (newTimestamp > currentTimestamp) {
+            console.log("[v0] Actualizando datos desde otro dispositivo")
+            calcRegistroVentas = newData
+            calcRegistroVentas.lastUpdated = newTimestamp
+            calcGuardarDatosLocal() // Guardar también en localStorage
+            calcActualizarTabla()
+            updateSyncStatus("🔄", "Datos actualizados desde otro dispositivo")
+
+            // Mostrar notificación visual
+            showSyncNotification("Datos actualizados desde otro dispositivo")
+          }
+        }
+      } catch (error) {
+        console.error("[v0] Error procesando datos de Firebase:", error)
+      }
+    },
+    (error) => {
+      console.error("[v0] Error escuchando cambios de Firebase:", error)
+      updateSyncStatus("🔴", "Error de conexión")
+    },
+  )
+}
+
+function showSyncNotification(message) {
+  // Crear notificación temporal
+  const notification = document.createElement("div")
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #10b981;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 10000;
+    font-size: 0.9rem;
+    max-width: 300px;
+    animation: slideIn 0.3s ease-out;
+  `
+  notification.textContent = message
+
+  // Agregar animación CSS
+  const style = document.createElement("style")
+  style.textContent = `
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+  `
+  document.head.appendChild(style)
+
+  document.body.appendChild(notification)
+
+  // Remover después de 3 segundos
+  setTimeout(() => {
+    notification.style.animation = "slideIn 0.3s ease-out reverse"
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification)
+      }
+    }, 300)
+  }, 3000)
+}
+
+function addOutsideClickListener() {
+  document.addEventListener("click", (event) => {
+    // Solo aplicar en la pantalla de login
+    const loginScreen = document.getElementById("loginScreen")
+    if (!loginScreen || loginScreen.style.display === "none") return
+
+    // Verificar si el clic fue fuera de las tarjetas de fotocopiado
+    const clickedCard = event.target.closest(".fotocopiado-card")
+    const clickedPasswordSection = event.target.closest(".password-section-inline")
+
+    // Si no se hizo clic en una tarjeta ni en una sección de contraseña, deseleccionar
+    if (!clickedCard && !clickedPasswordSection) {
+      cancelLogin()
+    }
+  })
+}
+
+function checkExistingSession() {
+  const savedSession = localStorage.getItem("currentFotocopiado")
+  if (savedSession && fotocopiados[savedSession]) {
+    currentFotocopiado = savedSession
+    showCalculatorScreen()
+  } else {
+    showLoginScreen()
+  }
+}
+
+function showLoginScreen() {
+  document.getElementById("loginScreen").style.display = "flex"
+  document.getElementById("calculatorScreen").style.display = "none"
+}
+
+function showCalculatorScreen() {
+  document.getElementById("loginScreen").style.display = "none"
+  document.getElementById("calculatorScreen").style.display = "block"
+
+  // Actualizar título y subtítulo
+  const fotocopiado = fotocopiados[currentFotocopiado]
+  document.getElementById("fotocopiadoTitle").textContent = fotocopiado.name
+  document.getElementById("fotocopiadoSubtitle").textContent = fotocopiado.fullName
+
+  showSyncNotification("Cargando datos más recientes del servidor...")
+
+  // Cargar datos específicos del fotocopiado
+  loadFromFirebase().then(() => {
+    if (calcArchivos.length === 0) {
+      calcAgregarArchivo()
+    }
+    calcActualizarTabla()
+    listenToFirebaseChanges()
+    setTimeout(() => {
+      showSyncNotification("Datos actualizados correctamente")
+    }, 1000)
+  })
+}
+
+function selectFotocopiado(tipo) {
+  document.querySelectorAll(".password-section-inline").forEach((section) => {
+    section.style.display = "none"
+  })
+
+  document.querySelectorAll(".fotocopiado-card").forEach((card) => {
+    card.classList.remove("selected")
+  })
+
+  event.target.closest(".fotocopiado-card").classList.add("selected")
+  selectedFotocopiado = tipo
+
+  const passwordSection = document.getElementById(`passwordSection-${tipo}`)
+  const passwordInput = document.getElementById(`passwordInput-${tipo}`)
+
+  if (passwordSection && passwordInput) {
+    passwordSection.style.display = "block"
+    passwordInput.value = ""
+    passwordInput.focus()
+  }
+}
+
+function login(tipo = null) {
+  const fotocopiadoType = tipo || selectedFotocopiado
+  const password = document.getElementById(`passwordInput-${fotocopiadoType}`).value
+
+  if (!fotocopiadoType) {
+    alert("Por favor selecciona un fotocopiado")
+    return
+  }
+
+  if (password === fotocopiados[fotocopiadoType].password) {
+    currentFotocopiado = fotocopiadoType
+    localStorage.setItem("currentFotocopiado", currentFotocopiado)
+    showCalculatorScreen()
+  } else {
+    alert("Contraseña incorrecta")
+    const passwordInput = document.getElementById(`passwordInput-${fotocopiadoType}`)
+    if (passwordInput) {
+      passwordInput.value = ""
+      passwordInput.focus()
+    }
+  }
+}
+
+function cancelLogin(tipo = null) {
+  if (tipo) {
+    const passwordSection = document.getElementById(`passwordSection-${tipo}`)
+    if (passwordSection) {
+      passwordSection.style.display = "none"
+    }
+    // Remover selección de la tarjeta específica
+    document.querySelectorAll(".fotocopiado-card").forEach((card) => {
+      if (card.onclick.toString().includes(tipo)) {
+        card.classList.remove("selected")
+      }
+    })
+  } else {
+    // Comportamiento original para compatibilidad
+    selectedFotocopiado = null
+    document.querySelectorAll(".password-section-inline").forEach((section) => {
+      section.style.display = "none"
+    })
+    document.querySelectorAll(".fotocopiado-card").forEach((card) => {
+      card.classList.remove("selected")
+    })
+  }
+}
+
+function logout() {
+  if (confirm("¿Estás seguro de que quieres cerrar sesión?")) {
+    if (isFirebaseEnabled && database && currentFotocopiado) {
+      const fotocopiadoRef = window.firebaseRef(database, `fotocopiados/${currentFotocopiado}`)
+      window.firebaseOff(fotocopiadoRef)
+    }
+
+    currentFotocopiado = null
+    selectedFotocopiado = null
+    localStorage.removeItem("currentFotocopiado")
+    showLoginScreen()
+  }
+}
+
+function calcCargarDatos() {
+  if (!currentFotocopiado) return
+
+  const datosGuardados = localStorage.getItem(`calcRegistroVentas_${currentFotocopiado}`)
+  if (datosGuardados) {
+    try {
+      calcRegistroVentas = JSON.parse(datosGuardados)
+    } catch (error) {
+      console.error("Error al cargar datos:", error)
+      calcRegistroVentas = {
+        efectivo: 0,
+        transferencia: 0,
+        ventas: [],
+      }
+    }
+  } else {
+    calcRegistroVentas = {
+      efectivo: 0,
+      transferencia: 0,
+      ventas: [],
+    }
+  }
+}
+
+function loadFromFirebase() {
+  return new Promise((resolve) => {
+    if (!isFirebaseEnabled || !database || !currentFotocopiado) {
+      console.log("[v0] Firebase no disponible, cargando desde localStorage")
+      calcCargarDatos()
+      resolve()
+      return
+    }
+
+    console.log("[v0] Forzando carga de datos más recientes desde Firebase...")
+    updateSyncStatus("🔄", "Obteniendo datos actuales...")
+
+    const fotocopiadoRef = window.firebaseRef(database, `fotocopiados/${currentFotocopiado}`)
+
+    window
+      .firebaseGet(fotocopiadoRef)
+      .then((snapshot) => {
+        try {
+          const firebaseData = snapshot.val()
+          console.log("[v0] Datos más recientes de Firebase:", firebaseData)
+
+          if (firebaseData && (firebaseData.ventas || firebaseData.efectivo || firebaseData.transferencia)) {
+            calcRegistroVentas = {
+              efectivo: firebaseData.efectivo || 0,
+              transferencia: firebaseData.transferencia || 0,
+              ventas: firebaseData.ventas || [],
+              resetTimestamp: firebaseData.resetTimestamp || Date.now(),
+            }
+            console.log("[v0] Datos actualizados desde Firebase (fuente de verdad):", calcRegistroVentas)
+            updateSyncStatus("🟢", "Datos actualizados desde servidor")
+          } else {
+            console.log("[v0] No hay datos en Firebase, inicializando registro vacío")
+            calcRegistroVentas = {
+              efectivo: 0,
+              transferencia: 0,
+              ventas: [],
+              resetTimestamp: Date.now(),
+            }
+            updateSyncStatus("🟢", "Registro inicializado")
+          }
+
+          calcGuardarDatosLocal()
+          resolve()
+        } catch (error) {
+          console.error("[v0] Error cargando desde Firebase:", error)
+          calcCargarDatos() // Fallback a localStorage solo en caso de error
+          updateSyncStatus("🔴", "Error cargando datos")
+          resolve()
+        }
+      })
+      .catch((error) => {
+        console.error("[v0] Error accediendo a Firebase:", error)
+        calcCargarDatos() // Fallback a localStorage solo en caso de error
+        updateSyncStatus("🔴", "Error de conexión")
+        resolve()
+      })
+  })
+}
