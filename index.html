@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="/Style.css">
     <!-- Agregando librería SheetJS para exportación a Excel -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Agregando Chart.js para gráficos de comparativa -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Cambiando a Firebase v9+ moderno con módulos ES6 -->
     <script type="module">
         // Importar Firebase v9+
@@ -53,7 +55,7 @@
             
             <div class="fotocopiados-grid">
                 <div class="fotocopiado-card" onclick="selectFotocopiado('salud')">
-                    <!-- Corrigiendo ruta de imagen del Instituto de Salud -->
+                    <!-- Actualizando ruta de imagen según código del usuario -->
                     <div class="fotocopiado-icon">
                         <img src="/imagenes/institutodesaludperfil.jpg" alt="Instituto de Ciencias de la Salud" class="instituto-logo">
                     </div>
@@ -72,7 +74,7 @@
                 </div>
                 
                 <div class="fotocopiado-card" onclick="selectFotocopiado('sociales')">
-                    <!-- Corrigiendo ruta de imagen del Instituto de Ciencias Sociales -->
+                    <!-- Actualizando ruta de imagen según código del usuario -->
                     <div class="fotocopiado-icon">
                         <img src="/imagenes/intitutodecienciassocialesperfil.png" alt="Instituto de Ciencias Sociales y Administración" class="instituto-logo">
                     </div>
@@ -91,7 +93,7 @@
                 </div>
                 
                 <div class="fotocopiado-card" onclick="selectFotocopiado('ingenieria')">
-                    <!-- Corrigiendo ruta de imagen del Instituto de Ingeniería -->
+                    <!-- Actualizando ruta de imagen según código del usuario -->
                     <div class="fotocopiado-icon">
                         <img src="/imagenes/institutodeingenieriayagronomiaperfil.jpg" alt="Instituto de Ingeniería y Agronomía" class="instituto-logo">
                     </div>
@@ -122,12 +124,14 @@
                         <p id="fotocopiadoSubtitle">Sistema para empleados - Cálculo de impresiones</p>
                     </div>
                     <div class="header-controls">
-                        <!-- Simplificando estructura del botón de tema -->
-                        <button id="calcThemeToggle" class="calc-theme-toggle" onclick="calcToggleTheme()" title="Cambiar tema">
+                        <button onclick="calcMostrarComparativa()" class="calc-btn calc-btn-outline header-btn" title="Ver comparativa entre institutos">
+                            Estadisticas
+                        </button>
+                        <button id="calcThemeToggle" class="calc-theme-toggle header-btn" onclick="calcToggleTheme()" title="Cambiar tema">
                             <span class="calc-theme-icon calc-sun-icon"></span>
                             <span class="calc-theme-icon calc-moon-icon"></span>
                         </button>
-                        <button onclick="logout()" class="logout-btn" title="Cerrar sesión">
+                        <button onclick="logout()" class="logout-btn header-btn" title="Cerrar sesión">
                             Salir
                         </button>
                     </div>
@@ -148,6 +152,7 @@
                                 <label class="calc-label">Precio hoja blanco y negro:</label>
                                 <div class="calc-flex">
                                     <input type="number" id="calcPrecioHoja" value="40" min="1" class="calc-input calc-input-small">
+                                    <!-- Eliminando texto "pesos" según código del usuario -->
                                     <span style="color: var(--text-secondary);"></span>
                                 </div>
                             </div>
@@ -155,6 +160,7 @@
                                 <label class="calc-label">Precio hoja a color:</label>
                                 <div class="calc-flex">
                                     <input type="number" id="calcPrecioHojaColor" value="80" min="1" class="calc-input calc-input-small">
+                                    <!-- Eliminando texto "pesos" según código del usuario -->
                                     <span style="color: var(--text-secondary);"></span>
                                 </div>
                             </div>
@@ -231,7 +237,7 @@
                 <div class="calc-card-header">
                     <div class="calc-flex-between">
                         <div class="calc-card-title">
-                            Registro de Ventas
+                            Registro de Ventas del Día
                             <!-- Agregando indicador de sincronización -->
                             <span id="syncStatus" class="sync-indicator" title="Estado de sincronización">🔄</span>
                         </div>
@@ -338,6 +344,87 @@
                 </div>
                 <div class="calc-card-content">
                     <div id="calcDetallesContent" class="calc-detalles"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nueva pantalla de comparativa entre institutos -->
+    <div id="calcComparativaScreen" class="calculadora-container" style="display: none;">
+        <div class="calculadora-wrapper">
+            <header class="calc-header">
+                <div class="calc-header-content">
+                    <div class="calc-header-text">
+                        <h1>Comparativa entre Institutos</h1>
+                        <p>Análisis de ventas y rendimiento por fotocopiado</p>
+                    </div>
+                    <div class="header-controls">
+                        <button onclick="calcActualizarComparativa()" class="calc-btn calc-btn-primary" title="Actualizar datos">
+                            Actualizar
+                        </button>
+                        <button id="calcThemeToggleComp" class="calc-theme-toggle" onclick="calcToggleTheme()" title="Cambiar tema">
+                            <span id="themeTextComp" class="calc-theme-text">🌙 Oscuro</span>
+                        </button>
+                        <button onclick="calcVolverDesdeComparativa()" class="calc-btn calc-btn-secondary" title="Volver">
+                            Volver
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Cards de resumen -->
+            <div class="calc-grid calc-grid-cols-3" style="margin-bottom: 32px;">
+                <div class="calc-card">
+                    <div class="calc-card-content" style="text-align: center;">
+                        <h3 style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 8px;">Total General</h3>
+                        <div id="calcTotalGeneralComp" style="font-size: 2rem; font-weight: 700; color: #10b981;">$0</div>
+                    </div>
+                </div>
+                <div class="calc-card">
+                    <div class="calc-card-content" style="text-align: center;">
+                        <h3 style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 8px;">Instituto Líder</h3>
+                        <div id="calcInstitutoLider" style="font-size: 1.2rem; font-weight: 600; color: var(--text-heading);">-</div>
+                    </div>
+                </div>
+                <div class="calc-card">
+                    <div class="calc-card-content" style="text-align: center;">
+                        <h3 style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 8px;">Ventas Totales</h3>
+                        <div id="calcVentasTotales" style="font-size: 2rem; font-weight: 700; color: #3b82f6;">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráficos -->
+            <div class="calc-grid calc-grid-cols-2" style="margin-bottom: 32px;">
+                <div class="calc-card">
+                    <div class="calc-card-header">
+                        <div class="calc-card-title">Ingresos por Instituto</div>
+                    </div>
+                    <div class="calc-card-content">
+                        <div class="calc-chart-container">
+                            <canvas id="calcChartIngresos"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="calc-card">
+                    <div class="calc-card-header">
+                        <div class="calc-card-title">Métodos de Pago</div>
+                    </div>
+                    <div class="calc-card-content">
+                        <div class="calc-chart-container">
+                            <canvas id="calcChartMetodos"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detalles por instituto -->
+            <div class="calc-card">
+                <div class="calc-card-header">
+                    <div class="calc-card-title">Detalles por Instituto</div>
+                </div>
+                <div class="calc-card-content">
+                    <div id="calcDetallesGrid" class="calc-details-grid"></div>
                 </div>
             </div>
         </div>

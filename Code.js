@@ -1,21 +1,3 @@
-let calcContadorArchivos = 0
-let calcArchivos = []
-let calcTotal = 0
-let calcMetodoPago = null
-let calcRegistroVentas = {
-  efectivo: 0,
-  transferencia: 0,
-  ventas: [],
-}
-
-let currentFotocopiado = null
-let selectedFotocopiado = null
-
-let firebaseApp = null
-let database = null
-let deviceId = null
-let isFirebaseEnabled = false
-
 // Configuración de Firebase - REEMPLAZAR CON TUS CREDENCIALES
 const firebaseConfig = {
   apiKey: "AIzaSyC0YFv49AUWjZtEl2KxgiytnFG4bzv5sMA",
@@ -29,25 +11,45 @@ const firebaseConfig = {
 }
 
 // Configuración de fotocopiados
-const fotocopiados = {
+const calcInstitutos = {
   salud: {
     name: "Copiados Salud",
     fullName: "Calculadora de cobro y registro de ventas",
     password: "salud123",
-    icon: "🏥",
   },
   sociales: {
     name: "Copiados Sociales",
     fullName: "Calculadora de cobro y registro de ventas",
     password: "sociales123",
-    icon: "👥",
   },
   ingenieria: {
     name: "Copiados Ingeniería",
     fullName: "Calculadora de cobro y registro de ventas",
     password: "ingenieria123",
-    icon: "⚙️",
   },
+}
+
+// Variables globales
+let firebaseApp
+let database
+let isFirebaseEnabled = false
+let deviceId
+let currentFotocopiado
+let calcRegistroVentas = {
+  efectivo: 0,
+  transferencia: 0,
+  ventas: [],
+}
+let calcContadorArchivos = 0
+let calcArchivos = []
+let calcTotal = 0
+let calcMetodoPago
+let selectedFotocopiado
+
+// Variables para la comparativa
+const comparativaCharts = {
+  ingresos: null,
+  metodos: null,
 }
 
 // Funciones de tema
@@ -822,11 +824,240 @@ function calcExportarExcel() {
   const mes = meses[ahora.getMonth()]
   const año = ahora.getFullYear()
   const nombreFotocopiado = currentFotocopiado
-    ? fotocopiados[currentFotocopiado].name.replace(/\s+/g, "_")
+    ? calcInstitutos[currentFotocopiado].name.replace(/\s+/g, "_")
     : "Fotocopiado"
 
   const fileName = `${nombreFotocopiado}_${mes}_${año}.xlsx`
   XLSX.writeFile(wb, fileName)
+}
+
+// Funciones para la comparativa entre institutos
+async function calcMostrarComparativa() {
+  document.getElementById("calculatorScreen").style.display = "none"
+  document.getElementById("calcComparativaScreen").style.display = "block"
+
+  // Sincronizar tema
+  const themeTextComp = document.getElementById("themeTextComp")
+  const currentTheme = document.documentElement.getAttribute("data-theme")
+  if (themeTextComp) {
+    themeTextComp.textContent = currentTheme === "dark" ? "☀️ Claro" : "🌙 Oscuro"
+  }
+
+  await calcCargarDatosComparativa()
+}
+
+function calcVolverDesdeComparativa() {
+  document.getElementById("calcComparativaScreen").style.display = "none"
+  document.getElementById("calculatorScreen").style.display = "block"
+}
+
+async function calcCargarDatosComparativa() {
+  if (!isFirebaseEnabled || !database) {
+    alert("Firebase no está disponible. No se pueden cargar los datos de comparativa.")
+    return
+  }
+
+  try {
+    const institutos = ["salud", "sociales", "ingenieria"]
+    const datosInstitutos = {}
+
+    // Cargar datos de todos los institutos
+    for (const instituto of institutos) {
+      const fotocopiadoRef = window.firebaseRef(database, `fotocopiados/${instituto}`)
+      const snapshot = await window.firebaseGet(fotocopiadoRef)
+      const data = snapshot.val()
+
+      datosInstitutos[instituto] = {
+        name: calcInstitutos[instituto].name,
+        efectivo: data?.efectivo || 0,
+        transferencia: data?.transferencia || 0,
+        ventas: data?.ventas || [],
+        total: (data?.efectivo || 0) + (data?.transferencia || 0),
+      }
+    }
+
+    calcMostrarDatosComparativa(datosInstitutos)
+  } catch (error) {
+    console.error("Error cargando datos de comparativa:", error)
+    alert("Error al cargar los datos de comparativa")
+  }
+}
+
+function calcMostrarDatosComparativa(datos) {
+  // Calcular totales generales
+  let totalGeneral = 0
+  let ventasTotales = 0
+  let institutoLider = ""
+  let maxTotal = 0
+
+  Object.values(datos).forEach((instituto) => {
+    totalGeneral += instituto.total
+    ventasTotales += instituto.ventas.length
+    if (instituto.total > maxTotal) {
+      maxTotal = instituto.total
+      institutoLider = instituto.name
+    }
+  })
+
+  // Actualizar cards de resumen con IDs correctos
+  document.getElementById("calcTotalGeneralComp").textContent = `$${totalGeneral.toLocaleString()}`
+  document.getElementById("calcInstitutoLider").textContent = institutoLider || "Sin datos"
+  document.getElementById("calcVentasTotales").textContent = ventasTotales
+
+  // Crear gráficos
+  calcCrearGraficoIngresos(datos)
+  calcCrearGraficoMetodos(datos)
+
+  // Mostrar detalles
+  calcMostrarDetallesComparativa(datos)
+}
+
+function calcCrearGraficoIngresos(datos) {
+  const ctx = document.getElementById("calcChartIngresos").getContext("2d")
+
+  // Destruir gráfico anterior si existe
+  if (comparativaCharts.ingresos) {
+    comparativaCharts.ingresos.destroy()
+  }
+
+  const labels = Object.values(datos).map((d) => d.name)
+  const totales = Object.values(datos).map((d) => d.total)
+
+  comparativaCharts.ingresos = new window.Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: "Ingresos Totales",
+          data: totales,
+          backgroundColor: [
+            "rgba(34, 197, 94, 0.8)", // Verde para Salud
+            "rgba(59, 130, 246, 0.8)", // Azul para Sociales
+            "rgba(239, 68, 68, 0.8)", // Rojo para Ingeniería
+          ],
+          borderColor: ["rgba(34, 197, 94, 1)", "rgba(59, 130, 246, 1)", "rgba(239, 68, 68, 1)"],
+          borderWidth: 2,
+          borderRadius: 8,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false,
+        },
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: (value) => "$" + value.toLocaleString(),
+          },
+        },
+      },
+    },
+  })
+}
+
+function calcCrearGraficoMetodos(datos) {
+  const ctx = document.getElementById("calcChartMetodos").getContext("2d")
+
+  // Destruir gráfico anterior si existe
+  if (comparativaCharts.metodos) {
+    comparativaCharts.metodos.destroy()
+  }
+
+  const labels = Object.values(datos).map((d) => d.name)
+  const efectivo = Object.values(datos).map((d) => d.efectivo)
+  const transferencia = Object.values(datos).map((d) => d.transferencia)
+
+  comparativaCharts.metodos = new window.Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: "Efectivo",
+          data: efectivo,
+          backgroundColor: "rgba(34, 197, 94, 0.8)",
+          borderColor: "rgba(34, 197, 94, 1)",
+          borderWidth: 2,
+          borderRadius: 8,
+        },
+        {
+          label: "Transferencia",
+          data: transferencia,
+          backgroundColor: "rgba(59, 130, 246, 0.8)",
+          borderColor: "rgba(59, 130, 246, 1)",
+          borderWidth: 2,
+          borderRadius: 8,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          stacked: false,
+        },
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: (value) => "$" + value.toLocaleString(),
+          },
+        },
+      },
+      plugins: {
+        legend: {
+          position: "top",
+        },
+      },
+    },
+  })
+}
+
+function calcMostrarDetallesComparativa(datos) {
+  const grid = document.getElementById("calcDetallesGrid")
+  grid.innerHTML = ""
+
+  Object.entries(datos).forEach(([key, instituto]) => {
+    const card = document.createElement("div")
+    card.className = "calc-detail-card"
+
+    card.innerHTML = `
+            <h4>${instituto.name}</h4>
+            <div class="calc-detail-stat">
+                <span>Total de Ingresos:</span>
+                <span>$${instituto.total.toLocaleString()}</span>
+            </div>
+            <div class="calc-detail-stat">
+                <span>Ventas en Efectivo:</span>
+                <span>$${instituto.efectivo.toLocaleString()}</span>
+            </div>
+            <div class="calc-detail-stat">
+                <span>Ventas por Transferencia:</span>
+                <span>$${instituto.transferencia.toLocaleString()}</span>
+            </div>
+            <div class="calc-detail-stat">
+                <span>Número de Ventas:</span>
+                <span>${instituto.ventas.length}</span>
+            </div>
+            <div class="calc-detail-stat">
+                <span>Promedio por Venta:</span>
+                <span>$${instituto.ventas.length > 0 ? Math.round(instituto.total / instituto.ventas.length).toLocaleString() : 0}</span>
+            </div>
+        `
+
+    grid.appendChild(card)
+  })
+}
+
+async function calcActualizarComparativa() {
+  await calcCargarDatosComparativa()
 }
 
 // Actualizar subtotales cuando cambien los precios
@@ -993,7 +1224,7 @@ function showCalculatorScreen() {
   document.getElementById("calculatorScreen").style.display = "block"
 
   // Actualizar título y subtítulo
-  const fotocopiado = fotocopiados[currentFotocopiado]
+  const fotocopiado = calcInstitutos[currentFotocopiado]
   document.getElementById("fotocopiadoTitle").textContent = fotocopiado.name
   document.getElementById("fotocopiadoSubtitle").textContent = fotocopiado.fullName
 
@@ -1043,7 +1274,7 @@ function login(tipo = null) {
     return
   }
 
-  if (password === fotocopiados[fotocopiadoType].password) {
+  if (password === calcInstitutos[fotocopiadoType].password) {
     currentFotocopiado = fotocopiadoType
     localStorage.setItem("currentFotocopiado", currentFotocopiado)
     showCalculatorScreen()
