@@ -528,15 +528,15 @@ function calcAgregarArchivo() {
                 </div>
                 
                 <div>
-                    <label class="calc-label">Tipo de impresión</label>
+                    <label class="calc-label">Ajustes</label>
                     <select id="calcTipo${calcContadorArchivos}" class="calc-select" onchange="calcActualizarSubtotal(${calcContadorArchivos})">
-                        <option value="normal">Normal</option>
-                        <option value="simple2">Simple faz (2 pág/carilla)</option>
+                        <option value="normal">Simple/Doble faz</option>
+                        <option value="simple2">Doble faz (2 pág/carilla)</option>
                     </select>
                 </div>
                 
                 <div>
-                    <label class="calc-label">Color</label>
+                    <label class="calc-label">Tipo de impresion</label>
                     <select id="calcColor${calcContadorArchivos}" class="calc-select" onchange="calcActualizarSubtotal(${calcContadorArchivos})">
                         <option value="bn">Blanco y Negro</option>
                         <option value="color">Color</option>
