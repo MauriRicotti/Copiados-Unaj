@@ -140,6 +140,7 @@ function syncToFirebase() {
         ventas: calcRegistroVentas.ventas || [],
         lastUpdated: Date.now(),
         deviceId: deviceId,
+        resetTimestamp: calcRegistroVentas.resetTimestamp || 0, // Incluir timestamp de reset
       }
 
       console.log("[v0] Sincronizando a Firebase:", dataToSync)
@@ -183,11 +184,30 @@ function listenToFirebaseChanges() {
         console.log("[v0] Cambio detectado en Firebase:", data)
 
         if (data && data.deviceId !== deviceId) {
-          // Solo actualizar si los datos vienen de otro dispositivo
+          const localResetTimestamp = calcRegistroVentas.resetTimestamp || 0
+          const firebaseResetTimestamp = data.resetTimestamp || 0
+
+          if (data.isReset || firebaseResetTimestamp > localResetTimestamp) {
+            console.log("[v0] Reset detectado desde otro dispositivo, invalidando datos locales")
+            calcRegistroVentas = {
+              efectivo: data.efectivo || 0,
+              transferencia: data.transferencia || 0,
+              ventas: data.ventas || [],
+              resetTimestamp: firebaseResetTimestamp,
+            }
+            calcGuardarDatosLocal() // Actualizar localStorage
+            calcActualizarTabla()
+            updateSyncStatus("🔄", "Datos restablecidos desde otro dispositivo")
+            showSyncNotification("Las ventas fueron restablecidas desde otro dispositivo")
+            return
+          }
+
+          // Solo actualizar si los datos vienen de otro dispositivo y son más recientes
           const newData = {
             efectivo: data.efectivo || 0,
             transferencia: data.transferencia || 0,
             ventas: data.ventas || [],
+            resetTimestamp: firebaseResetTimestamp,
           }
 
           const currentTimestamp = calcRegistroVentas.lastUpdated || 0
@@ -437,18 +457,33 @@ function loadFromFirebase() {
           const firebaseData = snapshot.val()
           console.log("[v0] Datos de Firebase recibidos:", firebaseData)
 
+          const localData = JSON.parse(localStorage.getItem(`calcRegistroVentas_${currentFotocopiado}`) || "{}")
+          const localResetTimestamp = localData.resetTimestamp || 0
+          const firebaseResetTimestamp = firebaseData?.resetTimestamp || 0
+
           if (firebaseData && (firebaseData.ventas || firebaseData.efectivo || firebaseData.transferencia)) {
-            // Hay datos en Firebase, usarlos
-            calcRegistroVentas = {
-              efectivo: firebaseData.efectivo || 0,
-              transferencia: firebaseData.transferencia || 0,
-              ventas: firebaseData.ventas || [],
+            if (firebaseResetTimestamp > localResetTimestamp) {
+              console.log("[v0] Reset más reciente detectado en Firebase, invalidando datos locales")
+              calcRegistroVentas = {
+                efectivo: firebaseData.efectivo || 0,
+                transferencia: firebaseData.transferencia || 0,
+                ventas: firebaseData.ventas || [],
+                resetTimestamp: firebaseResetTimestamp,
+              }
+              calcGuardarDatosLocal() // Actualizar localStorage con datos válidos
+            } else {
+              // Usar datos de Firebase normalmente
+              calcRegistroVentas = {
+                efectivo: firebaseData.efectivo || 0,
+                transferencia: firebaseData.transferencia || 0,
+                ventas: firebaseData.ventas || [],
+                resetTimestamp: firebaseResetTimestamp,
+              }
+              calcGuardarDatosLocal()
             }
+
             console.log("[v0] Datos cargados desde Firebase:", calcRegistroVentas)
             updateSyncStatus("🟢", "Datos sincronizados desde Firebase")
-
-            // También guardar en localStorage para backup
-            calcGuardarDatosLocal()
           } else {
             // No hay datos en Firebase, cargar desde localStorage
             console.log("[v0] No hay datos en Firebase, cargando desde localStorage")
@@ -797,15 +832,43 @@ function calcFinalizarVenta() {
 
 function calcRestablecerVentas() {
   if (confirm("¿Estás seguro de que quieres restablecer todas las ventas del día? Esta acción no se puede deshacer.")) {
+    const resetTimestamp = Date.now()
+
     calcRegistroVentas = {
       efectivo: 0,
       transferencia: 0,
       ventas: [],
+      lastUpdated: resetTimestamp,
+      resetTimestamp: resetTimestamp, // Timestamp del último reset global
     }
-    calcGuardarDatos()
+
+    if (isFirebaseEnabled && database && currentFotocopiado) {
+      const resetData = {
+        efectivo: 0,
+        transferencia: 0,
+        ventas: [],
+        lastUpdated: resetTimestamp,
+        resetTimestamp: resetTimestamp,
+        deviceId: deviceId,
+        isReset: true, // Flag para identificar que es un reset
+      }
+
+      const fotocopiadoRef = window.firebaseRef(database, `fotocopiados/${currentFotocopiado}`)
+      window
+        .firebaseSet(fotocopiadoRef, resetData)
+        .then(() => {
+          console.log("[v0] Reset sincronizado a Firebase correctamente")
+          updateSyncStatus("🟢", "Reset sincronizado")
+        })
+        .catch((error) => {
+          console.error("[v0] Error sincronizando reset:", error)
+        })
+    }
+
+    calcGuardarDatosLocal()
     calcActualizarTabla()
     calcOcultarDetalles()
-    alert("Todas las ventas han sido restablecidas.")
+    alert("Todas las ventas han sido restablecidas y sincronizadas en todos los dispositivos.")
   }
 }
 
