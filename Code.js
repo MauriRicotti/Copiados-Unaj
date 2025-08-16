@@ -11,6 +11,23 @@ let calcRegistroVentas = {
 let currentFotocopiado = null
 let selectedFotocopiado = null
 
+let firebaseApp = null
+let database = null
+let deviceId = null
+let isFirebaseEnabled = false
+
+// Configuración de Firebase - REEMPLAZAR CON TUS CREDENCIALES
+const firebaseConfig = {
+  apiKey: "AIzaSyC0YFv49AUWjZtEl2KxgiytnFG4bzv5sMA",
+  authDomain: "fotocopiado-unaj.firebaseapp.com",
+  databaseURL: "https://fotocopiado-unaj-default-rtdb.firebaseio.com/",
+  projectId: "fotocopiado-unaj",
+  storageBucket: "fotocopiado-unaj.firebasestorage.app",
+  messagingSenderId: "198572714385",
+  appId: "1:198572714385:web:2ec73dfa4386daa47a5230",
+  measurementId: "G-SNQ58PSQJ2",
+}
+
 // Configuración de fotocopiados
 const fotocopiados = {
   salud: {
@@ -35,9 +52,138 @@ const fotocopiados = {
 
 document.addEventListener("DOMContentLoaded", () => {
   calcCargarTema()
+  initializeFirebase()
+  generateDeviceId()
   checkExistingSession()
   addOutsideClickListener()
 })
+
+function initializeFirebase() {
+  try {
+    if (typeof window.firebase !== "undefined") {
+      firebaseApp = window.firebase.initializeApp(firebaseConfig)
+      database = window.firebase.database()
+      isFirebaseEnabled = true
+      updateSyncStatus("🟢", "Conectado a Firebase")
+      console.log("[v0] Firebase inicializado correctamente")
+    } else {
+      console.warn("[v0] Firebase no disponible, usando localStorage")
+      updateSyncStatus("🔴", "Sin conexión - Solo local")
+    }
+  } catch (error) {
+    console.error("[v0] Error inicializando Firebase:", error)
+    isFirebaseEnabled = false
+    updateSyncStatus("🔴", "Error de conexión")
+  }
+}
+
+function generateDeviceId() {
+  deviceId = localStorage.getItem("deviceId")
+  if (!deviceId) {
+    deviceId = "device_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9)
+    localStorage.setItem("deviceId", deviceId)
+  }
+  console.log("[v0] Device ID:", deviceId)
+}
+
+function updateSyncStatus(icon, title) {
+  const syncStatus = document.getElementById("syncStatus")
+  if (syncStatus) {
+    syncStatus.textContent = icon
+    syncStatus.title = title
+  }
+}
+
+function syncToFirebase() {
+  if (!isFirebaseEnabled || !database || !currentFotocopiado) return
+
+  try {
+    const dataToSync = {
+      ...calcRegistroVentas,
+      lastUpdated: Date.now(),
+      deviceId: deviceId,
+    }
+
+    database.ref(`fotocopiados/${currentFotocopiado}/ventas`).set(dataToSync)
+    updateSyncStatus("🟢", "Sincronizado")
+    console.log("[v0] Datos sincronizados a Firebase")
+  } catch (error) {
+    console.error("[v0] Error sincronizando a Firebase:", error)
+    updateSyncStatus("🔴", "Error de sincronización")
+  }
+}
+
+function listenToFirebaseChanges() {
+  if (!isFirebaseEnabled || !database || !currentFotocopiado) return
+
+  const ventasRef = database.ref(`fotocopiados/${currentFotocopiado}/ventas`)
+
+  ventasRef.on("value", (snapshot) => {
+    const data = snapshot.val()
+    if (data && data.deviceId !== deviceId) {
+      // Solo actualizar si los datos vienen de otro dispositivo
+      const newData = {
+        efectivo: data.efectivo || 0,
+        transferencia: data.transferencia || 0,
+        ventas: data.ventas || [],
+      }
+
+      // Verificar si hay cambios reales
+      if (JSON.stringify(newData) !== JSON.stringify(calcRegistroVentas)) {
+        calcRegistroVentas = newData
+        calcGuardarDatos() // Guardar también en localStorage
+        calcActualizarTabla()
+        updateSyncStatus("🔄", "Datos actualizados desde otro dispositivo")
+        console.log("[v0] Datos actualizados desde Firebase")
+
+        // Mostrar notificación visual
+        showSyncNotification("Datos actualizados desde otro dispositivo")
+      }
+    }
+  })
+}
+
+function showSyncNotification(message) {
+  // Crear notificación temporal
+  const notification = document.createElement("div")
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #10b981;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 10000;
+    font-size: 0.9rem;
+    max-width: 300px;
+    animation: slideIn 0.3s ease-out;
+  `
+  notification.textContent = message
+
+  // Agregar animación CSS
+  const style = document.createElement("style")
+  style.textContent = `
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+  `
+  document.head.appendChild(style)
+
+  document.body.appendChild(notification)
+
+  // Remover después de 3 segundos
+  setTimeout(() => {
+    notification.style.animation = "slideIn 0.3s ease-out reverse"
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification)
+      }
+    }, 300)
+  }, 3000)
+}
 
 function addOutsideClickListener() {
   document.addEventListener("click", (event) => {
@@ -84,6 +230,8 @@ function showCalculatorScreen() {
   calcCargarDatos()
   calcAgregarArchivo()
   calcActualizarTabla()
+
+  listenToFirebaseChanges()
 }
 
 function selectFotocopiado(tipo) {
@@ -157,6 +305,10 @@ function cancelLogin(tipo = null) {
 
 function logout() {
   if (confirm("¿Estás seguro de que quieres cerrar sesión?")) {
+    if (isFirebaseEnabled && database && currentFotocopiado) {
+      database.ref(`fotocopiados/${currentFotocopiado}/ventas`).off()
+    }
+
     currentFotocopiado = null
     selectedFotocopiado = null
     localStorage.removeItem("currentFotocopiado")
@@ -191,6 +343,8 @@ function calcCargarDatos() {
 function calcGuardarDatos() {
   if (!currentFotocopiado) return
   localStorage.setItem(`calcRegistroVentas_${currentFotocopiado}`, JSON.stringify(calcRegistroVentas))
+
+  syncToFirebase()
 }
 
 // Funciones de tema
@@ -431,6 +585,8 @@ function calcFinalizarVenta() {
     archivos: [...calcArchivos],
     precioHojaBN: Number.parseFloat(document.getElementById("calcPrecioHoja").value),
     precioHojaColor: Number.parseFloat(document.getElementById("calcPrecioHojaColor").value),
+    deviceId: deviceId,
+    timestamp: Date.now(),
   }
 
   // Actualizar registro
@@ -441,7 +597,7 @@ function calcFinalizarVenta() {
   }
   calcRegistroVentas.ventas.push(ventaDetalle)
 
-  calcGuardarDatos()
+  calcGuardarDatos() // Esto ahora también sincroniza con Firebase
   calcActualizarTabla()
 
   // Reset everything immediately
@@ -464,7 +620,7 @@ function calcRestablecerVentas() {
       transferencia: 0,
       ventas: [],
     }
-    calcGuardarDatos()
+    calcGuardarDatos() // Esto también sincronizará el reset con Firebase
     calcActualizarTabla()
     calcOcultarDetalles()
     alert("Todas las ventas han sido restablecidas.")
@@ -494,7 +650,7 @@ function calcCambiarMetodoPago(ventaId, nuevoMetodo) {
   // Actualizar venta
   venta.metodoPago = nuevoMetodo
 
-  calcGuardarDatos()
+  calcGuardarDatos() // Esto también sincronizará el cambio con Firebase
   calcActualizarTabla()
 
   // Actualizar vista de detalles si está abierta
