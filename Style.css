@@ -395,7 +395,7 @@ body {
 }
 
 .calc-input-small {
-  max-width: 100%;
+  max-width: 120px;
 }
 
 .calc-select {
@@ -655,6 +655,39 @@ body {
   cursor: help;
 }
 
+/* Agregando estilos para el footer con marca de agua */
+.watermark-footer {
+  position: static;
+  background: transparent;
+  padding: 0px;
+  text-align: center;
+  z-index: 1000;
+  pointer-events: none;
+  margin-top: -30px;
+}
+
+.watermark-footer p {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  opacity: 0.8;
+  margin: 0;
+  font-weight: 400;
+  pointer-events: auto;
+}
+
+.watermark-footer a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: all 0.3s ease;
+  pointer-events: auto;
+}
+
+.watermark-footer a:hover {
+  color: #28487b;
+  opacity: 1;
+  text-decoration: underline;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .login-header h1 {
@@ -687,6 +720,12 @@ body {
     flex-direction: column;
     gap: 12px;
   }
+
+  /* Ajustando footer para móvil */
+  .watermark-footer p {
+    font-size: 0.7rem;
+    margin-top: 20px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -704,5 +743,14 @@ body {
 
   .calc-card-header {
     padding: 16px;
+  }
+
+  /* Footer más pequeño en pantallas muy pequeñas */
+  .watermark-footer {
+    padding: 6px 15px;
+  }
+
+  .watermark-footer p {
+    font-size: 0.65rem;
   }
 }
