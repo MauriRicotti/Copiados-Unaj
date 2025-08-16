@@ -374,6 +374,23 @@ body {
 
 .calc-grid-cols-3 {
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  /* Fuerza siempre 3 columnas, incluso en pantallas pequeñas */
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 20px;
+  min-width: 0;
+}
+
+/* Para que las tarjetas no se achiquen demasiado, agrega scroll horizontal en pantallas chicas */
+@media (max-width: 900px) {
+  .calc-grid-cols-3 {
+    overflow-x: auto;
+    display: flex;
+    gap: 16px;
+  }
+  .calc-grid-cols-3 > .calc-card {
+    min-width: 260px;
+    flex: 0 0 260px;
+  }
 }
 
 .calc-grid-cols-5 {
@@ -1054,4 +1071,30 @@ body {
         display: block;
         text-align: center;
     }
+}
+
+/* Fondo blanco solo en tema claro */
+[data-theme="light"] .header-btn-estadisticas {
+  background: #fff;
+  color: var(--text-primary);
+  border: 2px solid var(--border-color);
+}
+
+/* Hover en tema claro */
+[data-theme="light"] .header-btn-estadisticas:hover {
+  background: var(--hover-bg);
+  border-color: #3b82f6;
+}
+
+/* En tema oscuro, igual que un botón outline */
+[data-theme="dark"] .header-btn-estadisticas {
+  background: transparent;
+  color: var(--text-primary);
+  border: 2px solid var(--border-color);
+}
+
+/* Hover en tema oscuro */
+[data-theme="dark"] .header-btn-estadisticas:hover {
+  background: var(--hover-bg);
+  border-color: #3b82f6;
 }
