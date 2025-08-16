@@ -8,27 +8,146 @@ let calcRegistroVentas = {
   ventas: [],
 }
 
-// Inicialización
+let currentFotocopiado = null
+let selectedFotocopiado = null
+
+// Configuración de fotocopiados
+const fotocopiados = {
+  salud: {
+    name: "Copiados Salud",
+    fullName: "Facultad de Ciencias de la Salud",
+    password: "salud123",
+    icon: "🏥",
+  },
+  sociales: {
+    name: "Copiados Sociales",
+    fullName: "Facultad de Ciencias Sociales",
+    password: "sociales123",
+    icon: "👥",
+  },
+  ingenieria: {
+    name: "Copiados Ingeniería",
+    fullName: "Facultad de Ingeniería",
+    password: "ingenieria123",
+    icon: "⚙️",
+  },
+}
+
 document.addEventListener("DOMContentLoaded", () => {
-  calcCargarDatos()
   calcCargarTema()
-  calcAgregarArchivo()
-  calcActualizarTabla()
+  checkExistingSession()
 })
 
+function checkExistingSession() {
+  const savedSession = localStorage.getItem("currentFotocopiado")
+  if (savedSession && fotocopiados[savedSession]) {
+    currentFotocopiado = savedSession
+    showCalculatorScreen()
+  } else {
+    showLoginScreen()
+  }
+}
+
+function showLoginScreen() {
+  document.getElementById("loginScreen").style.display = "flex"
+  document.getElementById("calculatorScreen").style.display = "none"
+}
+
+function showCalculatorScreen() {
+  document.getElementById("loginScreen").style.display = "none"
+  document.getElementById("calculatorScreen").style.display = "block"
+
+  // Actualizar título y subtítulo
+  const fotocopiado = fotocopiados[currentFotocopiado]
+  document.getElementById("fotocopiadoTitle").textContent = fotocopiado.name
+  document.getElementById("fotocopiadoSubtitle").textContent = fotocopiado.fullName
+
+  // Cargar datos específicos del fotocopiado
+  calcCargarDatos()
+  calcAgregarArchivo()
+  calcActualizarTabla()
+}
+
+function selectFotocopiado(tipo) {
+  // Limpiar selección anterior
+  document.querySelectorAll(".fotocopiado-card").forEach((card) => {
+    card.classList.remove("selected")
+  })
+
+  // Seleccionar nuevo fotocopiado
+  event.target.closest(".fotocopiado-card").classList.add("selected")
+  selectedFotocopiado = tipo
+
+  // Mostrar sección de contraseña
+  document.getElementById("passwordSection").style.display = "block"
+  document.getElementById("selectedFotocopiadoName").textContent = fotocopiados[tipo].name
+  document.getElementById("passwordInput").value = ""
+  document.getElementById("passwordInput").focus()
+}
+
+function login() {
+  const password = document.getElementById("passwordInput").value
+
+  if (!selectedFotocopiado) {
+    alert("Por favor selecciona un fotocopiado")
+    return
+  }
+
+  if (password === fotocopiados[selectedFotocopiado].password) {
+    currentFotocopiado = selectedFotocopiado
+    localStorage.setItem("currentFotocopiado", currentFotocopiado)
+    showCalculatorScreen()
+  } else {
+    alert("Contraseña incorrecta")
+    document.getElementById("passwordInput").value = ""
+    document.getElementById("passwordInput").focus()
+  }
+}
+
+function cancelLogin() {
+  selectedFotocopiado = null
+  document.getElementById("passwordSection").style.display = "none"
+  document.querySelectorAll(".fotocopiado-card").forEach((card) => {
+    card.classList.remove("selected")
+  })
+}
+
+function logout() {
+  if (confirm("¿Estás seguro de que quieres cerrar sesión?")) {
+    currentFotocopiado = null
+    selectedFotocopiado = null
+    localStorage.removeItem("currentFotocopiado")
+    showLoginScreen()
+  }
+}
+
 function calcCargarDatos() {
-  const datosGuardados = localStorage.getItem("calcRegistroVentas")
+  if (!currentFotocopiado) return
+
+  const datosGuardados = localStorage.getItem(`calcRegistroVentas_${currentFotocopiado}`)
   if (datosGuardados) {
     try {
       calcRegistroVentas = JSON.parse(datosGuardados)
     } catch (error) {
       console.error("Error al cargar datos:", error)
+      calcRegistroVentas = {
+        efectivo: 0,
+        transferencia: 0,
+        ventas: [],
+      }
+    }
+  } else {
+    calcRegistroVentas = {
+      efectivo: 0,
+      transferencia: 0,
+      ventas: [],
     }
   }
 }
 
 function calcGuardarDatos() {
-  localStorage.setItem("calcRegistroVentas", JSON.stringify(calcRegistroVentas))
+  if (!currentFotocopiado) return
+  localStorage.setItem(`calcRegistroVentas_${currentFotocopiado}`, JSON.stringify(calcRegistroVentas))
 }
 
 // Funciones de tema
@@ -486,5 +605,11 @@ document.addEventListener("change", (e) => {
     calcArchivos.forEach((archivo) => {
       calcActualizarSubtotal(archivo.id)
     })
+  }
+})
+
+document.addEventListener("keypress", (e) => {
+  if (e.key === "Enter" && document.getElementById("passwordInput") === document.activeElement) {
+    login()
   }
 })

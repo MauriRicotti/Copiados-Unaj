@@ -3,22 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora de Cobro - Fotocopiado Universitario</title>
+    <title>Sistema de Fotocopiados - UNAJ</title>
     <link rel="stylesheet" href="/Style.css">
 </head>
 <body>
-    <div class="calculadora-container">
+    <!-- Pantalla de selección de fotocopiado -->
+    <div id="loginScreen" class="login-screen">
+        <div class="login-container">
+            <div class="login-header">
+                <h1>Sistema de Fotocopiados UNAJ</h1>
+                <p>Selecciona tu fotocopiado e ingresa la contraseña</p>
+            </div>
+            
+            <div class="fotocopiados-grid">
+                <div class="fotocopiado-card" onclick="selectFotocopiado('salud')">
+                    <div class="fotocopiado-icon">🏥</div>
+                    <h3>Copiados Salud</h3>
+                    <p>Facultad de Ciencias de la Salud</p>
+                </div>
+                
+                <div class="fotocopiado-card" onclick="selectFotocopiado('sociales')">
+                    <div class="fotocopiado-icon">👥</div>
+                    <h3>Copiados Sociales</h3>
+                    <p>Facultad de Ciencias Sociales</p>
+                </div>
+                
+                <div class="fotocopiado-card" onclick="selectFotocopiado('ingenieria')">
+                    <div class="fotocopiado-icon">⚙️</div>
+                    <h3>Copiados Ingeniería</h3>
+                    <p>Facultad de Ingeniería</p>
+                </div>
+            </div>
+            
+            <div id="passwordSection" class="password-section" style="display: none;">
+                <div class="password-card">
+                    <h3 id="selectedFotocopiadoName">Fotocopiado Seleccionado</h3>
+                    <div class="password-input-group">
+                        <input type="password" id="passwordInput" placeholder="Ingresa la contraseña" class="password-input">
+                        <button onclick="login()" class="login-btn">Ingresar</button>
+                    </div>
+                    <button onclick="cancelLogin()" class="cancel-btn">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sistema de calculadora con header actualizado -->
+    <div id="calculatorScreen" class="calculadora-container" style="display: none;">
         <div class="calculadora-wrapper">
             <header class="calc-header">
                 <div class="calc-header-content">
                     <div class="calc-header-text">
-                        <h1>Calculadora de cobro</h1>
-                        <p>Sistema para empleados - Cálculo de impresiones</p>
+                        <h1 id="fotocopiadoTitle">Calculadora de cobro</h1>
+                        <p id="fotocopiadoSubtitle">Sistema para empleados - Cálculo de impresiones</p>
                     </div>
-                    <button id="calcThemeToggle" class="calc-theme-toggle" onclick="calcToggleTheme()" title="Cambiar tema">
-                        <span class="calc-theme-icon calc-sun-icon">☀️</span>
-                        <span class="calc-theme-icon calc-moon-icon">🌙</span>
-                    </button>
+                    <div class="header-controls">
+                        <button id="calcThemeToggle" class="calc-theme-toggle" onclick="calcToggleTheme()" title="Cambiar tema">
+                            <span class="calc-theme-icon calc-sun-icon">☀️</span>
+                            <span class="calc-theme-icon calc-moon-icon">🌙</span>
+                        </button>
+                        <button onclick="logout()" class="logout-btn" title="Cerrar sesión">
+                            <span>🚪</span> Salir
+                        </button>
+                    </div>
                 </div>
             </header>
 
