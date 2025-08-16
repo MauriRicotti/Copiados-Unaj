@@ -491,8 +491,6 @@ function calcCancelarVenta() {
 
     // Scroll al inicio
     window.scrollTo({ top: 0, behavior: "smooth" })
-
-    alert("Venta cancelada. Se ha reiniciado el formulario.")
   }
 }
 
@@ -600,6 +598,21 @@ function calcFinalizarVenta() {
 }
 
 function calcRestablecerVentas() {
+  // Primero pedir la contraseña
+  const password = prompt("Ingresa la contraseña de administrador para restablecer las ventas:")
+
+  // Verificar si se canceló o no se ingresó contraseña
+  if (password === null || password === "") {
+    return // Salir si se canceló o no se ingresó nada
+  }
+
+  // Verificar la contraseña (puedes cambiar "admin123" por la contraseña que prefieras)
+  if (password !== "admin123") {
+    alert("Contraseña incorrecta. No se puede restablecer el registro de ventas.")
+    return
+  }
+
+  // Si la contraseña es correcta, proceder con la confirmación original
   if (confirm("¿Estás seguro de que deseas restablecer todas las ventas del día?")) {
     const resetTimestamp = Date.now()
 
@@ -636,8 +649,6 @@ function calcRestablecerVentas() {
           console.error("[v0] Error sincronizando reset:", error)
         })
     }
-
-    alert("Las ventas han sido restablecidas correctamente")
   }
 }
 

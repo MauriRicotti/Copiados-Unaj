@@ -143,10 +143,9 @@ body {
 }
 
 .fotocopiado-card p {
-  /* Asegurar que el texto secundario use la variable CSS corregida */
   color: var(--text-secondary);
   font-size: 0.95rem;
-  font-weight: 500; /* Agregado peso de fuente para mejor legibilidad */
+  font-weight: 500;
 }
 
 /* Sección de contraseña inline */
@@ -421,7 +420,8 @@ body {
 
 .calc-select {
   width: 100%;
-  padding: 12px 16px;
+  /* Aumentando padding derecho para dar más espacio a la flecha desplegable */
+  padding: 12px 40px 12px 16px;
   border: 2px solid var(--border-color);
   border-radius: 8px;
   font-size: 1rem;
@@ -429,11 +429,18 @@ body {
   color: var(--text-primary);
   cursor: pointer;
   transition: border-color 0.3s ease;
+  /* Agregando appearance none para mejor control del estilo */
+  appearance: none;
+  /* Corrigiendo color de la flecha para que se adapte a los temas */
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23374151' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
 }
 
-.calc-select:focus {
-  outline: none;
-  border-color: #3b82f6;
+/* Agregando flecha específica para tema oscuro */
+[data-theme="dark"] .calc-select {
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
 }
 
 /* Botones */
@@ -684,7 +691,7 @@ body {
   text-align: center;
   z-index: 1000;
   pointer-events: none;
-  margin-top: -50px;
+  margin-top: 30px;
 }
 
 .login-screen ~ .watermark-footer,
