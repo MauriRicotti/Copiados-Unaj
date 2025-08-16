@@ -5,8 +5,7 @@
   --bg-card: #ffffff;
   --bg-card-header: #f9fafb;
   --text-primary: #333333;
-  /* Mejorado contraste del texto secundario en tema claro de #4b5563 a #374151 */
-  --text-secondary: #374151; /* Cambiado de #4b5563 para mejor contraste */
+  --text-secondary: #374151;
   --text-heading: #1f2937;
   --border-color: #e5e7eb;
   --border-light: #f3f4f6;
@@ -395,7 +394,7 @@ body {
 }
 
 .calc-input-small {
-  max-width: 120px;
+  max-width: 100%;
 }
 
 .calc-select {
@@ -724,7 +723,7 @@ body {
   /* Ajustando footer para móvil */
   .watermark-footer p {
     font-size: 0.7rem;
-    margin-top: 20px;
+    margin-top: 0px;
   }
 }
 
@@ -735,6 +734,7 @@ body {
 
   .fotocopiado-card {
     padding: 24px 16px;
+    margin-bottom: 15px;
   }
 
   .calc-card-content {

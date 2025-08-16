@@ -779,7 +779,7 @@ function calcFinalizarVenta() {
 
   console.log("[v0] Registro actualizado:", calcRegistroVentas)
 
-  calcGuardarDatos() // Esto ahora también sincroniza con Firebase inmediatamente
+  calcGuardarDatos()
   calcActualizarTabla()
 
   // Reset everything immediately
@@ -802,7 +802,7 @@ function calcRestablecerVentas() {
       transferencia: 0,
       ventas: [],
     }
-    calcGuardarDatos() // Esto también sincronizará el reset con Firebase
+    calcGuardarDatos()
     calcActualizarTabla()
     calcOcultarDetalles()
     alert("Todas las ventas han sido restablecidas.")
