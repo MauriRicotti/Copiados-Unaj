@@ -19,30 +19,49 @@
                 <div class="fotocopiado-card" onclick="selectFotocopiado('salud')">
                     <div class="fotocopiado-icon">🏥</div>
                     <h3>Copiados Salud</h3>
-                    <p>Facultad de Ciencias de la Salud</p>
+                    <p>Instituto de salud</p>
+                    <!-- Agregando sección de contraseña inline para cada perfil -->
+                    <div id="passwordSection-salud" class="password-section-inline" style="display: none;">
+                        <div class="password-card-inline">
+                            <div class="password-input-group">
+                                <input type="password" id="passwordInput-salud" placeholder="Ingresa la contraseña" class="password-input">
+                                <button onclick="login('salud')" class="login-btn">Ingresar</button>
+                            </div>
+                            <button onclick="cancelLogin('salud')" class="cancel-btn">Cancelar</button>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="fotocopiado-card" onclick="selectFotocopiado('sociales')">
                     <div class="fotocopiado-icon">👥</div>
                     <h3>Copiados Sociales</h3>
-                    <p>Facultad de Ciencias Sociales</p>
+                    <p>Instituto de Ciencias Sociales</p>
+                    <!-- Agregando sección de contraseña inline para cada perfil -->
+                    <div id="passwordSection-sociales" class="password-section-inline" style="display: none;">
+                        <div class="password-card-inline">
+                            <div class="password-input-group">
+                                <input type="password" id="passwordInput-sociales" placeholder="Ingresa la contraseña" class="password-input">
+                                <button onclick="login('sociales')" class="login-btn">Ingresar</button>
+                            </div>
+                            <button onclick="cancelLogin('sociales')" class="cancel-btn">Cancelar</button>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="fotocopiado-card" onclick="selectFotocopiado('ingenieria')">
                     <div class="fotocopiado-icon">⚙️</div>
                     <h3>Copiados Ingeniería</h3>
-                    <p>Facultad de Ingeniería</p>
-                </div>
-            </div>
-            
-            <div id="passwordSection" class="password-section" style="display: none;">
-                <div class="password-card">
-                    <h3 id="selectedFotocopiadoName">Fotocopiado Seleccionado</h3>
-                    <div class="password-input-group">
-                        <input type="password" id="passwordInput" placeholder="Ingresa la contraseña" class="password-input">
-                        <button onclick="login()" class="login-btn">Ingresar</button>
+                    <p>Instituto de Ingeniería</p>
+                    <!-- Agregando sección de contraseña inline para cada perfil -->
+                    <div id="passwordSection-ingenieria" class="password-section-inline" style="display: none;">
+                        <div class="password-card-inline">
+                            <div class="password-input-group">
+                                <input type="password" id="passwordInput-ingenieria" placeholder="Ingresa la contraseña" class="password-input">
+                                <button onclick="login('ingenieria')" class="login-btn">Ingresar</button>
+                            </div>
+                            <button onclick="cancelLogin('ingenieria')" class="cancel-btn">Cancelar</button>
+                        </div>
                     </div>
-                    <button onclick="cancelLogin()" class="cancel-btn">Cancelar</button>
                 </div>
             </div>
         </div>

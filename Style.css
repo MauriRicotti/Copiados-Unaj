@@ -489,6 +489,8 @@
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 24px;
   margin-bottom: 40px;
+  /* Cambiar align-items para evitar que las tarjetas se estiren */
+  align-items: start;
 }
 
 .fotocopiado-card {
@@ -500,8 +502,11 @@
   transition: all 0.3s ease;
   border: 2px solid var(--border-color);
   box-shadow: 0 4px 6px var(--shadow);
+  /* Asegurar que las tarjetas mantengan su altura natural */
+  height: fit-content;
 }
 
+/* Agregando estilos hover y selected que faltaban para las tarjetas */
 .fotocopiado-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 8px 25px var(--shadow);
@@ -578,6 +583,10 @@
   box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
 }
 
+.logout-btn:active {
+  transform: translateY(0);
+}
+
 /* Convertir password-section en modal verdadero con overlay */
 .password-section {
   position: fixed;
@@ -645,33 +654,54 @@
 }
 
 .password-card .calc-btn {
-  padding: 12px 24px;
-  font-size: 0.95rem;
-  font-weight: 500;
-  border-radius: 8px;
-  min-width: 100px;
-  transition: all 0.2s ease;
+  padding: 14px 28px;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 10px;
+  min-width: 120px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: none;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+  text-transform: none;
+  letter-spacing: 0.025em;
 }
 
 .password-card .calc-btn-primary {
-  background: #3b82f6;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: white;
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
 }
 
 .password-card .calc-btn-primary:hover {
-  background: #2563eb;
-  transform: translateY(-1px);
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.5);
+}
+
+.password-card .calc-btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
 }
 
 .password-card .calc-btn-secondary {
-  background: var(--bg-card-header);
+  background: linear-gradient(135deg, var(--bg-card-header) 0%, var(--hover-bg) 100%);
   color: var(--text-primary);
-  border: 1px solid var(--border-color);
+  border: 2px solid var(--border-color);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
 }
 
 .password-card .calc-btn-secondary:hover {
-  background: var(--hover-bg);
+  background: linear-gradient(135deg, var(--hover-bg) 0%, #f3f4f6 100%);
+  border-color: #9ca3af;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+.password-card .calc-btn-secondary:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
 }
 
 /* Responsive mejorado */
@@ -833,8 +863,9 @@
 
   .password-card .calc-btn {
     width: 100%;
-    padding: 12px 20px;
+    padding: 14px 24px;
     min-width: auto;
+    font-size: 1rem;
   }
 }
 
@@ -941,7 +972,151 @@
   }
 
   .password-card .calc-btn {
-    padding: 11px 18px;
+    padding: 13px 20px;
+    font-size: 0.95rem;
+  }
+}
+
+/* Agregando estilos para secciones de contraseña inline */
+.password-section-inline {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-color);
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mejorando diseño de la tarjeta inline de contraseña */
+.password-card-inline {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: none;
+  margin-top: 16px;
+}
+
+.password-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+  width: 100%;
+}
+
+/* Mejorando el campo de entrada de contraseña */
+.password-input-group .password-input {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 12px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  transition: all 0.2s ease;
+}
+
+.password-input-group .password-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.password-input-group .password-input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* Mejorando el botón de ingresar para evitar cortes */
+.password-input-group .login-btn {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.password-input-group .login-btn::before {
+  display: none;
+}
+
+.password-input-group .login-btn:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+.password-input-group .login-btn:active {
+  transform: translateY(0);
+}
+
+/* Mejorando el botón de cancelar */
+.password-card-inline .cancel-btn {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 0.9rem;
+  font-weight: 400;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.password-card-inline .cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.password-card-inline .cancel-btn:active {
+  transform: none;
+}
+
+/* Responsive para secciones inline */
+@media (max-width: 768px) {
+  .password-input-group {
+    gap: 12px;
+  }
+
+  .password-card-inline {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .password-card-inline {
+    padding: 14px;
+  }
+
+  .password-input-group .password-input,
+  .password-input-group .login-btn {
+    padding: 10px 14px;
     font-size: 0.9rem;
+  }
+
+  .password-card-inline .cancel-btn {
+    padding: 10px 16px;
+    font-size: 0.85rem;
   }
 }

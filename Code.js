@@ -36,7 +36,25 @@ const fotocopiados = {
 document.addEventListener("DOMContentLoaded", () => {
   calcCargarTema()
   checkExistingSession()
+  addOutsideClickListener()
 })
+
+function addOutsideClickListener() {
+  document.addEventListener("click", (event) => {
+    // Solo aplicar en la pantalla de login
+    const loginScreen = document.getElementById("loginScreen")
+    if (!loginScreen || loginScreen.style.display === "none") return
+
+    // Verificar si el clic fue fuera de las tarjetas de fotocopiado
+    const clickedCard = event.target.closest(".fotocopiado-card")
+    const clickedPasswordSection = event.target.closest(".password-section-inline")
+
+    // Si no se hizo clic en una tarjeta ni en una sección de contraseña, deseleccionar
+    if (!clickedCard && !clickedPasswordSection) {
+      cancelLogin()
+    }
+  })
+}
 
 function checkExistingSession() {
   const savedSession = localStorage.getItem("currentFotocopiado")
@@ -69,47 +87,72 @@ function showCalculatorScreen() {
 }
 
 function selectFotocopiado(tipo) {
-  // Limpiar selección anterior
+  document.querySelectorAll(".password-section-inline").forEach((section) => {
+    section.style.display = "none"
+  })
+
   document.querySelectorAll(".fotocopiado-card").forEach((card) => {
     card.classList.remove("selected")
   })
 
-  // Seleccionar nuevo fotocopiado
   event.target.closest(".fotocopiado-card").classList.add("selected")
   selectedFotocopiado = tipo
 
-  // Mostrar sección de contraseña
-  document.getElementById("passwordSection").style.display = "block"
-  document.getElementById("selectedFotocopiadoName").textContent = fotocopiados[tipo].name
-  document.getElementById("passwordInput").value = ""
-  document.getElementById("passwordInput").focus()
+  const passwordSection = document.getElementById(`passwordSection-${tipo}`)
+  const passwordInput = document.getElementById(`passwordInput-${tipo}`)
+
+  if (passwordSection && passwordInput) {
+    passwordSection.style.display = "block"
+    passwordInput.value = ""
+    passwordInput.focus()
+  }
 }
 
-function login() {
-  const password = document.getElementById("passwordInput").value
+function login(tipo = null) {
+  const fotocopiadoType = tipo || selectedFotocopiado
+  const password = document.getElementById(`passwordInput-${fotocopiadoType}`).value
 
-  if (!selectedFotocopiado) {
+  if (!fotocopiadoType) {
     alert("Por favor selecciona un fotocopiado")
     return
   }
 
-  if (password === fotocopiados[selectedFotocopiado].password) {
-    currentFotocopiado = selectedFotocopiado
+  if (password === fotocopiados[fotocopiadoType].password) {
+    currentFotocopiado = fotocopiadoType
     localStorage.setItem("currentFotocopiado", currentFotocopiado)
     showCalculatorScreen()
   } else {
     alert("Contraseña incorrecta")
-    document.getElementById("passwordInput").value = ""
-    document.getElementById("passwordInput").focus()
+    const passwordInput = document.getElementById(`passwordInput-${fotocopiadoType}`)
+    if (passwordInput) {
+      passwordInput.value = ""
+      passwordInput.focus()
+    }
   }
 }
 
-function cancelLogin() {
-  selectedFotocopiado = null
-  document.getElementById("passwordSection").style.display = "none"
-  document.querySelectorAll(".fotocopiado-card").forEach((card) => {
-    card.classList.remove("selected")
-  })
+function cancelLogin(tipo = null) {
+  if (tipo) {
+    const passwordSection = document.getElementById(`passwordSection-${tipo}`)
+    if (passwordSection) {
+      passwordSection.style.display = "none"
+    }
+    // Remover selección de la tarjeta específica
+    document.querySelectorAll(".fotocopiado-card").forEach((card) => {
+      if (card.onclick.toString().includes(tipo)) {
+        card.classList.remove("selected")
+      }
+    })
+  } else {
+    // Comportamiento original para compatibilidad
+    selectedFotocopiado = null
+    document.querySelectorAll(".password-section-inline").forEach((section) => {
+      section.style.display = "none"
+    })
+    document.querySelectorAll(".fotocopiado-card").forEach((card) => {
+      card.classList.remove("selected")
+    })
+  }
 }
 
 function logout() {
@@ -609,7 +652,12 @@ document.addEventListener("change", (e) => {
 })
 
 document.addEventListener("keypress", (e) => {
-  if (e.key === "Enter" && document.getElementById("passwordInput") === document.activeElement) {
-    login()
+  if (e.key === "Enter") {
+    // Buscar si el elemento activo es un input de contraseña
+    const activeElement = document.activeElement
+    if (activeElement && activeElement.id && activeElement.id.startsWith("passwordInput-")) {
+      const tipo = activeElement.id.replace("passwordInput-", "")
+      login(tipo)
+    }
   }
 })
