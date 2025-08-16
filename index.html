@@ -111,12 +111,13 @@
                         <p id="fotocopiadoSubtitle">Sistema para empleados - Cálculo de impresiones</p>
                     </div>
                     <div class="header-controls">
+                        <!-- Simplificando estructura del botón de tema -->
                         <button id="calcThemeToggle" class="calc-theme-toggle" onclick="calcToggleTheme()" title="Cambiar tema">
-                            <span class="calc-theme-icon calc-sun-icon">☀️</span>
-                            <span class="calc-theme-icon calc-moon-icon">🌙</span>
+                            <span class="calc-theme-icon calc-sun-icon"></span>
+                            <span class="calc-theme-icon calc-moon-icon"></span>
                         </button>
                         <button onclick="logout()" class="logout-btn" title="Cerrar sesión">
-                            <span>🚪</span> Salir
+                            <span></span> Salir
                         </button>
                     </div>
                 </div>
@@ -160,9 +161,15 @@
 
                 <!-- Botón calcular total -->
                 <div style="text-align: center; margin: 30px 0;">
-                    <button onclick="calcCalcularTotal()" class="calc-btn calc-btn-primary" style="padding: 16px 32px; font-size: 1.1rem;">
-                       Calcular Total
-                    </button>
+                    <!-- Agregando contenedor flex para botones Calcular Total y Cancelar Venta -->
+                    <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+                        <button onclick="calcCalcularTotal()" class="calc-btn calc-btn-primary" style="padding: 16px 32px; font-size: 1.1rem;">
+                           Calcular Total
+                        </button>
+                        <button onclick="calcCancelarVenta()" class="calc-btn calc-btn-secondary" style="padding: 16px 32px; font-size: 1.1rem;">
+                           Cancelar Venta
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Resultado y pago -->
@@ -239,8 +246,9 @@
                                 <td>Efectivo</td>
                                 <td style="text-align: right; font-family: monospace; font-size: 1.1rem;" id="calcTotalEfectivo">$0</td>
                                 <td style="text-align: center;">
+                                    <!-- Cambiando "Ver" por "Ver detalles" para consistencia -->
                                     <button onclick="calcMostrarDetalles('efectivo')" class="calc-btn calc-btn-outline" style="padding: 6px 12px; font-size: 0.9rem;">
-                                        Ver (<span id="calcCountEfectivo">0</span>)
+                                        Ver detalles (<span id="calcCountEfectivo">0</span>)
                                     </button>
                                 </td>
                             </tr>
@@ -249,7 +257,7 @@
                                 <td style="text-align: right; font-family: monospace; font-size: 1.1rem;" id="calcTotalTransferencia">$0</td>
                                 <td style="text-align: center;">
                                     <button onclick="calcMostrarDetalles('transferencia')" class="calc-btn calc-btn-outline" style="padding: 6px 12px; font-size: 0.9rem;">
-                                        Ver (<span id="calcCountTransferencia">0</span>)
+                                        Ver detalles (<span id="calcCountTransferencia">0</span>)
                                     </button>
                                 </td>
                             </tr>

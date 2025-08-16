@@ -645,6 +645,30 @@ function calcCalcularTotal() {
   document.getElementById("calcPagoContainer").scrollIntoView({ behavior: "smooth" })
 }
 
+function calcCancelarVenta() {
+  if (confirm("¿Estás seguro de que quieres cancelar la venta actual? Se perderán todos los archivos agregados.")) {
+    // Limpiar container de archivos
+    document.getElementById("calcArchivosContainer").innerHTML = ""
+
+    // Ocultar sección de pago si está visible
+    document.getElementById("calcPagoContainer").style.display = "none"
+
+    // Reset variables
+    calcArchivos = []
+    calcContadorArchivos = 0
+    calcTotal = 0
+    calcMetodoPago = null
+
+    // Agregar un archivo inicial
+    calcAgregarArchivo()
+
+    // Scroll al inicio
+    window.scrollTo({ top: 0, behavior: "smooth" })
+
+    alert("Venta cancelada. Se ha reiniciado el formulario.")
+  }
+}
+
 function calcSeleccionarMetodo(metodo) {
   const efectivoCheck = document.getElementById("calcEfectivo")
   const transferenciaCheck = document.getElementById("calcTransferencia")
