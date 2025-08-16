@@ -966,13 +966,10 @@ function addOutsideClickListener() {
 }
 
 function checkExistingSession() {
-  const savedSession = localStorage.getItem("currentFotocopiado")
-  if (savedSession && fotocopiados[savedSession]) {
-    currentFotocopiado = savedSession
-    showCalculatorScreen()
-  } else {
-    showLoginScreen()
-  }
+  // Clear any existing session to ensure fresh data sync
+  localStorage.removeItem("currentFotocopiado")
+  currentFotocopiado = null
+  showLoginScreen()
 }
 
 function showLoginScreen() {
