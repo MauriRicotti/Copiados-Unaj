@@ -1551,3 +1551,95 @@ function calcActualizarTabla() {
   document.getElementById("calcCountTransferenciaMobile").textContent = (calcRegistroVentas.ventas || []).filter(v => v.metodoPago === "transferencia").length;
   document.getElementById("calcTotalVentasMobile").textContent = `${(calcRegistroVentas.ventas || []).length} ventas`;
 }
+
+function actualizarRegistroVentas() {
+  loadFromFirebase().then(() => {
+    calcActualizarTabla();
+    showSyncNotification("Registro actualizado correctamente.");
+  });
+}
+
+function calcMostrarDetalles(metodo) {
+  const container = document.getElementById("calcDetallesContainer");
+  const content = document.getElementById("calcDetallesContent");
+  const title = document.getElementById("calcDetallesTitle");
+
+  if (!container || !content || !title) return;
+
+  // Filtrar ventas por método
+  const ventas = (calcRegistroVentas.ventas || []).filter(v => v.metodoPago === metodo);
+
+  title.textContent = `Detalles de Ventas (${metodo.charAt(0).toUpperCase() + metodo.slice(1)})`;
+  content.innerHTML = "";
+
+  if (ventas.length === 0) {
+    content.innerHTML = "<div style='color: var(--text-secondary); text-align: center;'>No hay ventas registradas.</div>";
+  } else {
+    ventas.forEach((v, idx) => {
+      const archivos = v.archivos.map(a => 
+        `<li>${a.paginas} pág × ${a.copias} copias (${a.color === "color" ? "Color" : "BN"})</li>`
+      ).join("");
+      content.innerHTML += `
+        <div class="calc-venta-item" id="venta-${v.id}">
+          <ul>
+            <li><strong>Fecha:</strong> ${v.fecha} ${v.hora}</li>
+            <li><strong>Total:</strong> $${v.total}</li>
+            <li><strong>Archivos:</strong>
+              <ul>${archivos}</ul>
+            </li>
+          </ul>
+          <div style="display:flex; gap:12px; margin-top:12px;">
+            <button class="calc-btn calc-btn-danger" onclick="eliminarVenta('${v.id}')">Eliminar venta</button>
+            <button class="calc-btn calc-btn-secondary" onclick="cambiarMetodoVenta('${v.id}')">Cambiar método de pago</button>
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  container.style.display = "block";
+}
+
+// Eliminar venta por ID
+function eliminarVenta(ventaId) {
+  if (!confirm("¿Seguro que deseas eliminar esta venta?")) return;
+  const idx = calcRegistroVentas.ventas.findIndex(v => v.id === ventaId);
+  if (idx === -1) return;
+
+  // Actualizar totales
+  const venta = calcRegistroVentas.ventas[idx];
+  if (venta.metodoPago === "efectivo") {
+    calcRegistroVentas.efectivo -= venta.total;
+  } else {
+    calcRegistroVentas.transferencia -= venta.total;
+  }
+
+  calcRegistroVentas.ventas.splice(idx, 1);
+  calcGuardarDatos();
+  calcActualizarTabla();
+  calcOcultarDetalles();
+  showSyncNotification("Venta eliminada correctamente.");
+}
+
+// Cambiar método de pago por ID
+function cambiarMetodoVenta(ventaId) {
+  const idx = calcRegistroVentas.ventas.findIndex(v => v.id === ventaId);
+  if (idx === -1) return;
+
+  const venta = calcRegistroVentas.ventas[idx];
+  // Actualizar totales
+  if (venta.metodoPago === "efectivo") {
+    calcRegistroVentas.efectivo -= venta.total;
+    calcRegistroVentas.transferencia += venta.total;
+    venta.metodoPago = "transferencia";
+  } else {
+    calcRegistroVentas.transferencia -= venta.total;
+    calcRegistroVentas.efectivo += venta.total;
+    venta.metodoPago = "efectivo";
+  }
+
+  calcGuardarDatos();
+  calcActualizarTabla();
+  calcOcultarDetalles();
+  showSyncNotification("Método de pago cambiado correctamente.");
+}
