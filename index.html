@@ -356,24 +356,27 @@
     <div id="calcComparativaScreen" class="calculadora-container" style="display: none;">
         <div class="calculadora-wrapper">
             <header class="calc-header">
-                <div class="calc-header-content">
-                    <div class="calc-header-text">
-                        <h1>Comparativa entre Institutos</h1>
-                        <p>Análisis de ventas y rendimiento por fotocopiado</p>
-                    </div>
-                    <div class="header-controls">
-                        <button onclick="calcActualizarComparativa()" class="calc-btn calc-btn-primary" title="Actualizar datos">
-                            Actualizar
-                        </button>
-                        <button id="calcThemeToggleComp" class="calc-theme-toggle" onclick="calcToggleTheme()" title="Cambiar tema">
-                            <span id="themeTextComp" class="calc-theme-text">🌙 Oscuro</span>
-                        </button>
-                        <button onclick="calcVolverDesdeComparativa()" class="calc-btn calc-btn-secondary" title="Volver">
-                            Volver
-                        </button>
-                    </div>
-                </div>
-            </header>
+    <div class="calc-header-content">
+        <div class="calc-header-text">
+            <h1>Comparativa entre Institutos</h1>
+            <p>Análisis de ventas y rendimiento por fotocopiado</p>
+        </div>
+        <div class="header-controls">
+            <button onclick="calcActualizarComparativa()" class="calc-btn calc-btn-primary" title="Actualizar datos">
+                Actualizar
+            </button>
+            <button onclick="calcExportarEstadisticasPDF()" class="calc-btn calc-btn-outline" title="Exportar estadísticas a PDF">
+                Exportar
+            </button>
+            <button id="calcThemeToggleComp" class="calc-theme-toggle" onclick="calcToggleTheme()" title="Cambiar tema">
+                <span id="themeTextComp" class="calc-theme-text">🌙 Oscuro</span>
+            </button>
+            <button onclick="calcVolverDesdeComparativa()" class="calc-btn calc-btn-secondary" title="Volver">
+                Volver
+            </button>
+        </div>
+    </div>
+</header>
 
             <!-- Cards de resumen -->
             <div class="calc-grid calc-grid-cols-3" style="margin-bottom: 32px;">

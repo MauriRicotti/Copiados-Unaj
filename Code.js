@@ -1443,55 +1443,142 @@ function calcExportarExcel() {
 }
 
 function calcExportarPDF() {
-  const ahora = new Date()
-  const mes = ahora.toLocaleString("es-ES", { month: "long" })
-  const año = ahora.getFullYear()
-  const fechaHoy = ahora.toLocaleDateString("es-ES")
-  const nombreCopiado = calcInstitutos[currentFotocopiado]?.name || "Copiado"
+  // Datos principales
+  const ahora = new Date();
+  const mes = ahora.toLocaleString("es-ES", { month: "long" });
+  const año = ahora.getFullYear();
+  const nombreCopiado = calcInstitutos[currentFotocopiado]?.name || "Copiado";
 
-  // Obtener ventas por método
-  const ventasEfectivo = (calcRegistroVentas.ventas || []).filter(v => v.metodoPago === "efectivo").map(v => v.total)
-  const ventasTransferencia = (calcRegistroVentas.ventas || []).filter(v => v.metodoPago === "transferencia").map(v => v.total)
-  const maxFilas = Math.max(ventasEfectivo.length, ventasTransferencia.length, 1) // Siempre al menos una fila
+  // Obtener ventas
+  const ventas = calcRegistroVentas.ventas || [];
+  const totalEfectivo = ventas.filter(v => v.metodoPago === 'efectivo').reduce((acc, v) => acc + v.total, 0);
+  const totalTransferencia = ventas.filter(v => v.metodoPago === 'transferencia').reduce((acc, v) => acc + v.total, 0);
+  const totalGeneral = totalEfectivo + totalTransferencia;
 
-  // Construir filas de ventas
-  const filasVentas = []
+  // Crear PDF
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFontSize(16);
+  doc.text(`Registro de Ventas - ${nombreCopiado}`, 14, 18);
+  doc.setFontSize(12);
+  doc.text(`Mes: ${mes.charAt(0).toUpperCase() + mes.slice(1)} ${año}`, 14, 26);
+
+  // Preparar datos para la tabla principal
+  const ventasEfectivo = ventas.filter(v => v.metodoPago === 'efectivo').map(v => `$${v.total}`);
+  const ventasTransferencia = ventas.filter(v => v.metodoPago === 'transferencia').map(v => `$${v.total}`);
+  const maxFilas = Math.max(ventasEfectivo.length, ventasTransferencia.length);
+  const tablaVentas = [];
   for (let i = 0; i < maxFilas; i++) {
-    filasVentas.push([
-      ventasEfectivo[i] !== undefined ? `$${ventasEfectivo[i]}` : "",
-      ventasTransferencia[i] !== undefined ? `$${ventasTransferencia[i]}` : ""
-    ])
+    tablaVentas.push([
+      ventasEfectivo[i] || '',
+      ventasTransferencia[i] || ''
+    ]);
   }
 
-  // Totales
-  const totalEfectivo = ventasEfectivo.reduce((a, b) => a + (parseFloat(b) || 0), 0)
-  const totalTransferencia = ventasTransferencia.reduce((a, b) => a + (parseFloat(b) || 0), 0)
-  const totalGeneral = totalEfectivo + totalTransferencia
-
-  // Tabla para PDF
-  const tablaPDF = [
-    ...filasVentas,
-    ["", ""],
-    ["Total Efectivo", "Total Transferencia", "Total General"],
-    [`$${totalEfectivo}`, `$${totalTransferencia}`, `$${totalGeneral}`]
-  ]
-
-  const doc = new window.jspdf.jsPDF()
-  doc.setFontSize(18)
-  doc.text(`Registro de ventas: ${nombreCopiado}`, 14, 22)
-  doc.setFontSize(12)
-  doc.text(`Mes: ${mes.charAt(0).toUpperCase() + mes.slice(1)}   Año: ${año}`, 14, 32)
-  doc.text(`Desde: ${fechaHoy}   Hasta: ${fechaHoy}`, 14, 40)
-
+  let y = 36;
+  doc.setFontSize(13);
+  doc.text('Ventas:', 14, y);
+  y += 8;
   doc.autoTable({
-    head: [["Efectivo", "Transferencia"]],
-    body: tablaPDF,
-    startY: 50,
+    head: [['Efectivo', 'Transferencia']],
+    body: tablaVentas,
+    startY: y,
+    theme: 'grid',
     styles: { fontSize: 12 },
     headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' },
     bodyStyles: { fillColor: [245, 245, 245] }
-  })
+  });
+  y = doc.lastAutoTable.finalY + 10;
 
-  const nombreArchivo = `${nombreCopiado.replace(/\s/g, "_")}_${mes}_${año}.pdf`
+  // Tabla de totales
+  doc.setFontSize(13);
+  doc.text('Totales:', 14, y);
+  y += 8;
+  doc.autoTable({
+    head: [['Concepto', 'Monto']],
+    body: [
+      ['Total ventas en efectivo', `$${totalEfectivo}`],
+      ['Total ventas en transferencia', `$${totalTransferencia}`],
+      ['Total general', `$${totalGeneral}`]
+    ],
+    startY: y,
+    theme: 'grid',
+    styles: { fontSize: 12 },
+    headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold' },
+    bodyStyles: { fillColor: [245, 245, 245] }
+  });
+
+  // Guardar PDF
+  doc.save(`RegistroVentas_${nombreCopiado}_${mes}_${año}.pdf`);
+}
+
+function calcExportarEstadisticasPDF() {
+  const ahora = new Date()
+  const mes = ahora.toLocaleString("es-ES", { month: "long" })
+  const año = ahora.getFullYear()
+  const nombreArchivo = `Estadisticas_copiados_${mes}_${año}.pdf`
+
+  const doc = new window.jspdf.jsPDF("p", "mm", "a4")
+  doc.setFontSize(18)
+  doc.text(`Estadísticas de Copiados UNAJ`, 14, 22)
+  doc.setFontSize(12)
+  doc.text(`Mes: ${mes.charAt(0).toUpperCase() + mes.slice(1)}   Año: ${año}`, 14, 32)
+
+  // Resumen general desde DOM
+  const totalGeneral = document.getElementById("calcTotalGeneralComp")?.textContent || "$0"
+  const institutoLider = document.getElementById("calcInstitutoLider")?.textContent || "-"
+  const ventasTotales = document.getElementById("calcVentasTotales")?.textContent || "0"
+
+  doc.text(`Total General: ${totalGeneral}`, 14, 42)
+  doc.text(`Instituto Líder: ${institutoLider}`, 14, 50)
+  doc.text(`Ventas Totales: ${ventasTotales}`, 14, 58)
+
+  // Detalles por instituto desde DOM
+  const grid = document.getElementById("calcDetallesGrid")
+  if (grid) {
+    let tabla = [["Instituto", "Total de Ingresos", "Ventas en Efectivo", "Ventas por Transferencia", "Número de Ventas", "Promedio por Venta"]]
+    const cards = grid.querySelectorAll(".calc-detail-card")
+    cards.forEach(card => {
+      const nombre = card.querySelector("h4")?.textContent?.trim() || ""
+      const stats = card.querySelectorAll(".calc-detail-stat span:last-child")
+      tabla.push([
+        nombre,
+        stats[0]?.textContent?.trim() || "",
+        stats[1]?.textContent?.trim() || "",
+        stats[2]?.textContent?.trim() || "",
+        stats[3]?.textContent?.trim() || "",
+        stats[4]?.textContent?.trim() || ""
+      ])
+    })
+    doc.autoTable({
+      head: [tabla[0]],
+      body: tabla.slice(1),
+      startY: 65,
+      styles: { fontSize: 11 },
+      headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' },
+      bodyStyles: { fillColor: [245, 245, 245] }
+    })
+  }
+
+  // Graficos: capturar canvas y agregar como imagen
+  let yOffset = doc.lastAutoTable?.finalY ? doc.lastAutoTable.finalY + 10 : 90
+  const chartIngresos = document.getElementById("calcChartIngresos")
+  const chartMetodos = document.getElementById("calcChartMetodos")
+
+  if (chartIngresos) {
+    const imgIngresos = chartIngresos.toDataURL("image/png", 1.0)
+    doc.setFontSize(13)
+    doc.text("Ingresos por Instituto", 14, yOffset)
+    doc.addImage(imgIngresos, "PNG", 14, yOffset + 3, 180, 60)
+    yOffset += 68
+  }
+  if (chartMetodos) {
+    const imgMetodos = chartMetodos.toDataURL("image/png", 1.0)
+    doc.setFontSize(13)
+    doc.text("Métodos de Pago", 14, yOffset)
+    doc.addImage(imgMetodos, "PNG", 14, yOffset + 3, 180, 60)
+    yOffset += 68
+  }
+
   doc.save(nombreArchivo)
 }
