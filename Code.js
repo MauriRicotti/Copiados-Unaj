@@ -664,148 +664,99 @@ function calcRestablecerVentas() {
   }
 }
 
-function calcCambiarMetodoPago(ventaId, nuevoMetodo) {
-  const venta = calcRegistroVentas.ventas.find((v) => v.id === ventaId)
-  if (!venta) return
-
-  const metodoAnterior = venta.metodoPago
-  const montoVenta = venta.total
-
-  // Actualizar totales
-  if (metodoAnterior === "efectivo") {
-    calcRegistroVentas.efectivo -= montoVenta
-  } else {
-    calcRegistroVentas.transferencia -= montoVenta
+// Restablecer ventas con backup en Firebase
+async function calcRestablecerVentas() {
+  const password = prompt("Ingresa la contraseña de administrador para restablecer las ventas:");
+  if (password === null || password === "") return;
+  if (password !== "admin123") {
+    alert("Contraseña incorrecta. No se puede restablecer el registro de ventas.");
+    return;
   }
 
-  if (nuevoMetodo === "efectivo") {
-    calcRegistroVentas.efectivo += montoVenta
-  } else {
-    calcRegistroVentas.transferencia += montoVenta
+  // Backup antes de borrar
+  if (isFirebaseEnabled && database && currentFotocopiado) {
+    try {
+      const ventasRef = window.firebaseRef(database, `fotocopiados/${currentFotocopiado}`);
+      const backupRef = window.firebaseRef(database, `backups/${currentFotocopiado}/${Date.now()}`);
+      const snapshot = await window.firebaseGet(ventasRef);
+      if (snapshot.exists()) {
+        await window.firebaseSet(backupRef, snapshot.val());
+      }
+    } catch (error) {
+      console.error("Error guardando backup en Firebase:", error);
+    }
   }
 
-  // Actualizar venta
-  venta.metodoPago = nuevoMetodo
+  if (confirm("¿Estás seguro de que deseas restablecer todas las ventas del día?")) {
+    const resetTimestamp = Date.now();
+    calcRegistroVentas = {
+      efectivo: 0,
+      transferencia: 0,
+      ventas: [],
+      resetTimestamp: resetTimestamp,
+      isReset: true,
+    };
+    calcGuardarDatosLocal();
+    calcActualizarTabla();
 
-  calcGuardarDatos() // Esto también sincronizará el cambio con Firebase
-  calcActualizarTabla()
-
-  // Actualizar vista de detalles si está abierta
-  const detallesContainer = document.getElementById("calcDetallesContainer")
-  if (detallesContainer.style.display !== "none") {
-    calcOcultarDetalles()
+    if (isFirebaseEnabled && database && currentFotocopiado) {
+      const fotocopiadoRef = window.firebaseRef(database, `fotocopiados/${currentFotocopiado}`);
+      const resetData = {
+        efectivo: 0,
+        transferencia: 0,
+        ventas: [],
+        resetTimestamp: resetTimestamp,
+        isReset: true,
+        lastUpdated: resetTimestamp,
+        deviceId: deviceId,
+      };
+      window.firebaseSet(fotocopiadoRef, resetData)
+        .then(() => {
+          updateSyncStatus("🟢", "Ventas restablecidas y sincronizadas");
+        })
+        .catch((error) => {
+          console.error("Error sincronizando reset:", error);
+        });
+    }
   }
 }
 
-function calcActualizarTabla() {
-  const ventasEfectivo = calcRegistroVentas.ventas.filter((v) => v.metodoPago === "efectivo")
-  const ventasTransferencia = calcRegistroVentas.ventas.filter((v) => v.metodoPago === "transferencia")
-
-  // Desktop
-  document.getElementById("calcTotalEfectivo").textContent = `$${calcRegistroVentas.efectivo.toLocaleString()}`
-  document.getElementById("calcTotalTransferencia").textContent =
-    `$${calcRegistroVentas.transferencia.toLocaleString()}`
-  document.getElementById("calcTotalGeneral").textContent =
-    `$${(calcRegistroVentas.efectivo + calcRegistroVentas.transferencia).toLocaleString()}`
-  document.getElementById("calcCountEfectivo").textContent = ventasEfectivo.length
-  document.getElementById("calcCountTransferencia").textContent = ventasTransferencia.length
-  document.getElementById("calcTotalVentas").textContent = `${calcRegistroVentas.ventas.length} ventas`
-
-  // Mobile
-  document.getElementById("calcTotalEfectivoMobile").textContent = `$${calcRegistroVentas.efectivo.toLocaleString()}`
-  document.getElementById("calcTotalTransferenciaMobile").textContent =
-    `$${calcRegistroVentas.transferencia.toLocaleString()}`
-  document.getElementById("calcTotalGeneralMobile").textContent =
-    `$${(calcRegistroVentas.efectivo + calcRegistroVentas.transferencia).toLocaleString()}`
-  document.getElementById("calcCountEfectivoMobile").textContent = ventasEfectivo.length
-  document.getElementById("calcCountTransferenciaMobile").textContent = ventasTransferencia.length
-  document.getElementById("calcTotalVentasMobile").textContent = `${calcRegistroVentas.ventas.length} ventas`
-}
-
-function calcMostrarDetalles(metodo) {
-  const ventas = calcRegistroVentas.ventas.filter((v) => v.metodoPago === metodo)
-  const container = document.getElementById("calcDetallesContainer")
-  const content = document.getElementById("calcDetallesContent")
-  const title = document.getElementById("calcDetallesTitle")
-
-  title.textContent = `Detalles de Ventas - ${metodo === "efectivo" ? "Efectivo" : "Transferencia"}`
-
-  if (ventas.length === 0) {
-    content.innerHTML = `
-            <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
-                No hay ventas registradas para este método de pago.
-            </div>
-        `
-  } else {
-    content.innerHTML = ventas
-      .map(
-        (venta) => `
-            <div class="calc-venta-item">
-                <div class="calc-flex-between" style="margin-bottom: 12px;">
-                    <div>
-                        <span style="font-size: 1.2rem; font-weight: 600;">$${venta.total}</span>
-                        <span style="font-size: 0.9rem; color: var(--text-secondary); margin-left: 12px;">
-                            ${venta.fecha} - ${venta.hora}
-                        </span>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <div class="calc-badge">B/N: $${venta.precioHojaBN || venta.precioHoja || 40}</div>
-                        <div class="calc-badge">Color: $${venta.precioHojaColor || 80}</div>
-                        <button onclick="if(confirm('¿Cambiar método de pago a ${venta.metodoPago === "efectivo" ? "transferencia" : "efectivo"}?')) calcCambiarMetodoPago('${venta.id}', '${venta.metodoPago === "efectivo" ? "transferencia" : "efectivo"}')" class="calc-btn calc-btn-outline" style="padding: 4px 8px; font-size: 0.8rem;">
-                            Cambiar
-                        </button>
-                        <button onclick="calcEliminarVenta('${venta.id}')" class="calc-btn calc-btn-danger" style="padding: 4px 8px; font-size: 0.8rem;">
-                            Eliminar
-                        </button>
-                    </div>
-                </div>
-                <div style="font-size: 0.9rem; color: var(--text-secondary);">
-                    <strong>Archivos:</strong>
-                    <ul style="margin-top: 8px; margin-left: 20px;">
-                        ${venta.archivos
-                          .map((archivo) => {
-                            const paginasPorCarilla = Number.parseInt(archivo.tipo) || 1
-                            const hojas = Math.ceil(archivo.paginas / paginasPorCarilla)
-                            const tipoLabel = archivo.tipo === "1" ? "Simple/Doble faz" : `${paginasPorCarilla} pág/carilla`
-                            const colorLabel = archivo.color === "color" ? "Color" : "B/N"
-                            const precioUsado =
-                              archivo.color === "color"
-                                ? venta.precioHojaColor || 80
-                                : venta.precioHojaBN || venta.precioHoja || 40
-                            return `<li style="margin-bottom: 4px;">• ${archivo.paginas} páginas × ${archivo.copias} copias (${tipoLabel} - ${colorLabel}) = $${hojas * precioUsado * archivo.copias}</li>`
-                          })
-                          .join("")}
-                    </ul>
-                </div>
-            </div>
-        `,
-      )
-      .join("")
+// Recuperar el último backup desde Firebase
+async function calcRecuperarBackup() {
+  if (!isFirebaseEnabled || !database || !currentFotocopiado) {
+    alert("Firebase no está disponible.");
+    return;
   }
-
-  container.style.display = "block"
-  container.scrollIntoView({ behavior: "smooth" })
-}
-
-function calcEliminarVenta(ventaId) {
-  const venta = calcRegistroVentas.ventas.find((v) => v.id === ventaId)
-  if (!venta) return
-
-  if (!confirm("¿Seguro que deseas eliminar esta venta? Esta acción no se puede deshacer.")) return
-
-  // Actualizar totales
-  if (venta.metodoPago === "efectivo") {
-    calcRegistroVentas.efectivo -= venta.total
-  } else {
-    calcRegistroVentas.transferencia -= venta.total
+  try {
+    const backupsRef = window.firebaseRef(database, `backups/${currentFotocopiado}`);
+    const snapshot = await window.firebaseGet(backupsRef);
+    if (snapshot.exists()) {
+      const backups = snapshot.val();
+      const timestamps = Object.keys(backups).sort((a, b) => b - a);
+      const ultimoBackup = backups[timestamps[0]];
+      if (!ultimoBackup) {
+        alert("No hay backup disponible.");
+        return;
+      }
+      // Restaurar ventas en Firebase y local
+      const ventasRef = window.firebaseRef(database, `fotocopiados/${currentFotocopiado}`);
+      await window.firebaseSet(ventasRef, ultimoBackup);
+      calcRegistroVentas = {
+        efectivo: ultimoBackup.efectivo || 0,
+        transferencia: ultimoBackup.transferencia || 0,
+        ventas: ultimoBackup.ventas || [],
+        resetTimestamp: ultimoBackup.resetTimestamp || Date.now(),
+      };
+      calcGuardarDatosLocal();
+      calcActualizarTabla();
+      alert("Backup restaurado correctamente y sincronizado.");
+    } else {
+      alert("No hay backup disponible.");
+    }
+  } catch (error) {
+    console.error("Error restaurando backup:", error);
+    alert("Error al restaurar el backup.");
   }
-
-  // Eliminar del array
-  calcRegistroVentas.ventas = calcRegistroVentas.ventas.filter((v) => v.id !== ventaId)
-
-  calcGuardarDatos()
-  calcActualizarTabla()
-  calcMostrarDetalles(venta.metodoPago) // Actualiza la vista actual
 }
 
 // Funciones para la comparativa entre institutos
@@ -1581,4 +1532,22 @@ function calcExportarEstadisticasPDF() {
   }
 
   doc.save(nombreArchivo)
+}
+
+function calcActualizarTabla() {
+  // Actualizar totales
+  document.getElementById("calcTotalEfectivo").textContent = `$${calcRegistroVentas.efectivo || 0}`;
+  document.getElementById("calcTotalTransferencia").textContent = `$${calcRegistroVentas.transferencia || 0}`;
+  document.getElementById("calcTotalGeneral").textContent = `$${(calcRegistroVentas.efectivo + calcRegistroVentas.transferencia) || 0}`;
+  document.getElementById("calcCountEfectivo").textContent = (calcRegistroVentas.ventas || []).filter(v => v.metodoPago === "efectivo").length;
+  document.getElementById("calcCountTransferencia").textContent = (calcRegistroVentas.ventas || []).filter(v => v.metodoPago === "transferencia").length;
+  document.getElementById("calcTotalVentas").textContent = `${(calcRegistroVentas.ventas || []).length} ventas`;
+
+  // Actualizar versión móvil
+  document.getElementById("calcTotalEfectivoMobile").textContent = `$${calcRegistroVentas.efectivo || 0}`;
+  document.getElementById("calcTotalTransferenciaMobile").textContent = `$${calcRegistroVentas.transferencia || 0}`;
+  document.getElementById("calcTotalGeneralMobile").textContent = `$${(calcRegistroVentas.efectivo + calcRegistroVentas.transferencia) || 0}`;
+  document.getElementById("calcCountEfectivoMobile").textContent = (calcRegistroVentas.ventas || []).filter(v => v.metodoPago === "efectivo").length;
+  document.getElementById("calcCountTransferenciaMobile").textContent = (calcRegistroVentas.ventas || []).filter(v => v.metodoPago === "transferencia").length;
+  document.getElementById("calcTotalVentasMobile").textContent = `${(calcRegistroVentas.ventas || []).length} ventas`;
 }

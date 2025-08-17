@@ -1098,3 +1098,28 @@ body {
   background: var(--hover-bg);
   border-color: #3b82f6;
 }
+
+.btn-backup-minimal {
+  background: transparent;
+  color: var(--text-secondary);
+  border: none;
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 500;
+  box-shadow: none;
+  transition: background 0.2s, color 0.2s;
+}
+
+.btn-backup-minimal:hover,
+.btn-backup-minimal:focus {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+}
+
+@media (max-width: 600px) {
+  .calc-btn-danger + .btn-backup-minimal {
+    margin-top: 10px;
+    display: block;
+    width: 100%;
+  }
+}
