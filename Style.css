@@ -862,6 +862,42 @@ body {
   border-bottom-right-radius: 8px;
 }
 
+/* Animación de fade-in y slide para pantallas principales */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeOutDown {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(40px); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.animated-fadeInUp {
+  animation: fadeInUp 0.5s cubic-bezier(.4,0,.2,1);
+}
+.animated-fadeOutDown {
+  animation: fadeOutDown 0.4s cubic-bezier(.4,0,.2,1);
+}
+.animated-fadeIn {
+  animation: fadeIn 0.4s cubic-bezier(.4,0,.2,1);
+}
+.animated-fadeOut {
+  animation: fadeOut 0.3s cubic-bezier(.4,0,.2,1);
+}
+
+/* Opcional: para evitar interacción durante animación de salida */
+.animating {
+  pointer-events: none;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .login-header h1 {
@@ -1122,4 +1158,24 @@ body {
     display: block;
     width: 100%;
   }
+}
+
+/* Posicionamiento de botones en la card de detalles de venta */
+.venta-detalle-card {
+  position: relative;
+  padding-bottom: 48px; /* espacio para el botón inferior */
+}
+
+.btn-eliminar-venta {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 2;
+}
+
+.btn-cambiar-metodo {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  z-index: 2;
 }

@@ -761,8 +761,18 @@ async function calcRecuperarBackup() {
 
 // Funciones para la comparativa entre institutos
 async function calcMostrarComparativa() {
-  document.getElementById("calculatorScreen").style.display = "none"
-  document.getElementById("calcComparativaScreen").style.display = "block"
+  const calculatorScreen = document.getElementById("calculatorScreen");
+  const comparativaScreen = document.getElementById("calcComparativaScreen");
+  calculatorScreen.classList.add("animated-fadeOutDown", "animating");
+  setTimeout(() => {
+    calculatorScreen.style.display = "none";
+    calculatorScreen.classList.remove("animated-fadeOutDown", "animating");
+    comparativaScreen.style.display = "block";
+    comparativaScreen.classList.add("animated-fadeInUp");
+    setTimeout(() => {
+      comparativaScreen.classList.remove("animated-fadeInUp");
+    }, 500);
+  }, 400);
 
   // Sincronizar tema
   const themeTextComp = document.getElementById("themeTextComp")
@@ -774,9 +784,20 @@ async function calcMostrarComparativa() {
   await calcCargarDatosComparativa()
 }
 
+// Animación al salir del apartado de estadísticas
 function calcVolverDesdeComparativa() {
-  document.getElementById("calcComparativaScreen").style.display = "none"
-  document.getElementById("calculatorScreen").style.display = "block"
+  const calculatorScreen = document.getElementById("calculatorScreen");
+  const comparativaScreen = document.getElementById("calcComparativaScreen");
+  comparativaScreen.classList.add("animated-fadeOutDown", "animating");
+  setTimeout(() => {
+    comparativaScreen.style.display = "none";
+    comparativaScreen.classList.remove("animated-fadeOutDown", "animating");
+    calculatorScreen.style.display = "block";
+    calculatorScreen.classList.add("animated-fadeInUp");
+    setTimeout(() => {
+      calculatorScreen.classList.remove("animated-fadeInUp");
+    }, 500);
+  }, 400);
 }
 
 async function calcCargarDatosComparativa() {
@@ -1143,13 +1164,30 @@ function checkExistingSession() {
 }
 
 function showLoginScreen() {
-  document.getElementById("loginScreen").style.display = "flex"
-  document.getElementById("calculatorScreen").style.display = "none"
+  const loginScreen = document.getElementById("loginScreen");
+  const calculatorScreen = document.getElementById("calculatorScreen");
+  loginScreen.style.display = "flex";
+  calculatorScreen.style.display = "none";
+  loginScreen.classList.remove("animated-fadeOutDown", "animating");
+  loginScreen.classList.add("animated-fadeInUp");
+  setTimeout(() => {
+    loginScreen.classList.remove("animated-fadeInUp");
+  }, 500);
 }
 
 function showCalculatorScreen() {
-  document.getElementById("loginScreen").style.display = "none"
-  document.getElementById("calculatorScreen").style.display = "block"
+  const loginScreen = document.getElementById("loginScreen");
+  const calculatorScreen = document.getElementById("calculatorScreen");
+  loginScreen.classList.add("animated-fadeOutDown", "animating");
+  setTimeout(() => {
+    loginScreen.style.display = "none";
+    loginScreen.classList.remove("animated-fadeOutDown", "animating");
+    calculatorScreen.style.display = "block";
+    calculatorScreen.classList.add("animated-fadeInUp");
+    setTimeout(() => {
+      calculatorScreen.classList.remove("animated-fadeInUp");
+    }, 500);
+  }, 400);
 
   // Actualizar título y subtítulo
   const fotocopiado = calcInstitutos[currentFotocopiado]
@@ -1580,7 +1618,8 @@ function calcMostrarDetalles(metodo) {
         `<li>${a.paginas} pág × ${a.copias} copias (${a.color === "color" ? "Color" : "BN"})</li>`
       ).join("");
       content.innerHTML += `
-        <div class="calc-venta-item" id="venta-${v.id}">
+        <div class="calc-venta-item venta-detalle-card" id="venta-${v.id}">
+          <button class="calc-btn calc-btn-danger btn-eliminar-venta" onclick="eliminarVenta('${v.id}')">Eliminar venta</button>
           <ul>
             <li><strong>Fecha:</strong> ${v.fecha} ${v.hora}</li>
             <li><strong>Total:</strong> $${v.total}</li>
@@ -1588,10 +1627,7 @@ function calcMostrarDetalles(metodo) {
               <ul>${archivos}</ul>
             </li>
           </ul>
-          <div style="display:flex; gap:12px; margin-top:12px;">
-            <button class="calc-btn calc-btn-danger" onclick="eliminarVenta('${v.id}')">Eliminar venta</button>
-            <button class="calc-btn calc-btn-secondary" onclick="cambiarMetodoVenta('${v.id}')">Cambiar método de pago</button>
-          </div>
+          <button class="calc-btn calc-btn-secondary btn-cambiar-metodo" onclick="cambiarMetodoVenta('${v.id}')">Cambiar método de pago</button>
         </div>
       `;
     });
