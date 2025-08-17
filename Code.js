@@ -311,13 +311,13 @@ function calcAgregarArchivo() {
 
   div.innerHTML = `
     <div class="calc-card-content">
-        <div class="calc-flex-between" style="margin-bottom: 24px; align-items: center;">
+        <div class="calc-flex-between" style="margin-bottom: 24px; align-items: flex-start;">
             <div style="font-size: 1.2rem; font-weight: 600; color: var(--text-heading);">
                 Archivo ${numeroArchivo}
-                <button onclick="calcEliminarArchivo(${calcContadorArchivos})" class="calc-btn calc-btn-danger" style="margin-left: 16px; padding: 6px 12px; font-size: 0.9rem;">
-                    Eliminar
-                </button>
             </div>
+            <button onclick="calcEliminarArchivo(${calcContadorArchivos})" class="calc-btn calc-btn-danger" style="margin-left: 0; padding: 6px 12px; font-size: 0.9rem;">
+                Eliminar
+            </button>
         </div>
         <div class="calc-archivo-form">
             <div class="calc-archivo-row">
@@ -335,8 +335,11 @@ function calcAgregarArchivo() {
             <div class="calc-archivo-ajustes">
                 <label class="calc-label">Ajustes</label>
                 <select id="calcTipo${calcContadorArchivos}" class="calc-select" onchange="calcActualizarSubtotal(${calcContadorArchivos})">
-                    <option value="normal">Simple/Doble faz</option>
-                    <option value="simple2">Doble faz (2 pág/carilla)</option>
+                    <option value="1">Simple/Doble faz</option>
+                    <option value="2">Doble faz (2 pág/carilla)</option>
+                    <option value="4">Doble faz (4 pág/carilla)</option>
+                    <option value="6">Doble faz (6 pág/carilla)</option>
+                    <option value="9">Doble faz (9 pág/carilla)</option>
                 </select>
             </div>
             <div class="calc-archivo-tipo">
@@ -364,7 +367,7 @@ function calcAgregarArchivo() {
     id: calcContadorArchivos,
     paginas: 1,
     copias: 1,
-    tipo: "normal",
+    tipo: "1", // Por defecto 1 pág/carilla
     color: "bn",
   })
 
@@ -413,13 +416,25 @@ function calcActualizarSubtotal(numeroArchivo) {
   const tipo = document.getElementById(`calcTipo${numeroArchivo}`).value
   const color = document.getElementById(`calcColor${numeroArchivo}`).value
 
+  // Validación de páginas
+  if (paginas <= 0) {
+    const descElement = document.getElementById(`calcDesc${numeroArchivo}`)
+    const subtotalElement = document.getElementById(`calcSubtotal${numeroArchivo}`)
+    if (descElement && subtotalElement) {
+      descElement.textContent = "Error: Debe ingresar más de 0 páginas."
+      subtotalElement.textContent = "$0"
+    }
+    return
+  }
+
   // Actualizar array de archivos
   const archivoIndex = calcArchivos.findIndex((a) => a.id === numeroArchivo)
   if (archivoIndex !== -1) {
     calcArchivos[archivoIndex] = { id: numeroArchivo, paginas, copias, tipo, color }
   }
 
-  const hojasNecesarias = tipo === "simple2" ? Math.ceil(paginas / 2) : paginas
+  const paginasPorCarilla = Number.parseInt(tipo) || 1
+  const hojasNecesarias = Math.ceil(paginas / paginasPorCarilla)
   const precioHoja = color === "color" ? precioHojaColor : precioHojaBN
   const subtotal = hojasNecesarias * precioHoja * copias
 
@@ -739,6 +754,9 @@ function calcMostrarDetalles(metodo) {
                         <button onclick="if(confirm('¿Cambiar método de pago a ${venta.metodoPago === "efectivo" ? "transferencia" : "efectivo"}?')) calcCambiarMetodoPago('${venta.id}', '${venta.metodoPago === "efectivo" ? "transferencia" : "efectivo"}')" class="calc-btn calc-btn-outline" style="padding: 4px 8px; font-size: 0.8rem;">
                             Cambiar
                         </button>
+                        <button onclick="calcEliminarVenta('${venta.id}')" class="calc-btn calc-btn-danger" style="padding: 4px 8px; font-size: 0.8rem;">
+                            Eliminar
+                        </button>
                     </div>
                 </div>
                 <div style="font-size: 0.9rem; color: var(--text-secondary);">
@@ -746,8 +764,9 @@ function calcMostrarDetalles(metodo) {
                     <ul style="margin-top: 8px; margin-left: 20px;">
                         ${venta.archivos
                           .map((archivo) => {
-                            const hojas = archivo.tipo === "simple2" ? Math.ceil(archivo.paginas / 2) : archivo.paginas
-                            const tipoLabel = archivo.tipo === "simple2" ? "Simple faz (2 pág/carilla)" : "Normal"
+                            const paginasPorCarilla = Number.parseInt(archivo.tipo) || 1
+                            const hojas = Math.ceil(archivo.paginas / paginasPorCarilla)
+                            const tipoLabel = archivo.tipo === "1" ? "Simple/Doble faz" : `${paginasPorCarilla} pág/carilla`
                             const colorLabel = archivo.color === "color" ? "Color" : "B/N"
                             const precioUsado =
                               archivo.color === "color"
@@ -768,137 +787,25 @@ function calcMostrarDetalles(metodo) {
   container.scrollIntoView({ behavior: "smooth" })
 }
 
-function calcOcultarDetalles() {
-  document.getElementById("calcDetallesContainer").style.display = "none"
-}
+function calcEliminarVenta(ventaId) {
+  const venta = calcRegistroVentas.ventas.find((v) => v.id === ventaId)
+  if (!venta) return
 
-function calcExportarExcel() {
-  const ventasEfectivo = calcRegistroVentas.ventas.filter((v) => v.metodoPago === "efectivo")
-  const ventasTransferencia = calcRegistroVentas.ventas.filter((v) => v.metodoPago === "transferencia")
+  if (!confirm("¿Seguro que deseas eliminar esta venta? Esta acción no se puede deshacer.")) return
 
-  // Crear datos para Excel con dos columnas
-  const data = [
-    ["Efectivo", "Transferencia"], // Headers
-  ]
-
-  // Obtener el máximo número de filas necesarias
-  const maxRows = Math.max(ventasEfectivo.length, ventasTransferencia.length)
-
-  // Llenar las filas con los precios de cada venta
-  for (let i = 0; i < maxRows; i++) {
-    const efectivoValue = i < ventasEfectivo.length ? ventasEfectivo[i].total : ""
-    const transferenciaValue = i < ventasTransferencia.length ? ventasTransferencia[i].total : ""
-    data.push([efectivoValue, transferenciaValue])
-  }
-
-  // Importar SheetJS
-  const XLSX = window.XLSX
-
-  // Crear workbook y worksheet usando SheetJS
-  const wb = XLSX.utils.book_new()
-  const ws = XLSX.utils.aoa_to_sheet(data)
-
-  // Agregar el worksheet al workbook
-  XLSX.utils.book_append_sheet(wb, ws, "Registro de Ventas")
-
-  const ahora = new Date()
-  const meses = [
-    "Enero",
-    "Febrero",
-    "Marzo",
-    "Abril",
-    "Mayo",
-    "Junio",
-    "Julio",
-    "Agosto",
-    "Septiembre",
-    "Octubre",
-    "Noviembre",
-    "Diciembre",
-  ]
-  const mes = meses[ahora.getMonth()]
-  const año = ahora.getFullYear()
-  const nombreFotocopiado = currentFotocopiado
-    ? calcInstitutos[currentFotocopiado].name.replace(/\s+/g, "_")
-    : "Fotocopiado"
-
-  const fileName = `${nombreFotocopiado}_${mes}_${año}.xlsx`
-  XLSX.writeFile(wb, fileName)
-}
-
-function calcExportarPDF() {
-  const ventasEfectivo = calcRegistroVentas.ventas.filter((v) => v.metodoPago === "efectivo");
-  const ventasTransferencia = calcRegistroVentas.ventas.filter((v) => v.metodoPago === "transferencia");
-
-  // Crear datos para la tabla
-  const maxRows = Math.max(ventasEfectivo.length, ventasTransferencia.length);
-  const rows = [];
-  for (let i = 0; i < maxRows; i++) {
-    rows.push([
-      ventasEfectivo[i] ? `$${ventasEfectivo[i].total}` : "",
-      ventasTransferencia[i] ? `$${ventasTransferencia[i].total}` : ""
-    ]);
-  }
-
-  // Obtener nombre del copiado
-  const nombreFotocopiado = currentFotocopiado
-    ? calcInstitutos[currentFotocopiado].name
-    : "Fotocopiado";
-
-  // Obtener fechas de las ventas
-  const fechas = calcRegistroVentas.ventas.map(v => {
-    // v.fecha puede ser "dd/mm/yyyy" o "dd/mm/yy"
-    const partes = v.fecha.split("/");
-    let año = partes[2];
-    if (año.length === 2) año = "20" + año;
-    return new Date(`${año}-${partes[1].padStart(2, "0")}-${partes[0].padStart(2, "0")}`);
-  }).sort((a, b) => a - b);
-
-  let rangoFechas = "";
-  if (fechas.length > 0) {
-    const desde = fechas[0];
-    const hasta = fechas[fechas.length - 1];
-    const opciones = { day: "2-digit", month: "2-digit", year: "numeric" };
-    rangoFechas = `Desde: ${desde.toLocaleDateString("es-AR", opciones)}  Hasta: ${hasta.toLocaleDateString("es-AR", opciones)}`;
+  // Actualizar totales
+  if (venta.metodoPago === "efectivo") {
+    calcRegistroVentas.efectivo -= venta.total
   } else {
-    rangoFechas = "Sin ventas registradas";
+    calcRegistroVentas.transferencia -= venta.total
   }
 
-  // Mes y año del registro
-  const ahora = new Date();
-  const meses = [
-    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
-  ];
-  const mes = meses[ahora.getMonth()];
-  const año = ahora.getFullYear();
+  // Eliminar del array
+  calcRegistroVentas.ventas = calcRegistroVentas.ventas.filter((v) => v.id !== ventaId)
 
-  // Crear PDF
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-
-  doc.setFontSize(16);
-  doc.text(`Registro de ventas: ${nombreFotocopiado}`, 14, 18);
-
-  doc.setFontSize(12);
-  doc.text(`Mes: ${mes}  Año: ${año}`, 14, 26);
-  doc.text(rangoFechas, 14, 34);
-
-  doc.autoTable({
-    head: [["Efectivo", "Transferencia"]],
-    body: rows,
-    startY: 40,
-    styles: { halign: 'center' }
-  });
-
-  const nombreArchivo = nombreFotocopiado.replace(/\s+/g, "_");
-  const fileName = `${nombreArchivo}_${mes}_${año}.pdf`;
-
-  doc.save(fileName);
-
-  // Ocultar menú después de exportar
-  const menu = document.getElementById("menuExportar");
-  if (menu) menu.style.display = "none";
+  calcGuardarDatos()
+  calcActualizarTabla()
+  calcMostrarDetalles(venta.metodoPago) // Actualiza la vista actual
 }
 
 // Funciones para la comparativa entre institutos
@@ -1472,9 +1379,119 @@ function loadFromFirebase() {
       })
       .catch((error) => {
         console.error("[v0] Error accediendo a Firebase:", error)
-        calcCargarDatos() // Fallback a localStorage solo en caso de error
+        calcCargarDatos() // Fallback a localStorage solo in case of error
         updateSyncStatus("🔴", "Error de conexión")
         resolve()
       })
   })
+}
+
+function calcOcultarDetalles() {
+  const container = document.getElementById("calcDetallesContainer")
+  if (container) {
+    container.style.display = "none"
+  }
+}
+
+function calcExportarExcel() {
+  const ahora = new Date()
+  const mes = ahora.toLocaleString("es-ES", { month: "long" })
+  const año = ahora.getFullYear()
+  const fechaHoy = ahora.toLocaleDateString("es-ES")
+  const nombreCopiado = calcInstitutos[currentFotocopiado]?.name || "Copiado"
+
+  // Obtener ventas por método
+  const ventasEfectivo = (calcRegistroVentas.ventas || []).filter(v => v.metodoPago === "efectivo").map(v => v.total)
+  const ventasTransferencia = (calcRegistroVentas.ventas || []).filter(v => v.metodoPago === "transferencia").map(v => v.total)
+  const maxFilas = Math.max(ventasEfectivo.length, ventasTransferencia.length, 1) // Siempre al menos una fila
+
+  // Construir filas de ventas
+  const filasVentas = []
+  for (let i = 0; i < maxFilas; i++) {
+    filasVentas.push([
+      ventasEfectivo[i] !== undefined ? `$${ventasEfectivo[i]}` : "",
+      ventasTransferencia[i] !== undefined ? `$${ventasTransferencia[i]}` : ""
+    ])
+  }
+
+  // Totales
+  const totalEfectivo = ventasEfectivo.reduce((a, b) => a + (parseFloat(b) || 0), 0)
+  const totalTransferencia = ventasTransferencia.reduce((a, b) => a + (parseFloat(b) || 0), 0)
+  const totalGeneral = totalEfectivo + totalTransferencia
+
+  // Estructura final
+  const datos = [
+    ["Registro de ventas: " + nombreCopiado],
+    [`Mes: ${mes.charAt(0).toUpperCase() + mes.slice(1)}   Año: ${año}`],
+    [`Desde: ${fechaHoy}   Hasta: ${fechaHoy}`],
+    [],
+    ["Efectivo", "Transferencia"],
+    ...filasVentas,
+    [],
+    ["Total Efectivo", "Total Transferencia", "Total General"],
+    [`$${totalEfectivo}`, `$${totalTransferencia}`, `$${totalGeneral}`]
+  ]
+
+  // Crear hoja y libro
+  const ws = XLSX.utils.aoa_to_sheet(datos)
+  const wb = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(wb, ws, "Ventas")
+
+  // Nombre de archivo
+  const nombreArchivo = `${nombreCopiado.replace(/\s/g, "_")}_${mes}_${año}.xlsx`
+  XLSX.writeFile(wb, nombreArchivo)
+}
+
+function calcExportarPDF() {
+  const ahora = new Date()
+  const mes = ahora.toLocaleString("es-ES", { month: "long" })
+  const año = ahora.getFullYear()
+  const fechaHoy = ahora.toLocaleDateString("es-ES")
+  const nombreCopiado = calcInstitutos[currentFotocopiado]?.name || "Copiado"
+
+  // Obtener ventas por método
+  const ventasEfectivo = (calcRegistroVentas.ventas || []).filter(v => v.metodoPago === "efectivo").map(v => v.total)
+  const ventasTransferencia = (calcRegistroVentas.ventas || []).filter(v => v.metodoPago === "transferencia").map(v => v.total)
+  const maxFilas = Math.max(ventasEfectivo.length, ventasTransferencia.length, 1) // Siempre al menos una fila
+
+  // Construir filas de ventas
+  const filasVentas = []
+  for (let i = 0; i < maxFilas; i++) {
+    filasVentas.push([
+      ventasEfectivo[i] !== undefined ? `$${ventasEfectivo[i]}` : "",
+      ventasTransferencia[i] !== undefined ? `$${ventasTransferencia[i]}` : ""
+    ])
+  }
+
+  // Totales
+  const totalEfectivo = ventasEfectivo.reduce((a, b) => a + (parseFloat(b) || 0), 0)
+  const totalTransferencia = ventasTransferencia.reduce((a, b) => a + (parseFloat(b) || 0), 0)
+  const totalGeneral = totalEfectivo + totalTransferencia
+
+  // Tabla para PDF
+  const tablaPDF = [
+    ...filasVentas,
+    ["", ""],
+    ["Total Efectivo", "Total Transferencia", "Total General"],
+    [`$${totalEfectivo}`, `$${totalTransferencia}`, `$${totalGeneral}`]
+  ]
+
+  const doc = new window.jspdf.jsPDF()
+  doc.setFontSize(18)
+  doc.text(`Registro de ventas: ${nombreCopiado}`, 14, 22)
+  doc.setFontSize(12)
+  doc.text(`Mes: ${mes.charAt(0).toUpperCase() + mes.slice(1)}   Año: ${año}`, 14, 32)
+  doc.text(`Desde: ${fechaHoy}   Hasta: ${fechaHoy}`, 14, 40)
+
+  doc.autoTable({
+    head: [["Efectivo", "Transferencia"]],
+    body: tablaPDF,
+    startY: 50,
+    styles: { fontSize: 12 },
+    headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' },
+    bodyStyles: { fillColor: [245, 245, 245] }
+  })
+
+  const nombreArchivo = `${nombreCopiado.replace(/\s/g, "_")}_${mes}_${año}.pdf`
+  doc.save(nombreArchivo)
 }
