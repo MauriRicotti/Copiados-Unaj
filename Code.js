@@ -1618,8 +1618,7 @@ function calcMostrarDetalles(metodo) {
         `<li>${a.paginas} pág × ${a.copias} copias (${a.color === "color" ? "Color" : "BN"})</li>`
       ).join("");
       content.innerHTML += `
-        <div class="calc-venta-item venta-detalle-card" id="venta-${v.id}">
-          <button class="calc-btn calc-btn-danger btn-eliminar-venta" onclick="eliminarVenta('${v.id}')">Eliminar venta</button>
+        <div class="calc-venta-item" id="venta-${v.id}">
           <ul>
             <li><strong>Fecha:</strong> ${v.fecha} ${v.hora}</li>
             <li><strong>Total:</strong> $${v.total}</li>
@@ -1627,7 +1626,10 @@ function calcMostrarDetalles(metodo) {
               <ul>${archivos}</ul>
             </li>
           </ul>
-          <button class="calc-btn calc-btn-secondary btn-cambiar-metodo" onclick="cambiarMetodoVenta('${v.id}')">Cambiar método de pago</button>
+          <div style="display:flex; gap:12px; margin-top:12px;">
+            <button class="calc-btn calc-btn-danger" onclick="eliminarVenta('${v.id}')">Eliminar venta</button>
+            <button class="calc-btn calc-btn-secondary" onclick="cambiarMetodoVenta('${v.id}')">Cambiar método de pago</button>
+          </div>
         </div>
       `;
     });

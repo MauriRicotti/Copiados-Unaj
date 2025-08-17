@@ -1160,22 +1160,21 @@ body {
   }
 }
 
-/* Posicionamiento de botones en la card de detalles de venta */
-.venta-detalle-card {
-  position: relative;
-  padding-bottom: 48px; /* espacio para el botón inferior */
+/* Apilar los botones de la card en pantallas pequeñas */
+.card-bottom-buttons {
+  display: flex;
+  gap: 12px;
 }
 
-.btn-eliminar-venta {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  z-index: 2;
-}
-
-.btn-cambiar-metodo {
-  position: absolute;
-  bottom: 16px;
-  right: 16px;
-  z-index: 2;
+@media (max-width: 600px) {
+  .card-bottom-buttons {
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+  }
+  .card-bottom-buttons > * {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
 }

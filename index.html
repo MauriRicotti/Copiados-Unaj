@@ -328,20 +328,17 @@
                     </div>
 
                     <!-- Botones de acciones en la parte inferior de la tarjeta -->
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-color);">
-                        <!-- Botón Actualizar -->
-                        <button onclick="actualizarRegistroVentas()" class="calc-btn calc-btn-outline" style="padding: 12px 24px; font-size: 1rem;">
-                            Actualizar
-                        </button>
-                        <!-- Botón Restablecer -->
-                        <button onclick="calcRestablecerVentas()" class="calc-btn calc-btn-danger" style="padding: 12px 24px; font-size: 1rem;">
-                            Restablecer
-                        </button>
-                        <!-- Botón Recuperar último registro -->
-                        <button onclick="calcRecuperarBackup()" class="calc-btn btn-backup-minimal" style="padding: 12px 24px; font-size: 1rem;">
-                            Recuperar último registro
-                        </button>
-                    </div>
+                    <div class="card-bottom-buttons" style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+    <button onclick="actualizarRegistroVentas()" class="calc-btn calc-btn-outline" style="padding: 12px 24px; font-size: 1rem;">
+        Actualizar
+    </button>
+    <button onclick="calcRestablecerVentas()" class="calc-btn calc-btn-danger" style="padding: 12px 24px; font-size: 1rem;">
+        Restablecer
+    </button>
+    <button onclick="calcRecuperarBackup()" class="calc-btn btn-backup-minimal" style="padding: 12px 24px; font-size: 1rem;">
+        Recuperar último registro
+    </button>
+</div>
                 </div>
             </div>
 
