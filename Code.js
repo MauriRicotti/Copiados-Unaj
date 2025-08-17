@@ -443,7 +443,7 @@ function calcActualizarSubtotal(numeroArchivo) {
 
   if (descElement && subtotalElement) {
     descElement.textContent = `${hojasNecesarias} hojas × ${copias} copias`
-    subtotalElement.textContent = `$${subtotal}`
+    subtotalElement.textContent = `$${subtotal.toLocaleString("es-AR")}`
   }
 }
 
@@ -470,7 +470,7 @@ function calcCalcularTotal() {
   })
 
   calcTotal = totalCalculado
-  document.getElementById("calcTotalDisplay").textContent = `Total a cobrar: $${calcTotal}`
+  document.getElementById("calcTotalDisplay").textContent = `Total a cobrar: $${calcTotal.toLocaleString("es-AR")}`
   document.getElementById("calcPagoContainer").style.display = "block"
 
   // Reset payment section
@@ -849,7 +849,7 @@ function calcMostrarDatosComparativa(datos) {
   })
 
   // Actualizar cards de resumen con IDs correctos
-  document.getElementById("calcTotalGeneralComp").textContent = `$${totalGeneral.toLocaleString()}`
+  document.getElementById("calcTotalGeneralComp").textContent = `$${totalGeneral.toLocaleString("es-AR")}`
   document.getElementById("calcInstitutoLider").textContent = institutoLider || "Sin datos"
   document.getElementById("calcVentasTotales").textContent = ventasTotales
 
@@ -981,15 +981,15 @@ function calcMostrarDetallesComparativa(datos) {
             <h4>${instituto.name}</h4>
             <div class="calc-detail-stat">
                 <span>Total de Ingresos:</span>
-                <span>$${instituto.total.toLocaleString()}</span>
+                <span>$${instituto.total.toLocaleString("es-AR")}</span>
             </div>
             <div class="calc-detail-stat">
                 <span>Ventas en Efectivo:</span>
-                <span>$${instituto.efectivo.toLocaleString()}</span>
+                <span>$${instituto.efectivo.toLocaleString("es-AR")}</span>
             </div>
             <div class="calc-detail-stat">
                 <span>Ventas por Transferencia:</span>
-                <span>$${instituto.transferencia.toLocaleString()}</span>
+                <span>$${instituto.transferencia.toLocaleString("es-AR")}</span>
             </div>
             <div class="calc-detail-stat">
                 <span>Número de Ventas:</span>
@@ -997,7 +997,7 @@ function calcMostrarDetallesComparativa(datos) {
             </div>
             <div class="calc-detail-stat">
                 <span>Promedio por Venta:</span>
-                <span>$${instituto.ventas.length > 0 ? Math.round(instituto.total / instituto.ventas.length).toLocaleString() : 0}</span>
+                <span>$${instituto.ventas.length > 0 ? Math.round(instituto.total / instituto.ventas.length).toLocaleString("es-AR") : 0}</span>
             </div>
         `
 
@@ -1574,17 +1574,17 @@ function calcExportarEstadisticasPDF() {
 
 function calcActualizarTabla() {
   // Actualizar totales
-  document.getElementById("calcTotalEfectivo").textContent = `$${calcRegistroVentas.efectivo || 0}`;
-  document.getElementById("calcTotalTransferencia").textContent = `$${calcRegistroVentas.transferencia || 0}`;
-  document.getElementById("calcTotalGeneral").textContent = `$${(calcRegistroVentas.efectivo + calcRegistroVentas.transferencia) || 0}`;
+  document.getElementById("calcTotalEfectivo").textContent = `$${(calcRegistroVentas.efectivo || 0).toLocaleString("es-AR")}`;
+  document.getElementById("calcTotalTransferencia").textContent = `$${(calcRegistroVentas.transferencia || 0).toLocaleString("es-AR")}`;
+  document.getElementById("calcTotalGeneral").textContent = `$${((calcRegistroVentas.efectivo || 0) + (calcRegistroVentas.transferencia || 0)).toLocaleString("es-AR")}`;
   document.getElementById("calcCountEfectivo").textContent = (calcRegistroVentas.ventas || []).filter(v => v.metodoPago === "efectivo").length;
   document.getElementById("calcCountTransferencia").textContent = (calcRegistroVentas.ventas || []).filter(v => v.metodoPago === "transferencia").length;
   document.getElementById("calcTotalVentas").textContent = `${(calcRegistroVentas.ventas || []).length} ventas`;
 
   // Actualizar versión móvil
-  document.getElementById("calcTotalEfectivoMobile").textContent = `$${calcRegistroVentas.efectivo || 0}`;
-  document.getElementById("calcTotalTransferenciaMobile").textContent = `$${calcRegistroVentas.transferencia || 0}`;
-  document.getElementById("calcTotalGeneralMobile").textContent = `$${(calcRegistroVentas.efectivo + calcRegistroVentas.transferencia) || 0}`;
+  document.getElementById("calcTotalEfectivoMobile").textContent = `$${(calcRegistroVentas.efectivo || 0).toLocaleString("es-AR")}`;
+  document.getElementById("calcTotalTransferenciaMobile").textContent = `$${(calcRegistroVentas.transferencia || 0).toLocaleString("es-AR")}`;
+  document.getElementById("calcTotalGeneralMobile").textContent = `$${((calcRegistroVentas.efectivo || 0) + (calcRegistroVentas.transferencia || 0)).toLocaleString("es-AR")}`;
   document.getElementById("calcCountEfectivoMobile").textContent = (calcRegistroVentas.ventas || []).filter(v => v.metodoPago === "efectivo").length;
   document.getElementById("calcCountTransferenciaMobile").textContent = (calcRegistroVentas.ventas || []).filter(v => v.metodoPago === "transferencia").length;
   document.getElementById("calcTotalVentasMobile").textContent = `${(calcRegistroVentas.ventas || []).length} ventas`;
@@ -1621,7 +1621,7 @@ function calcMostrarDetalles(metodo) {
         <div class="calc-venta-item" id="venta-${v.id}">
           <ul>
             <li><strong>Fecha:</strong> ${v.fecha} ${v.hora}</li>
-            <li><strong>Total:</strong> $${v.total}</li>
+            <li><strong>Total:</strong> $${v.total.toLocaleString("es-AR")}</li>
             <li><strong>Archivos:</strong>
               <ul>${archivos}</ul>
             </li>
