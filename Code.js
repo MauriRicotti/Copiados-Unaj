@@ -72,6 +72,16 @@ document.addEventListener("DOMContentLoaded", () => {
   checkExistingSession()
   addOutsideClickListener()
   setTimeout(initializeFirebase, 100)
+
+  // Limpiar input de propina al enfocar si el valor es 0
+  const propinaInput = document.getElementById("calcPropinaInput")
+  if (propinaInput) {
+    propinaInput.addEventListener("focus", function() {
+      if (this.value === "0") {
+        this.value = ""
+      }
+    })
+  }
 })
 
 function initializeFirebase() {
@@ -370,6 +380,9 @@ function calcAgregarArchivo() {
     tipo: "1", // Por defecto 1 pág/carilla
     color: "bn",
   })
+  // Resetear propina al iniciar nueva venta
+  const propinaInput = document.getElementById("calcPropinaInput")
+  if (propinaInput) propinaInput.value = "0"
 
   calcActualizarSubtotal(calcContadorArchivos)
 }
@@ -464,13 +477,24 @@ function calcCalcularTotal() {
   let totalCalculado = 0
 
   calcArchivos.forEach((archivo) => {
-    const hojasNecesarias = archivo.tipo === "simple2" ? Math.ceil(archivo.paginas / 2) : archivo.paginas
-    const precioHoja = archivo.color === "color" ? precioHojaColor : precioHojaBN
-    totalCalculado += hojasNecesarias * precioHoja * archivo.copias
+    const paginasPorCarilla = Number.parseInt(archivo.tipo) || 1;
+    const hojasNecesarias = Math.ceil(archivo.paginas / paginasPorCarilla);
+    const precioHoja = archivo.color === "color" ? precioHojaColor : precioHojaBN;
+    totalCalculado += hojasNecesarias * precioHoja * archivo.copias;
   })
 
+
   calcTotal = totalCalculado
-  document.getElementById("calcTotalDisplay").textContent = `Total a cobrar: $${calcTotal.toLocaleString("es-AR")}`
+  // Mostrar campo de propina
+  const propinaInput = document.getElementById("calcPropinaInput")
+  const propinaLabel = document.getElementById("calcPropinaLabel")
+  let propina = 0
+  if (propinaInput) {
+    propinaInput.style.display = "block"
+    propina = Number.parseFloat(propinaInput.value) || 0
+  }
+  if (propinaLabel) propinaLabel.style.display = "block"
+  document.getElementById("calcTotalDisplay").textContent = `Total a cobrar: $${(calcTotal + propina).toLocaleString("es-AR")}${propina > 0 ? ` (Propina: $${propina})` : ""}`
   document.getElementById("calcPagoContainer").style.display = "block"
 
   // Reset payment section
@@ -483,6 +507,14 @@ function calcCalcularTotal() {
 
   // Scroll to payment section
   document.getElementById("calcPagoContainer").scrollIntoView({ behavior: "smooth" })
+
+  // Actualizar total en tiempo real al cambiar propina
+  if (propinaInput) {
+    propinaInput.oninput = function() {
+      const nuevaPropina = Number.parseFloat(this.value) || 0
+      document.getElementById("calcTotalDisplay").textContent = `Total a cobrar: $${(calcTotal + nuevaPropina).toLocaleString("es-AR")}${nuevaPropina > 0 ? ` (Propina: $${nuevaPropina})` : ""}`
+    }
+  }
 }
 
 function calcCancelarVenta() {
@@ -568,11 +600,13 @@ function calcFinalizarVenta() {
   }
 
   const ahora = new Date()
+  const propina = Number.parseFloat(document.getElementById("calcPropinaInput")?.value) || 0
   const ventaDetalle = {
     id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     fecha: ahora.toLocaleDateString("es-ES"),
     hora: ahora.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }),
-    total: calcTotal,
+    total: calcTotal + propina,
+    propina: propina,
     metodoPago: calcMetodoPago,
     archivos: [...calcArchivos],
     precioHojaBN: Number.parseFloat(document.getElementById("calcPrecioHoja").value),
@@ -585,9 +619,9 @@ function calcFinalizarVenta() {
 
   // Actualizar registro
   if (calcMetodoPago === "efectivo") {
-    calcRegistroVentas.efectivo += calcTotal
+    calcRegistroVentas.efectivo += ventaDetalle.total
   } else {
-    calcRegistroVentas.transferencia += calcTotal
+    calcRegistroVentas.transferencia += ventaDetalle.total
   }
   calcRegistroVentas.ventas.push(ventaDetalle)
 
@@ -604,6 +638,9 @@ function calcFinalizarVenta() {
   calcContadorArchivos = 0
   calcTotal = 0
   calcMetodoPago = null
+
+  // Resetear propina al iniciar nueva venta
+  if (document.getElementById("calcPropinaInput")) document.getElementById("calcPropinaInput").value = "0"
 
   calcAgregarArchivo()
   window.scrollTo({ top: 0, behavior: "smooth" })
@@ -1601,6 +1638,7 @@ function calcMostrarDetalles(metodo) {
   const container = document.getElementById("calcDetallesContainer");
   const content = document.getElementById("calcDetallesContent");
   const title = document.getElementById("calcDetallesTitle");
+  const btnPropina = document.getElementById("btnAgregarPropinaDetalle");
 
   if (!container || !content || !title) return;
 
@@ -1612,6 +1650,7 @@ function calcMostrarDetalles(metodo) {
 
   if (ventas.length === 0) {
     content.innerHTML = "<div style='color: var(--text-secondary); text-align: center;'>No hay ventas registradas.</div>";
+    if (btnPropina) btnPropina.style.display = "none";
   } else {
     ventas.forEach((v, idx) => {
       const archivos = v.archivos.map(a => 
@@ -1621,18 +1660,21 @@ function calcMostrarDetalles(metodo) {
         <div class="calc-venta-item" id="venta-${v.id}">
           <ul>
             <li><strong>Fecha:</strong> ${v.fecha} ${v.hora}</li>
-            <li><strong>Total:</strong> $${v.total.toLocaleString("es-AR")}</li>
+            <li><strong>Total:</strong> $${v.total.toLocaleString("es-AR")}${v.propina ? ` <span style='color:#10b981;'>(Propina: $${v.propina})</span>` : ""}</li>
             <li><strong>Archivos:</strong>
               <ul>${archivos}</ul>
             </li>
           </ul>
-          <div style="display:flex; gap:12px; margin-top:12px;">
+          <div class="card-bottom-buttons" style="margin-top:12px;">
             <button class="calc-btn calc-btn-danger" onclick="eliminarVenta('${v.id}')">Eliminar venta</button>
             <button class="calc-btn calc-btn-secondary" onclick="cambiarMetodoVenta('${v.id}')">Cambiar método de pago</button>
+            <button class="calc-btn calc-btn-success" onclick="agregarPropinaADetalle('${v.id}')">Agregar/Modificar propina</button>
           </div>
         </div>
       `;
     });
+    // Mostrar el botón de propina solo si hay ventas (opcional, ya que ahora está en cada venta)
+    if (btnPropina) btnPropina.style.display = "none";
   }
 
   container.style.display = "block";
@@ -1680,4 +1722,28 @@ function cambiarMetodoVenta(ventaId) {
   calcActualizarTabla();
   calcOcultarDetalles();
   showSyncNotification("Método de pago cambiado correctamente.");
+}
+
+function agregarPropinaADetalle(ventaId) {
+  const venta = calcRegistroVentas.ventas.find(v => v.id === ventaId)
+  if (!venta) return
+  const nuevaPropina = prompt("Ingresa la propina para esta venta:", venta.propina ? venta.propina : "0")
+  if (nuevaPropina === null) return
+  const propinaNum = Number.parseFloat(nuevaPropina) || 0
+  // El total base debe ser el total original menos la propina actual
+  // Si la venta tiene un campo 'totalBase', lo usamos, si no lo calculamos
+  if (!venta.totalBase) {
+    venta.totalBase = venta.total - (venta.propina || 0)
+  }
+  venta.propina = propinaNum
+  venta.total = venta.totalBase + propinaNum
+  if (venta.metodoPago === "efectivo") {
+    calcRegistroVentas.efectivo = calcRegistroVentas.ventas.filter(v => v.metodoPago === "efectivo").reduce((acc, v) => acc + v.total, 0)
+  } else {
+    calcRegistroVentas.transferencia = calcRegistroVentas.ventas.filter(v => v.metodoPago === "transferencia").reduce((acc, v) => acc + v.total, 0)
+  }
+  calcGuardarDatos()
+  calcActualizarTabla()
+  calcMostrarDetalles(venta.metodoPago)
+  alert("Propina actualizada correctamente.")
 }

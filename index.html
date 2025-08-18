@@ -198,6 +198,10 @@
                     </div>
                     <div class="calc-card-content">
                         <div id="calcTotalDisplay" class="calc-total-display"></div>
+                        <div class="propina-group">
+                            <label id="calcPropinaLabel" for="calcPropinaInput">Propina:</label>
+                            <input type="number" id="calcPropinaInput" class="calc-input" min="0" step="1" placeholder="$0">
+                        </div>
                         
                         <div style="border-top: 1px solid var(--border-color); padding-top: 20px;">
                             <label class="calc-label">Método de pago:</label>
@@ -213,8 +217,8 @@
                             </div>
                         </div>
 
-                        <div class="calc-flex" style="margin: 20px 0;">
-                            <label class="calc-label">Dinero que entrega el cliente:</label>
+                        <div class="calc-cambio-group">
+                            <label class="calc-label" for="calcDineroCliente">Dinero que entrega el cliente:</label>
                             <input type="number" id="calcDineroCliente" placeholder="Ingrese el monto" class="calc-input calc-input-small">
                             <button onclick="calcCalcularCambio()" class="calc-btn calc-btn-secondary">
                                 Calcular Cambio
@@ -328,14 +332,14 @@
                     </div>
 
                     <!-- Botones de acciones en la parte inferior de la tarjeta -->
-                    <div class="card-bottom-buttons" style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-color);">
-    <button onclick="actualizarRegistroVentas()" class="calc-btn calc-btn-outline" style="padding: 12px 24px; font-size: 1rem;">
+                    <div class="card-bottom-buttons">
+    <button onclick="actualizarRegistroVentas()" class="calc-btn calc-btn-outline">
         Actualizar
     </button>
-    <button onclick="calcRestablecerVentas()" class="calc-btn calc-btn-danger" style="padding: 12px 24px; font-size: 1rem;">
+    <button onclick="calcRestablecerVentas()" class="calc-btn calc-btn-danger">
         Restablecer
     </button>
-    <button onclick="calcRecuperarBackup()" class="calc-btn btn-backup-minimal" style="padding: 12px 24px; font-size: 1rem;">
+    <button onclick="calcRecuperarBackup()" class="calc-btn btn-backup-minimal">
         Recuperar último registro
     </button>
 </div>
@@ -354,6 +358,10 @@
                 </div>
                 <div class="calc-card-content">
                     <div id="calcDetallesContent" class="calc-detalles"></div>
+                    <!-- Botón para agregar/modificar propina en el detalle de venta -->
+                    <div style="margin-top:16px; text-align:center;">
+    <button id="btnAgregarPropinaDetalle" class="calc-btn calc-btn-success" style="display:none;" onclick="agregarPropinaADetalle(window.ventaDetalleIdMostrado)">Agregar/Modificar propina</button>
+</div>
                 </div>
             </div>
         </div>
