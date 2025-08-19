@@ -333,13 +333,13 @@
 
                     <!-- Botones de acciones en la parte inferior de la tarjeta -->
                     <div class="card-bottom-buttons">
-    <button onclick="actualizarRegistroVentas()" class="calc-btn calc-btn-outline">
+    <button onclick="actualizarRegistroVentas()" class="calc-btn calc-btn-primary">
         Actualizar
     </button>
-    <button onclick="calcRestablecerVentas()" class="calc-btn calc-btn-danger">
+    <button onclick="calcRestablecerVentas()" class="calc-btn calc-btn-warning">
         Restablecer
     </button>
-    <button onclick="calcRecuperarBackup()" class="calc-btn btn-backup-minimal">
+    <button onclick="calcRecuperarBackup()" class="calc-btn calc-btn-secondary">
         Recuperar último registro
     </button>
 </div>
@@ -373,7 +373,7 @@
             <header class="calc-header">
     <div class="calc-header-content">
         <div class="calc-header-text">
-            <h1>Comparativa entre Institutos</h1>
+            <h1>Comparativa por Fotocopiado</h1>
             <p>Análisis de ventas y rendimiento por fotocopiado</p>
         </div>
         <div class="header-controls">
@@ -403,7 +403,7 @@
                 </div>
                 <div class="calc-card">
                     <div class="calc-card-content" style="text-align: center;">
-                        <h3 style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 8px;">Instituto Líder</h3>
+                        <h3 style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 8px;">Fotocopiado Líder</h3>
                         <div id="calcInstitutoLider" style="font-size: 1.2rem; font-weight: 600; color: var(--text-heading);">-</div>
                     </div>
                 </div>
@@ -419,7 +419,7 @@
             <div class="calc-grid calc-grid-cols-2" style="margin-bottom: 32px;">
                 <div class="calc-card">
                     <div class="calc-card-header">
-                        <div class="calc-card-title">Ingresos por Instituto</div>
+                        <div class="calc-card-title">Ingresos por Fotocopiados</div>
                     </div>
                     <div class="calc-card-content">
                         <div class="calc-chart-container">
@@ -442,7 +442,7 @@
             <!-- Detalles por instituto -->
             <div class="calc-card">
                 <div class="calc-card-header">
-                    <div class="calc-card-title">Detalles por Instituto</div>
+                    <div class="calc-card-title">Detalles por Fotocopiado</div>
                 </div>
                 <div class="calc-card-content">
                     <div id="calcDetallesGrid" class="calc-details-grid"></div>

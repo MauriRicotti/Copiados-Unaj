@@ -1226,10 +1226,49 @@ body {
   }
 }
 
-/* Apilar los botones de la card en pantallas pequeñas */
+/* Grupo de botones para acciones de registro de ventas */
 .card-bottom-buttons {
   display: flex;
-  gap: 12px;
+  gap: 16px;
+  justify-content: flex-end;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
+
+.card-bottom-buttons .calc-btn {
+  min-width: 140px;
+  font-size: 1rem;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.card-bottom-buttons .calc-btn-primary {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+}
+.card-bottom-buttons .calc-btn-primary:hover {
+  background: #1d4ed8;
+}
+
+.card-bottom-buttons .calc-btn-warning {
+  background: #f54242;
+  color: #fff;
+  border: none;
+}
+.card-bottom-buttons .calc-btn-warning:hover {
+  background: #ea580c;
+}
+
+.card-bottom-buttons .calc-btn-secondary {
+  background: #64748b;
+  color: #fff;
+  border: none;
+}
+.card-bottom-buttons .calc-btn-secondary:hover {
+  background: #334155;
 }
 
 @media (max-width: 600px) {
@@ -1238,7 +1277,7 @@ body {
     gap: 10px;
     align-items: stretch;
   }
-  .card-bottom-buttons > * {
+  .card-bottom-buttons .calc-btn {
     width: 100%;
     min-width: 0;
     box-sizing: border-box;
