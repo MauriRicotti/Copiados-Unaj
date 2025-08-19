@@ -334,12 +334,16 @@ function calcAgregarArchivo() {
                 <div>
                     <label class="calc-label">Páginas</label>
                     <input type="number" id="calcPaginas${calcContadorArchivos}" value="1" min="1" 
-                        class="calc-input" onchange="calcActualizarSubtotal(${calcContadorArchivos})">
+                        class="calc-input" 
+                        onchange="calcActualizarSubtotal(${calcContadorArchivos})"
+                        onfocus="if(this.value==='1'){this.value='';}">
                 </div>
                 <div>
                     <label class="calc-label">Copias</label>
                     <input type="number" id="calcCopias${calcContadorArchivos}" value="1" min="1"
-                        class="calc-input" onchange="calcActualizarSubtotal(${calcContadorArchivos})">
+                        class="calc-input" 
+                        onchange="calcActualizarSubtotal(${calcContadorArchivos})"
+                        onfocus="if(this.value==='1'){this.value='';}">
                 </div>
             </div>
             <div class="calc-archivo-ajustes">
