@@ -1830,6 +1830,8 @@ function calcActualizarTabla() {
 
  
 
+
+
   // Tabla desktop
   document.getElementById("calcTotalEfectivo").innerText = `$${efectivo.toLocaleString("es-AR")}`;
   document.getElementById("calcTotalTransferencia").innerText = `$${transferencia.toLocaleString("es-AR")}`;
@@ -2046,4 +2048,11 @@ async function calcRecuperarBackup() {
       alert("No hay backup local disponible.");
     }
   }
+}
+
+function actualizarYRefrescarTabla() {
+  loadFromFirebase().then(() => {
+    calcActualizarTabla();
+    showSyncNotification("Datos actualizados desde el servidor.");
+  });
 }
