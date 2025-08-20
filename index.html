@@ -46,6 +46,28 @@
     <link rel="icon" type="image/png" href="/imagenes/unaj-removebg-preview.png">
 </head>
 <body>
+    <!-- Selector de turno fijo arriba a la derecha SOLO en la pantalla de calculadora -->
+    <div id="turnoSelectorFixed" style="display:none;position:fixed;top:18px;right:18px;z-index:1001;background:var(--bg-card);padding:6px 12px 6px 10px;border-radius:8px;box-shadow:0 2px 8px var(--shadow);border:1px solid var(--border-color);display:flex;align-items:center;gap:6px;font-size:0.95rem;min-width:110px;">
+        <label for="turnoSelect" style="font-weight:600;font-size:0.97rem;">Turno:</label>
+        <select id="turnoSelect" class="calc-select" style="width:auto;display:inline-block;font-size:0.97rem;padding:6px 18px 6px 8px;">
+            <option value="TM">Mañana</option>
+            <option value="TT">Tarde</option>
+        </select>
+    </div>
+
+    <!-- MODAL DE SELECCIÓN DE TURNO (nuevo, obligatorio al ingresar) -->
+    <div id="turnoModal" style="display:none;position:fixed;z-index:2000;top:0;left:0;width:100vw;height:100vh;background:rgba(30,41,59,0.45);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
+      <div style="background:var(--bg-card);padding:32px 24px;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.18);max-width:95vw;width:340px;text-align:center;">
+        <h2 style="margin-bottom:18px;font-size:1.3rem;color:var(--text-heading);">Selecciona el turno</h2>
+        <select id="turnoModalSelect" class="calc-select" style="width:100%;font-size:1.1rem;margin-bottom:24px;">
+          <option value="" disabled selected>Elige un turno...</option>
+          <option value="TM">Mañana</option>
+          <option value="TT">Tarde</option>
+        </select>
+        <button id="turnoModalBtn" class="calc-btn calc-btn-primary" style="width:100%;">Confirmar turno</button>
+      </div>
+    </div>
+
     <!-- Pantalla de selección de fotocopiado -->
     <div id="loginScreen" class="login-screen">
         <div class="login-container">
@@ -119,25 +141,25 @@
     <div id="calculatorScreen" class="calculadora-container" style="display: none;">
         <div class="calculadora-wrapper">
             <header class="calc-header">
-                <div class="calc-header-content">
-                    <div class="calc-header-text">
-                        <h1 id="fotocopiadoTitle">Calculadora de cobro</h1>
-                        <p id="fotocopiadoSubtitle">Sistema para empleados - Cálculo de impresiones</p>
-                    </div>
-                    <div class="header-controls">
-                        <button onclick="calcMostrarComparativa()" class="calc-btn calc-btn-outline header-btn header-btn-estadisticas" title="Ver comparativa entre institutos">
-                            Estadisticas
-                        </button>
-                        <button id="calcThemeToggle" class="calc-theme-toggle header-btn" onclick="calcToggleTheme()" title="Cambiar tema">
-                            <span class="calc-theme-icon calc-sun-icon"></span>
-                            <span class="calc-theme-icon calc-moon-icon"></span>
-                        </button>
-                        <button onclick="logout()" class="logout-btn header-btn" title="Cerrar sesión">
-                            Salir
-                        </button>
-                    </div>
-                </div>
-            </header>
+    <div class="calc-header-content">
+        <div class="calc-header-text">
+            <h1 id="fotocopiadoTitle">Calculadora de cobro</h1>
+            <p id="fotocopiadoSubtitle">Sistema para empleados - Cálculo de impresiones</p>
+        </div>
+        <div class="header-controls">
+            <button onclick="calcMostrarComparativa()" class="calc-btn calc-btn-outline header-btn header-btn-estadisticas" title="Ver comparativa entre institutos">
+                Estadisticas
+            </button>
+            <button id="calcThemeToggle" class="calc-theme-toggle header-btn" onclick="calcToggleTheme()" title="Cambiar tema">
+                <span class="calc-theme-icon calc-sun-icon"></span>
+                <span class="calc-theme-icon calc-moon-icon"></span>
+            </button>
+            <button onclick="logout()" class="logout-btn header-btn" title="Cerrar sesión">
+                Salir
+            </button>
+        </div>
+    </div>
+</header>
 
             <div id="calcMainContent">
                 <!-- Configuración de precio -->
@@ -160,7 +182,7 @@
                             <div>
                                 <label class="calc-label">Precio hoja a color:</label>
                                 <div class="calc-flex">
-                                    <input type="number" id="calcPrecioHojaColor" value="80" min="1" class="calc-input calc-input-small">
+                                    <input type="number" id="calcPrecioHojaColor" value="115" min="1" class="calc-input calc-input-small">
                                     <!-- Eliminando texto "pesos" según código del usuario -->
                                     <span style="color: var(--text-secondary);"></span>
                                 </div>
@@ -332,14 +354,14 @@
                     </div>
 
                     <!-- Botones de acciones en la parte inferior de la tarjeta -->
-                    <div class="card-bottom-buttons">
-    <button onclick="actualizarRegistroVentas()" class="calc-btn calc-btn-primary">
+                    <div class="registros-ventas-btn-group">
+    <button onclick="loadFromFirebase().then(calcActualizarTabla)" class="calc-btn calc-btn-primary">
         Actualizar
     </button>
     <button onclick="calcRestablecerVentas()" class="calc-btn calc-btn-warning">
         Restablecer
     </button>
-    <button onclick="calcRecuperarBackup()" class="calc-btn calc-btn-secondary">
+    <button onclick="pedirPasswordRecuperarBackup()" class="calc-btn calc-btn-secondary">
         Recuperar último registro
     </button>
 </div>
@@ -371,26 +393,29 @@
     <div id="calcComparativaScreen" class="calculadora-container" style="display: none;">
         <div class="calculadora-wrapper">
             <header class="calc-header">
-    <div class="calc-header-content">
-        <div class="calc-header-text">
-            <h1>Comparativa por Fotocopiado</h1>
-            <p>Análisis de ventas y rendimiento por fotocopiado</p>
-        </div>
-        <div class="header-controls">
-            <button onclick="calcActualizarComparativa()" class="calc-btn calc-btn-primary" title="Actualizar datos">
-                Actualizar
-            </button>
-            <button onclick="calcExportarEstadisticasPDF()" class="calc-btn calc-btn-outline" title="Exportar estadísticas a PDF">
-                Exportar
-            </button>
-            <button id="calcThemeToggleComp" class="calc-theme-toggle" onclick="calcToggleTheme()" title="Cambiar tema">
-                <span id="themeTextComp" class="calc-theme-text">🌙 Oscuro</span>
-            </button>
-            <button onclick="calcVolverDesdeComparativa()" class="calc-btn calc-btn-secondary" title="Volver">
-                Volver
-            </button>
-        </div>
+<div class="calc-header-content">
+    <div class="calc-header-text">
+        <h1>Comparativa por Fotocopiado</h1>
+        <p>Análisis de ventas y rendimiento por fotocopiado</p>
     </div>
+    <div class="header-controls">
+        <button onclick="calcActualizarComparativa()" class="calc-btn calc-btn-primary" title="Actualizar datos">
+            Actualizar
+        </button>
+        <button onclick="calcExportarEstadisticasPDF()" class="calc-btn calc-btn-outline" title="Exportar estadísticas a PDF">
+            Exportar
+        </button>
+        <button onclick="exportarTodosLosRegistrosPDFZip()" class="calc-btn calc-btn-success" title="Descargar registros de los 3 copiados en ZIP">
+            Descargar ZIP de registros PDF
+        </button>
+        <button id="calcThemeToggleComp" class="calc-theme-toggle" onclick="calcToggleTheme()" title="Cambiar tema">
+            <span id="themeTextComp" class="calc-theme-text">🌙 Oscuro</span>
+        </button>
+        <button onclick="calcVolverDesdeComparativa()" class="calc-btn calc-btn-secondary" title="Volver">
+            Volver
+        </button>
+    </div>
+</div>
 </header>
 
             <!-- Cards de resumen -->
@@ -459,5 +484,7 @@
     <script src="/Code.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <!-- Agregando librería JSZip para exportar ZIP de PDFs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </body>
 </html>

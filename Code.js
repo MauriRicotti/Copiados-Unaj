@@ -52,6 +52,9 @@ const comparativaCharts = {
   metodos: null,
 }
 
+// Variable global para el turno
+let currentTurno = localStorage.getItem("currentTurno") || "TM";
+
 // Funciones de tema
 function calcCargarTema() {
   const temaGuardado = localStorage.getItem("calcTema") || "light"
@@ -82,6 +85,28 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     })
   }
+
+  // Inicializar selector de turno (ahora debajo del subtítulo)
+  const turnoSelect = document.getElementById("turnoSelect");
+  if (turnoSelect) {
+    turnoSelect.value = currentTurno;
+    turnoSelect.onchange = function() {
+      currentTurno = this.value;
+      localStorage.setItem("currentTurno", currentTurno);
+    }
+  }
+
+  // Permitir login con Enter en los inputs de contraseña
+  ["salud", "sociales", "ingenieria"].forEach(tipo => {
+    const input = document.getElementById(`passwordInput-${tipo}`);
+    if (input) {
+      input.addEventListener("keydown", function(e) {
+        if (e.key === "Enter") {
+          login(tipo);
+        }
+      });
+    }
+  });
 })
 
 function initializeFirebase() {
@@ -601,12 +626,12 @@ function calcCalcularCambio() {
 
 function calcFinalizarVenta() {
   if (!calcMetodoPago) {
-    alert("Por favor selecciona un método de pago.")
-    return
+    alert("Por favor selecciona un método de pago.");
+    return;
   }
 
-  const ahora = new Date()
-  const propina = Number.parseFloat(document.getElementById("calcPropinaInput")?.value) || 0
+  const ahora = new Date();
+  const propina = Number.parseFloat(document.getElementById("calcPropinaInput")?.value) || 0;
   const ventaDetalle = {
     id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     fecha: ahora.toLocaleDateString("es-ES"),
@@ -619,37 +644,34 @@ function calcFinalizarVenta() {
     precioHojaColor: Number.parseFloat(document.getElementById("calcPrecioHojaColor").value),
     deviceId: deviceId,
     timestamp: Date.now(),
-  }
+  };
 
-  console.log("[v0] Finalizando venta:", ventaDetalle)
-
-  // Actualizar registro
+  // Actualizar registro de ventas
   if (calcMetodoPago === "efectivo") {
-    calcRegistroVentas.efectivo += ventaDetalle.total
+    calcRegistroVentas.efectivo += ventaDetalle.total;
   } else {
-    calcRegistroVentas.transferencia += ventaDetalle.total
+    calcRegistroVentas.transferencia += ventaDetalle.total;
   }
-  calcRegistroVentas.ventas.push(ventaDetalle)
+  calcRegistroVentas.ventas.push(ventaDetalle);
 
-  console.log("[v0] Registro actualizado:", calcRegistroVentas)
+  // Guardar y sincronizar
+  calcGuardarDatos();
 
-  calcGuardarDatos()
-  calcActualizarTabla()
+  // Actualizar la tabla de ventas
+  if (typeof calcActualizarTabla === "function") {
+    calcActualizarTabla();
+  }
 
-  // Reset everything immediately
-  document.getElementById("calcArchivosContainer").innerHTML = ""
-  document.getElementById("calcPagoContainer").style.display = "none"
-
-  calcArchivos = []
-  calcContadorArchivos = 0
-  calcTotal = 0
-  calcMetodoPago = null
-
-  // Resetear propina al iniciar nueva venta
-  if (document.getElementById("calcPropinaInput")) document.getElementById("calcPropinaInput").value = "0"
-
-  calcAgregarArchivo()
-  window.scrollTo({ top: 0, behavior: "smooth" })
+  // Resetear la interfaz para una nueva venta
+  document.getElementById("calcArchivosContainer").innerHTML = "";
+  document.getElementById("calcPagoContainer").style.display = "none";
+  calcArchivos = [];
+  calcContadorArchivos = 0;
+  calcTotal = 0;
+  calcMetodoPago = null;
+  if (document.getElementById("calcPropinaInput")) document.getElementById("calcPropinaInput").value = "0";
+  calcAgregarArchivo();
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function calcRestablecerVentas() {
@@ -841,6 +863,11 @@ function calcVolverDesdeComparativa() {
       calculatorScreen.classList.remove("animated-fadeInUp");
     }, 500);
   }, 400);
+
+  // Mostrar el selector de turno solo si vuelve a calculadora
+  if (document.getElementById("calculatorScreen").style.display === "block") {
+    document.getElementById("turnoSelectorFixed").style.display = "flex";
+  }
 }
 
 async function calcCargarDatosComparativa() {
@@ -1048,29 +1075,79 @@ function calcMostrarDetallesComparativa(datos) {
   })
 }
 
-async function calcActualizarComparativa() {
-  await calcCargarDatosComparativa()
+function mostrarTurnoModal() {
+  const modal = document.getElementById("turnoModal");
+  const select = document.getElementById("turnoModalSelect");
+  const btn = document.getElementById("turnoModalBtn");
+
+  // Reset selección
+  select.value = "";
+  modal.style.display = "flex";
+
+  // Evitar cerrar con click fuera
+  modal.onclick = function(e) {
+    if (e.target === modal) {
+      // No cerrar, es obligatorio elegir turno
+      e.stopPropagation();
+    }
+  };
+
+  btn.onclick = function() {
+    const turnoElegido = select.value;
+    if (!turnoElegido) {
+      alert("Debes seleccionar un turno para continuar.");
+      return;
+    }
+    // Guardar turno y actualizar selector principal
+    currentTurno = turnoElegido;
+    localStorage.setItem("currentTurno", currentTurno);
+
+    // Actualizar el selector de turnos de la calculadora
+    const turnoSelect = document.getElementById("turnoSelect");
+    if (turnoSelect) turnoSelect.value = currentTurno;
+
+    modal.style.display = "none";
+    showCalculatorScreen();
+  };
 }
 
-// Actualizar subtotales cuando cambien los precios
-document.addEventListener("change", (e) => {
-  if (e.target.id === "calcPrecioHoja" || e.target.id === "calcPrecioHojaColor") {
-    calcArchivos.forEach((archivo) => {
-      calcActualizarSubtotal(archivo.id)
-    })
-  }
-})
+// Sobrescribir login para forzar selección de turno antes de mostrar calculadora
+function login(tipo = null) {
+  const fotocopiadoType = tipo || selectedFotocopiado
+  const password = document.getElementById(`passwordInput-${fotocopiadoType}`).value
 
-document.addEventListener("keypress", (e) => {
-  if (e.key === "Enter") {
-    // Buscar si el elemento activo es un input de contraseña
-    const activeElement = document.activeElement
-    if (activeElement && activeElement.id && activeElement.id.startsWith("passwordInput-")) {
-      const tipo = activeElement.id.replace("passwordInput-", "")
-      login(tipo)
+  if (!fotocopiadoType) {
+    alert("Por favor selecciona un fotocopiado")
+    return
+  }
+
+  if (password === calcInstitutos[fotocopiadoType].password) {
+    currentFotocopiado = fotocopiadoType
+    localStorage.setItem("currentFotocopiado", currentFotocopiado)
+    mostrarTurnoModal(); // <-- Mostrar modal de turno obligatorio
+  } else {
+    alert("Contraseña incorrecta")
+    const passwordInput = document.getElementById(`passwordInput-${fotocopiadoType}`)
+    if (passwordInput) {
+      passwordInput.value = ""
+      passwordInput.focus()
     }
   }
-})
+}
+
+// Cuando el usuario cambia el selector de turno manualmente, actualizar currentTurno y localStorage
+document.addEventListener("DOMContentLoaded", () => {
+  // ...existing code...
+  const turnoSelect = document.getElementById("turnoSelect");
+  if (turnoSelect) {
+    turnoSelect.value = currentTurno;
+    turnoSelect.onchange = function() {
+      currentTurno = this.value;
+      localStorage.setItem("currentTurno", currentTurno);
+    }
+  }
+  // ...existing code...
+});
 
 function listenToFirebaseChanges() {
   if (!isFirebaseEnabled || !database || !currentFotocopiado) {
@@ -1184,19 +1261,28 @@ function showSyncNotification(message) {
 
 function addOutsideClickListener() {
   document.addEventListener("click", (event) => {
+    // Si el modal de turno está visible, ignorar clicks fuera
+    const turnoModal = document.getElementById("turnoModal");
+    if (turnoModal && turnoModal.style.display === "flex") {
+      // Si el click fue dentro del modal, no hacer nada
+      if (turnoModal.contains(event.target)) return;
+      // Si el click fue fuera del modal, tampoco cerrar paneles de login
+      return;
+    }
+
     // Solo aplicar en la pantalla de login
-    const loginScreen = document.getElementById("loginScreen")
-    if (!loginScreen || loginScreen.style.display === "none") return
+    const loginScreen = document.getElementById("loginScreen");
+    if (!loginScreen || loginScreen.style.display === "none") return;
 
     // Verificar si el clic fue fuera de las tarjetas de fotocopiado
-    const clickedCard = event.target.closest(".fotocopiado-card")
-    const clickedPasswordSection = event.target.closest(".password-section-inline")
+    const clickedCard = event.target.closest(".fotocopiado-card");
+    const clickedPasswordSection = event.target.closest(".password-section-inline");
 
     // Si no se hizo clic en una tarjeta ni en una sección de contraseña, deseleccionar
     if (!clickedCard && !clickedPasswordSection) {
-      cancelLogin()
+      cancelLogin();
     }
-  })
+  });
 }
 
 function checkExistingSession() {
@@ -1216,8 +1302,12 @@ function showLoginScreen() {
   setTimeout(() => {
     loginScreen.classList.remove("animated-fadeInUp");
   }, 500);
+
+  // Ocultar el selector de turno fuera de calculadora
+  document.getElementById("turnoSelectorFixed").style.display = "none";
 }
 
+// Mostrar/ocultar el selector de turno SOLO en la pantalla de calculadora
 function showCalculatorScreen() {
   const loginScreen = document.getElementById("loginScreen");
   const calculatorScreen = document.getElementById("calculatorScreen");
@@ -1231,6 +1321,18 @@ function showCalculatorScreen() {
       calculatorScreen.classList.remove("animated-fadeInUp");
     }, 500);
   }, 400);
+
+  // Mostrar el selector de turno solo en calculadora
+  document.getElementById("turnoSelectorFixed").style.display = "flex";
+
+  // Si es mobile, mover el selector arriba del título
+  if (window.innerWidth <= 900) {
+    const header = document.querySelector('.calc-header-text');
+    const selector = document.getElementById("turnoSelectorFixed");
+    if (header && selector && header.parentNode) {
+      header.parentNode.insertBefore(selector, header);
+    }
+  }
 
   // Actualizar título y subtítulo
   const fotocopiado = calcInstitutos[currentFotocopiado]
@@ -1286,7 +1388,7 @@ function login(tipo = null) {
   if (password === calcInstitutos[fotocopiadoType].password) {
     currentFotocopiado = fotocopiadoType
     localStorage.setItem("currentFotocopiado", currentFotocopiado)
-    showCalculatorScreen()
+    mostrarTurnoModal(); // <-- Mostrar modal de turno obligatorio
   } else {
     alert("Contraseña incorrecta")
     const passwordInput = document.getElementById(`passwordInput-${fotocopiadoType}`)
@@ -1480,6 +1582,7 @@ function calcExportarPDF() {
   const mes = ahora.toLocaleString("es-ES", { month: "long" });
   const año = ahora.getFullYear();
   const nombreCopiado = calcInstitutos[currentFotocopiado]?.name || "Copiado";
+  const turno = currentTurno === "TM" ? "Mañana" : "Tarde";
 
   // Obtener ventas
   const ventas = calcRegistroVentas.ventas || [];
@@ -1494,6 +1597,7 @@ function calcExportarPDF() {
   doc.text(`Registro de Ventas - ${nombreCopiado}`, 14, 18);
   doc.setFontSize(12);
   doc.text(`Mes: ${mes.charAt(0).toUpperCase() + mes.slice(1)} ${año}`, 14, 26);
+  doc.text(`Turno: ${turno}`, 14, 34);
 
   // Preparar datos para la tabla principal
   const ventasEfectivo = ventas.filter(v => v.metodoPago === 'efectivo').map(v => `$${v.total}`);
@@ -1507,7 +1611,7 @@ function calcExportarPDF() {
     ]);
   }
 
-  let y = 36;
+  let y = 42;
   doc.setFontSize(13);
   doc.text('Ventas:', 14, y);
   y += 8;
@@ -1541,7 +1645,7 @@ function calcExportarPDF() {
   });
 
   // Guardar PDF
-  doc.save(`RegistroVentas_${nombreCopiado}_${mes}_${año}.pdf`);
+  doc.save(`RegistroVentas_${nombreCopiado}_${mes}_${año}_${turno}.pdf`);
 }
 
 function calcExportarEstadisticasPDF() {
@@ -1615,105 +1719,234 @@ function calcExportarEstadisticasPDF() {
   doc.save(nombreArchivo)
 }
 
-function calcActualizarTabla() {
-  // Actualizar totales
-  document.getElementById("calcTotalEfectivo").textContent = `$${(calcRegistroVentas.efectivo || 0).toLocaleString("es-AR")}`;
-  document.getElementById("calcTotalTransferencia").textContent = `$${(calcRegistroVentas.transferencia || 0).toLocaleString("es-AR")}`;
-  document.getElementById("calcTotalGeneral").textContent = `$${((calcRegistroVentas.efectivo || 0) + (calcRegistroVentas.transferencia || 0)).toLocaleString("es-AR")}`;
-  document.getElementById("calcCountEfectivo").textContent = (calcRegistroVentas.ventas || []).filter(v => v.metodoPago === "efectivo").length;
-  document.getElementById("calcCountTransferencia").textContent = (calcRegistroVentas.ventas || []).filter(v => v.metodoPago === "transferencia").length;
-  document.getElementById("calcTotalVentas").textContent = `${(calcRegistroVentas.ventas || []).length} ventas`;
+// Exportar los 3 registros de ventas en PDF y empaquetar en ZIP
+async function exportarTodosLosRegistrosPDFZip() {
+  const institutos = ["salud", "sociales", "ingenieria"];
+  const nombres = {
+    salud: "Copiados_Salud",
+    sociales: "Copiados_Sociales",
+    ingenieria: "Copiados_Ingenieria"
+  };
+  const zip = new JSZip();
+  const ahora = new Date();
+  const mes = ahora.toLocaleString("es-ES", { month: "long" });
+  const año = ahora.getFullYear();
+  const turno = currentTurno || "TM";
 
-  // Actualizar versión móvil
-  document.getElementById("calcTotalEfectivoMobile").textContent = `$${(calcRegistroVentas.efectivo || 0).toLocaleString("es-AR")}`;
-  document.getElementById("calcTotalTransferenciaMobile").textContent = `$${(calcRegistroVentas.transferencia || 0).toLocaleString("es-AR")}`;
-  document.getElementById("calcTotalGeneralMobile").textContent = `$${((calcRegistroVentas.efectivo || 0) + (calcRegistroVentas.transferencia || 0)).toLocaleString("es-AR")}`;
-  document.getElementById("calcCountEfectivoMobile").textContent = (calcRegistroVentas.ventas || []).filter(v => v.metodoPago === "efectivo").length;
-  document.getElementById("calcCountTransferenciaMobile").textContent = (calcRegistroVentas.ventas || []).filter(v => v.metodoPago === "transferencia").length;
-  document.getElementById("calcTotalVentasMobile").textContent = `${(calcRegistroVentas.ventas || []).length} ventas`;
-}
+  for (const tipo of institutos) {
+    // Cargar datos de Firebase para cada copiado
+    let data = null;
+    if (isFirebaseEnabled && database) {
+      const ref = window.firebaseRef(database, `fotocopiados/${tipo}`);
+      const snap = await window.firebaseGet(ref);
+      data = snap.exists() ? snap.val() : { efectivo: 0, transferencia: 0, ventas: [] };
+    } else {
+      data = JSON.parse(localStorage.getItem(`calcRegistroVentas_${tipo}`) || "{}");
+    }
+    // Generar PDF usando jsPDF igual que en calcExportarPDF
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text(`Registro de Ventas - ${nombres[tipo]}`, 14, 18);
+    doc.setFontSize(12);
+    doc.text(`Mes: ${mes.charAt(0).toUpperCase() + mes.slice(1)} ${año}`, 14, 26);
+    doc.text(`Turno: ${turno === "TM" ? "Mañana" : "Tarde"}`, 14, 34);
 
-function actualizarRegistroVentas() {
-  loadFromFirebase().then(() => {
-    calcActualizarTabla();
-    showSyncNotification("Registro actualizado correctamente.");
+    // Ventas
+    const ventas = data.ventas || [];
+    const totalEfectivo = ventas.filter(v => v.metodoPago === 'efectivo').reduce((acc, v) => acc + v.total, 0);
+    const totalTransferencia = ventas.filter(v => v.metodoPago === 'transferencia').reduce((acc, v) => acc + v.total, 0);
+    const totalGeneral = totalEfectivo + totalTransferencia;
+    const ventasEfectivo = ventas.filter(v => v.metodoPago === 'efectivo').map(v => `$${v.total}`);
+    const ventasTransferencia = ventas.filter(v => v.metodoPago === 'transferencia').map(v => `$${v.total}`);
+    const maxFilas = Math.max(ventasEfectivo.length, ventasTransferencia.length);
+    const tablaVentas = [];
+    for (let i = 0; i < maxFilas; i++) {
+      tablaVentas.push([
+        ventasEfectivo[i] || '',
+        ventasTransferencia[i] || ''
+      ]);
+    }
+    let y = 42;
+    doc.setFontSize(13);
+    doc.text('Ventas:', 14, y);
+    y += 8;
+    doc.autoTable({
+      head: [['Efectivo', 'Transferencia']],
+      body: tablaVentas,
+      startY: y,
+      theme: 'grid',
+      styles: { fontSize: 12 },
+      headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' },
+      bodyStyles: { fillColor: [245, 245, 245] }
+    });
+    y = doc.lastAutoTable.finalY + 10;
+    doc.setFontSize(13);
+    doc.text('Totales:', 14, y);
+    y += 8;
+    doc.autoTable({
+      head: [['Concepto', 'Monto']],
+      body: [
+        ['Total ventas en efectivo', `$${totalEfectivo}`],
+        ['Total ventas en transferencia', `$${totalTransferencia}`],
+        ['Total general', `$${totalGeneral}`]
+      ],
+      startY: y,
+      theme: 'grid',
+      styles: { fontSize: 12 },
+      headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold' },
+      bodyStyles: { fillColor: [245, 245, 245] }
+    });
+
+    // Guardar PDF en el ZIP
+    const nombrePDF = `${nombres[tipo]}_${mes}_${año}_${turno}.pdf`;
+    const pdfBlob = doc.output("blob");
+    zip.file(nombrePDF, pdfBlob);
+  }
+
+  // Generar y descargar el ZIP
+  const nombreZip = `Registros_Copiados_UNAJ_${mes}_${año}_${turno}.zip`;
+  zip.generateAsync({ type: "blob" }).then(function(content) {
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(content);
+    link.download = nombreZip;
+    document.body.appendChild(link);
+    link.click();
+    setTimeout(() => {
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+    }, 100);
   });
 }
 
-function calcMostrarDetalles(metodo) {
+function calcActualizarTabla() {
+  // Actualiza los totales y la cantidad de ventas en la tabla de registro de ventas
+  const efectivo = calcRegistroVentas.efectivo || 0;
+  const transferencia = calcRegistroVentas.transferencia || 0;
+  const total = efectivo + transferencia;
+  const ventasEfectivo = (calcRegistroVentas.ventas || []).filter(v => v.metodoPago === "efectivo").length;
+  const ventasTransferencia = (calcRegistroVentas.ventas || []).filter(v => v.metodoPago === "transferencia").length;
+  const ventasTotales = (calcRegistroVentas.ventas || []).length;
+
+ 
+
+  // Tabla desktop
+  document.getElementById("calcTotalEfectivo").innerText = `$${efectivo.toLocaleString("es-AR")}`;
+  document.getElementById("calcTotalTransferencia").innerText = `$${transferencia.toLocaleString("es-AR")}`;
+  document.getElementById("calcTotalGeneral").innerText = `$${total.toLocaleString("es-AR")}`;
+  document.getElementById("calcCountEfectivo").innerText = ventasEfectivo;
+  document.getElementById("calcCountTransferencia").innerText = ventasTransferencia;
+  document.getElementById("calcTotalVentas").innerText = `${ventasTotales} ventas`;
+
+  // Tabla mobile (¡AGREGA ESTO!)
+  document.getElementById("calcTotalEfectivoMobile").innerText = `$${efectivo.toLocaleString("es-AR")}`;
+  document.getElementById("calcTotalTransferenciaMobile").innerText = `$${transferencia.toLocaleString("es-AR")}`;
+  document.getElementById("calcTotalGeneralMobile").innerText = `$${total.toLocaleString("es-AR")}`;
+  document.getElementById("calcCountEfectivoMobile").innerText = ventasEfectivo;
+  document.getElementById("calcCountTransferenciaMobile").innerText = ventasTransferencia;
+  document.getElementById("calcTotalVentasMobile").innerText = `${ventasTotales} ventas`;
+}
+
+// Mostrar detalles de ventas por método (efectivo o transferencia)
+function calcMostrarDetalles(tipo) {
   const container = document.getElementById("calcDetallesContainer");
   const content = document.getElementById("calcDetallesContent");
   const title = document.getElementById("calcDetallesTitle");
-  const btnPropina = document.getElementById("btnAgregarPropinaDetalle");
 
-  if (!container || !content || !title) return;
+  // Filtrar ventas por método de pago
+  const ventas = (calcRegistroVentas.ventas || []).filter(v => v.metodoPago === tipo);
 
-  // Filtrar ventas por método
-  const ventas = (calcRegistroVentas.ventas || []).filter(v => v.metodoPago === metodo);
+  // Título dinámico
+  title.textContent = `Detalles de Ventas (${tipo === "efectivo" ? "Efectivo" : "Transferencia"})`;
 
-  title.textContent = `Detalles de Ventas (${metodo.charAt(0).toUpperCase() + metodo.slice(1)})`;
-  content.innerHTML = "";
+  // Opciones de ajustes
+  const ajustesOpciones = {
+    "1": "Simple/Doble faz",
+    "2": "Doble faz (2 pág/carilla)",
+    "4": "Doble faz (4 pág/carilla)",
+    "6": "Doble faz (6 pág/carilla)",
+    "9": "Doble faz (9 pág/carilla)"
+  };
 
+  // Si no hay ventas, mostrar mensaje
   if (ventas.length === 0) {
-    content.innerHTML = "<div style='color: var(--text-secondary); text-align: center;'>No hay ventas registradas.</div>";
-    if (btnPropina) btnPropina.style.display = "none";
+    content.innerHTML = `<div style="padding: 24px; text-align: center; color: var(--text-secondary);">No hay ventas registradas para este método de pago.</div>`;
   } else {
-    ventas.forEach((v, idx) => {
-      const archivos = v.archivos.map(a => 
-        `<li>${a.paginas} pág × ${a.copias} copias (${a.color === "color" ? "Color" : "BN"})</li>`
-      ).join("");
-      content.innerHTML += `
-        <div class="calc-venta-item" id="venta-${v.id}">
-          <ul>
-            <li><strong>Fecha:</strong> ${v.fecha} ${v.hora}</li>
-            <li><strong>Total:</strong> $${v.total.toLocaleString("es-AR")}${v.propina ? ` <span style='color:#10b981;'>(Propina: $${v.propina})</span>` : ""}</li>
-            <li><strong>Archivos:</strong>
-              <ul>${archivos}</ul>
-            </li>
-          </ul>
-          <div class="card-bottom-buttons" style="margin-top:12px;">
-            <button class="calc-btn calc-btn-danger" onclick="eliminarVenta('${v.id}')">Eliminar venta</button>
-            <button class="calc-btn calc-btn-secondary" onclick="cambiarMetodoVenta('${v.id}')">Cambiar método de pago</button>
-            <button class="calc-btn calc-btn-success" onclick="agregarPropinaADetalle('${v.id}')">Agregar/Modificar propina</button>
+    content.innerHTML = ventas.map((venta, idx) => `
+      <div class="calc-venta-item" style="margin-bottom:18px;">
+        <ul>
+          <li><b>#${idx + 1}</b> - <b>Fecha:</b> ${venta.fecha} <b>Hora:</b> ${venta.hora}</li>
+          <li><b>Total:</b> $${venta.total.toLocaleString("es-AR")}${venta.propina && venta.propina > 0 ? ` (Propina: $${venta.propina})` : ""}</li>
+          <li><b>Precios:</b> BN $${venta.precioHojaBN} / Color $${venta.precioHojaColor}</li>
+        </ul>
+        <div style="margin-top:10px;">
+          <b>Archivos de la venta:</b>
+          <div>
+            ${venta.archivos.map((archivo, i) => {
+              // Calcular precio individual del archivo
+              const paginasPorCarilla = Number.parseInt(archivo.tipo) || 1;
+              const hojasNecesarias = Math.ceil(archivo.paginas / paginasPorCarilla);
+              const precioHoja = archivo.color === "color" ? venta.precioHojaColor : venta.precioHojaBN;
+              const precioArchivo = hojasNecesarias * precioHoja * archivo.copias;
+              return `
+                <div style="margin:10px 0; padding:10px; border-radius:8px; background:var(--bg-card-header); border:1px solid var(--border-color);">
+                  <b>Archivo ${i + 1}</b><br>
+                  <b>Páginas:</b> ${archivo.paginas} &nbsp; 
+                  <b>Copias:</b> ${archivo.copias} &nbsp; 
+                  <b>Ajuste:</b> ${ajustesOpciones[archivo.tipo] || archivo.tipo} &nbsp; 
+                  <b>Tipo impresión:</b> ${archivo.color === "color" ? "Color" : "Blanco y Negro"}<br>
+                  <b>Precio archivo:</b> $${precioArchivo.toLocaleString("es-AR")}
+                </div>
+              `;
+            }).join("")}
           </div>
         </div>
-      `;
-    });
-    // Mostrar el botón de propina solo si hay ventas (opcional, ya que ahora está en cada venta)
-    if (btnPropina) btnPropina.style.display = "none";
+        <div style="margin-top:12px; display:flex; flex-wrap:wrap; gap:10px;">
+          <button class="calc-btn calc-btn-danger" onclick="eliminarVentaPorIndice(${getVentaIndiceGlobal(venta)}, '${tipo}')">Eliminar</button>
+          <button class="calc-btn calc-btn-secondary" onclick="cambiarMetodoPagoVenta(${getVentaIndiceGlobal(venta)}, '${tipo}')">Cambiar método de pago</button>
+          <button class="calc-btn calc-btn-success" onclick="mostrarPropinaDetalle(${getVentaIndiceGlobal(venta)})">Agregar/Modificar propina</button>
+        </div>
+      </div>
+    `).join("");
   }
 
+  // Ajustar altura de la card para ver más ventas cómodamente
   container.style.display = "block";
+  container.style.maxHeight = "80vh";
+  container.style.overflowY = "auto";
+  container.style.minHeight = "500px";
+  window.ventaDetalleIdMostrado = null; // Oculta botón de propina por defecto
 }
 
-// Eliminar venta por ID
-function eliminarVenta(ventaId) {
-  if (!confirm("¿Seguro que deseas eliminar esta venta?")) return;
-  const idx = calcRegistroVentas.ventas.findIndex(v => v.id === ventaId);
-  if (idx === -1) return;
+// Devuelve el índice global de la venta en el array original (para acciones)
+function getVentaIndiceGlobal(venta) {
+  return (calcRegistroVentas.ventas || []).findIndex(v => v.id === venta.id);
+}
 
-  // Actualizar totales
+// Eliminar venta por índice global
+function eliminarVentaPorIndice(idx, tipo) {
+  if (!confirm("¿Seguro que deseas eliminar esta venta?")) return;
   const venta = calcRegistroVentas.ventas[idx];
+  if (!venta) return;
+  // Restar del acumulado
   if (venta.metodoPago === "efectivo") {
     calcRegistroVentas.efectivo -= venta.total;
   } else {
     calcRegistroVentas.transferencia -= venta.total;
   }
-
+  // Eliminar venta
   calcRegistroVentas.ventas.splice(idx, 1);
   calcGuardarDatos();
   calcActualizarTabla();
-  calcOcultarDetalles();
-  showSyncNotification("Venta eliminada correctamente.");
+  // Refrescar detalles en el método actual
+  calcMostrarDetalles(tipo);
 }
 
-// Cambiar método de pago por ID
-function cambiarMetodoVenta(ventaId) {
-  const idx = calcRegistroVentas.ventas.findIndex(v => v.id === ventaId);
-  if (idx === -1) return;
-
+// Cambiar método de pago de una venta y mover la tarjeta al otro método
+function cambiarMetodoPagoVenta(idx, tipoActual) {
   const venta = calcRegistroVentas.ventas[idx];
-  // Actualizar totales
+  if (!venta) return;
+  // Restar del método actual y sumar al nuevo
   if (venta.metodoPago === "efectivo") {
     calcRegistroVentas.efectivo -= venta.total;
     calcRegistroVentas.transferencia += venta.total;
@@ -1723,33 +1956,94 @@ function cambiarMetodoVenta(ventaId) {
     calcRegistroVentas.efectivo += venta.total;
     venta.metodoPago = "efectivo";
   }
-
   calcGuardarDatos();
   calcActualizarTabla();
-  calcOcultarDetalles();
-  showSyncNotification("Método de pago cambiado correctamente.");
+  // Refrescar detalles: mostrar el método actual (ya no contiene la venta movida)
+  calcMostrarDetalles(tipoActual);
+  // Mostrar notificación para que el usuario pueda ver la venta en el otro método
+  showSyncNotification("La venta fue movida al otro método de pago. Haz clic en 'Ver detalles' del otro método para verla.");
 }
 
-function agregarPropinaADetalle(ventaId) {
-  const venta = calcRegistroVentas.ventas.find(v => v.id === ventaId)
-  if (!venta) return
-  const nuevaPropina = prompt("Ingresa la propina para esta venta:", venta.propina ? venta.propina : "0")
-  if (nuevaPropina === null) return
-  const propinaNum = Number.parseFloat(nuevaPropina) || 0
-  // El total base debe ser el total original menos la propina actual
-  // Si la venta tiene un campo 'totalBase', lo usamos, si no lo calculamos
-  if (!venta.totalBase) {
-    venta.totalBase = venta.total - (venta.propina || 0)
-  }
-  venta.propina = propinaNum
-  venta.total = venta.totalBase + propinaNum
+// Mostrar input para modificar propina
+function mostrarPropinaDetalle(idx) {
+  const venta = calcRegistroVentas.ventas[idx];
+  if (!venta) return;
+  const nuevaPropina = prompt("Ingrese la nueva propina para esta venta:", venta.propina || 0);
+  if (nuevaPropina === null) return;
+  const propinaNum = Number.parseFloat(nuevaPropina) || 0;
+  // Actualizar totales
   if (venta.metodoPago === "efectivo") {
-    calcRegistroVentas.efectivo = calcRegistroVentas.ventas.filter(v => v.metodoPago === "efectivo").reduce((acc, v) => acc + v.total, 0)
+    calcRegistroVentas.efectivo -= venta.total;
+    venta.total = venta.total - (venta.propina || 0) + propinaNum;
+    calcRegistroVentas.efectivo += venta.total;
   } else {
-    calcRegistroVentas.transferencia = calcRegistroVentas.ventas.filter(v => v.metodoPago === "transferencia").reduce((acc, v) => acc + v.total, 0)
+    calcRegistroVentas.transferencia -= venta.total;
+    venta.total = venta.total - (venta.propina || 0) + propinaNum;
+    calcRegistroVentas.transferencia += venta.total;
   }
-  calcGuardarDatos()
-  calcActualizarTabla()
-  calcMostrarDetalles(venta.metodoPago)
-  alert("Propina actualizada correctamente.")
+  venta.propina = propinaNum;
+  calcGuardarDatos();
+  calcActualizarTabla();
+  // Refrescar detalles
+  calcMostrarDetalles(venta.metodoPago);
+}
+
+function pedirPasswordRecuperarBackup() {
+  const pass = prompt("Ingrese la contraseña de administrador para recuperar el último registro:");
+  if (pass !== "admin123") { // Unificado a minúscula
+    alert("Contraseña incorrecta. No se realizó la acción.");
+    return;
+  }
+  calcRecuperarBackup();
+}
+
+// Recuperar el último backup desde Firebase o localStorage
+async function calcRecuperarBackup() {
+  if (isFirebaseEnabled && database && currentFotocopiado) {
+    try {
+      const backupsRef = window.firebaseRef(database, `backups/${currentFotocopiado}`);
+      const snapshot = await window.firebaseGet(backupsRef);
+      if (snapshot.exists()) {
+        const backups = snapshot.val();
+        const timestamps = Object.keys(backups).sort((a, b) => b - a);
+        const ultimoBackup = backups[timestamps[0]];
+        if (!ultimoBackup) {
+          alert("No hay backup disponible.");
+          return;
+        }
+        // Restaurar ventas en Firebase y local
+        const ventasRef = window.firebaseRef(database, `fotocopiados/${currentFotocopiado}`);
+        await window.firebaseSet(ventasRef, ultimoBackup);
+        calcRegistroVentas = {
+          efectivo: ultimoBackup.efectivo || 0,
+          transferencia: ultimoBackup.transferencia || 0,
+          ventas: ultimoBackup.ventas || [],
+          resetTimestamp: ultimoBackup.resetTimestamp || Date.now(),
+        };
+        calcGuardarDatosLocal();
+        calcActualizarTabla();
+        alert("Backup restaurado correctamente y sincronizado.");
+      } else {
+        alert("No hay backup disponible.");
+      }
+    } catch (error) {
+      console.error("Error restaurando backup:", error);
+      alert("Error al restaurar el backup.");
+    }
+  } else {
+    // Restaurar desde localStorage si no hay Firebase
+    const backup = localStorage.getItem(`calcRegistroVentas_backup_${currentFotocopiado}`);
+    if (backup) {
+      try {
+        calcRegistroVentas = JSON.parse(backup);
+        calcGuardarDatosLocal();
+        calcActualizarTabla();
+        alert("Backup local restaurado correctamente.");
+      } catch (e) {
+        alert("Error al restaurar el backup local.");
+      }
+    } else {
+      alert("No hay backup local disponible.");
+    }
+  }
 }
