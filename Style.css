@@ -53,8 +53,7 @@
   --bg-card: #ffffff;
   --bg-card-header: #f9fafb;
   --text-primary: #333333;
-  /* Mejorado contraste del texto secundario en tema claro de #4b5563 a #374151 */
-  --text-secondary: #374151; /* Cambiado de #4b5563 para mejor contraste */
+  --text-secondary: #374151;
   --text-heading: #1f2937;
   --border-color: #e5e7eb;
   --border-light: #f3f4f6;
@@ -161,14 +160,12 @@ body {
 .fotocopiado-icon {
   font-size: 3rem;
   margin-bottom: 16px;
-  /* Agregando estilos para las imágenes de los institutos */
   display: flex;
   justify-content: center;
   align-items: center;
   height: 80px;
 }
 
-/* Estilos específicos para los logos de los institutos */
 .instituto-logo {
   max-width: 100%;
   max-height: 80px;
@@ -191,13 +188,11 @@ body {
 }
 
 .fotocopiado-card p {
-  /* Asegurar que el texto secundario use la variable CSS corregida */
   color: var(--text-secondary);
   font-size: 0.95rem;
-  font-weight: 500; /* Agregado peso de fuente para mejor legibilidad */
+  font-weight: 500;
 }
 
-/* Sección de contraseña inline */
 .password-section-inline {
   margin-top: 24px;
   padding-top: 20px;
@@ -384,7 +379,6 @@ body {
   background: #dc2626;
 }
 
-/* Cards y contenido principal */
 .calc-card {
   background: var(--bg-card);
   border-radius: 12px;
@@ -410,7 +404,6 @@ body {
   padding: 24px;
 }
 
-/* Grids y layouts */
 .calc-grid {
   display: grid;
   gap: 20px;
@@ -1335,10 +1328,4 @@ body {
 [data-theme="dark"] .registros-ventas-btn-group .calc-btn-warning {
   background: #d91b06;
   color: #fff;
-}
-
-[data-theme="dark"] .registros-ventas-btn-group .calc-btn-secondary {
-  background: #374151;
-  color: #f1f5f9;
-  border: 2px solid #4a5568;
 }

@@ -1,4 +1,3 @@
-// Configuración de Firebase - REEMPLAZAR CON TUS CREDENCIALES
 const firebaseConfig = {
   apiKey: "AIzaSyC0YFv49AUWjZtEl2KxgiytnFG4bzv5sMA",
   authDomain: "fotocopiado-unaj.firebaseapp.com",
@@ -10,7 +9,6 @@ const firebaseConfig = {
   measurementId: "G-SNQ58PSQJ2",
 }
 
-// Configuración de fotocopiados
 const calcInstitutos = {
   salud: {
     name: "Copiados Salud",
@@ -29,7 +27,6 @@ const calcInstitutos = {
   },
 }
 
-// Variables globales
 let firebaseApp
 let database
 let isFirebaseEnabled = false
@@ -46,16 +43,13 @@ let calcTotal = 0
 let calcMetodoPago
 let selectedFotocopiado
 
-// Variables para la comparativa
 const comparativaCharts = {
   ingresos: null,
   metodos: null,
 }
 
-// Variable global para el turno
 let currentTurno = localStorage.getItem("currentTurno") || "TM";
 
-// Funciones de tema
 function calcCargarTema() {
   const temaGuardado = localStorage.getItem("calcTema") || "light"
   document.documentElement.setAttribute("data-theme", temaGuardado)
@@ -76,7 +70,6 @@ document.addEventListener("DOMContentLoaded", () => {
   addOutsideClickListener()
   setTimeout(initializeFirebase, 100)
 
-  // Limpiar input de propina al enfocar si el valor es 0
   const propinaInput = document.getElementById("calcPropinaInput")
   if (propinaInput) {
     propinaInput.addEventListener("focus", function() {
@@ -86,7 +79,6 @@ document.addEventListener("DOMContentLoaded", () => {
     })
   }
 
-  // Inicializar selector de turno (ahora debajo del subtítulo)
   const turnoSelect = document.getElementById("turnoSelect");
   if (turnoSelect) {
     turnoSelect.value = currentTurno;
@@ -96,7 +88,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Permitir login con Enter en los inputs de contraseña
   ["salud", "sociales", "ingenieria"].forEach(tipo => {
     const input = document.getElementById(`passwordInput-${tipo}`);
     if (input) {
@@ -165,7 +156,7 @@ function updateSyncStatus(icon, title) {
 
 function areLocalDataValid() {
   if (!isFirebaseEnabled || !database || !currentFotocopiado) {
-    return true // Si no hay Firebase, usar datos locales
+    return true 
   }
 
   return new Promise((resolve) => {
@@ -176,18 +167,17 @@ function areLocalDataValid() {
       .then((snapshot) => {
         const firebaseData = snapshot.val()
         if (!firebaseData) {
-          resolve(true) // No hay datos en Firebase, los locales son válidos
+          resolve(true)
           return
         }
 
         const localResetTimestamp = calcRegistroVentas.resetTimestamp || 0
         const firebaseResetTimestamp = firebaseData.resetTimestamp || 0
 
-        // Si el reset de Firebase es más reciente, los datos locales son inválidos
         resolve(firebaseResetTimestamp <= localResetTimestamp)
       })
       .catch(() => {
-        resolve(true) // En caso de error, asumir que los datos locales son válidos
+        resolve(true)
       })
   })
 }
@@ -201,7 +191,6 @@ function syncToFirebase() {
   return areLocalDataValid().then((isValid) => {
     if (!isValid) {
       console.log("[v0] Datos locales obsoletos detectados, cancelando sincronización")
-      // Recargar datos desde Firebase en lugar de sincronizar datos obsoletos
       return calcCargarDatosIniciales()
     }
 
@@ -278,9 +267,8 @@ function calcCargarDatosIniciales() {
                 ventas: firebaseData.ventas || [],
                 resetTimestamp: firebaseResetTimestamp,
               }
-              calcGuardarDatosLocal() // Actualizar localStorage con datos válidos
+              calcGuardarDatosLocal() 
             } else {
-              // Usar datos de Firebase normalmente
               calcRegistroVentas = {
                 efectivo: firebaseData.efectivo || 0,
                 transferencia: firebaseData.transferencia || 0,
@@ -293,11 +281,9 @@ function calcCargarDatosIniciales() {
             console.log("[v0] Datos cargados desde Firebase:", calcRegistroVentas)
             updateSyncStatus("🟢", "Datos sincronizados desde Firebase")
           } else {
-            // No hay datos en Firebase, cargar desde localStorage
             console.log("[v0] No hay datos en Firebase, cargando desde localStorage")
             calcCargarDatos()
 
-            // Si hay datos en localStorage, sincronizarlos a Firebase
             if (calcRegistroVentas.ventas.length > 0) {
               console.log("[v0] Sincronizando datos locales a Firebase")
               syncToFirebase()
@@ -306,14 +292,14 @@ function calcCargarDatosIniciales() {
           resolve()
         } catch (error) {
           console.error("[v0] Error cargando desde Firebase:", error)
-          calcCargarDatos() // Fallback a localStorage
+          calcCargarDatos() 
           updateSyncStatus("🔴", "Error cargando datos")
           resolve()
         }
       })
       .catch((error) => {
         console.error("[v0] Error accediendo a Firebase:", error)
-        calcCargarDatos() // Fallback a localStorage
+        calcCargarDatos() 
         updateSyncStatus("🔴", "Error de conexión")
         resolve()
       })
@@ -410,10 +396,9 @@ function calcAgregarArchivo() {
     id: calcContadorArchivos,
     paginas: 1,
     copias: 1,
-    tipo: "1", // Por defecto 1 pág/carilla
+    tipo: "1",
     color: "bn",
   })
-  // Resetear propina al iniciar nueva venta
   const propinaInput = document.getElementById("calcPropinaInput")
   if (propinaInput) propinaInput.value = "0"
 
@@ -446,7 +431,6 @@ function calcReorganizarNombresArchivos() {
     const numeroNuevo = index + 1
     const titulo = tarjeta.querySelector('div[style*="font-size: 1.2rem"]')
     if (titulo) {
-      // Mantener el botón eliminar pero actualizar el texto
       const botonEliminar = titulo.querySelector("button")
       const textoBoton = botonEliminar ? botonEliminar.outerHTML : ""
       titulo.innerHTML = `Archivo ${numeroNuevo} ${textoBoton}`
@@ -462,7 +446,6 @@ function calcActualizarSubtotal(numeroArchivo) {
   const tipo = document.getElementById(`calcTipo${numeroArchivo}`).value
   const color = document.getElementById(`calcColor${numeroArchivo}`).value
 
-  // Validación de páginas
   if (paginas <= 0) {
     const descElement = document.getElementById(`calcDesc${numeroArchivo}`)
     const subtotalElement = document.getElementById(`calcSubtotal${numeroArchivo}`)
@@ -473,7 +456,6 @@ function calcActualizarSubtotal(numeroArchivo) {
     return
   }
 
-  // Actualizar array de archivos
   const archivoIndex = calcArchivos.findIndex((a) => a.id === numeroArchivo)
   if (archivoIndex !== -1) {
     calcArchivos[archivoIndex] = { id: numeroArchivo, paginas, copias, tipo, color }
@@ -518,7 +500,6 @@ function calcCalcularTotal() {
 
 
   calcTotal = totalCalculado
-  // Mostrar campo de propina
   const propinaInput = document.getElementById("calcPropinaInput")
   const propinaLabel = document.getElementById("calcPropinaLabel")
   let propina = 0
@@ -530,7 +511,6 @@ function calcCalcularTotal() {
   document.getElementById("calcTotalDisplay").textContent = `Total a cobrar: $${(calcTotal + propina).toLocaleString("es-AR")}${propina > 0 ? ` (Propina: $${propina})` : ""}`
   document.getElementById("calcPagoContainer").style.display = "block"
 
-  // Reset payment section
   calcMetodoPago = null
   document.getElementById("calcEfectivo").checked = false
   document.getElementById("calcTransferencia").checked = false
@@ -538,10 +518,8 @@ function calcCalcularTotal() {
   document.getElementById("calcResultadoCambio").style.display = "none"
   document.getElementById("calcBtnFinalizar").disabled = true
 
-  // Scroll to payment section
   document.getElementById("calcPagoContainer").scrollIntoView({ behavior: "smooth" })
 
-  // Actualizar total en tiempo real al cambiar propina
   if (propinaInput) {
     propinaInput.oninput = function() {
       const nuevaPropina = Number.parseFloat(this.value) || 0
@@ -552,10 +530,8 @@ function calcCalcularTotal() {
 
 function calcCancelarVenta() {
   if (confirm("¿Estás seguro de que quieres cancelar la venta actual? Se perderán todos los archivos agregados.")) {
-    // Limpiar container de archivos
     document.getElementById("calcArchivosContainer").innerHTML = ""
 
-    // Ocultar sección de pago si está visible
     document.getElementById("calcPagoContainer").style.display = "none"
 
     // Reset variables
@@ -566,7 +542,6 @@ function calcCancelarVenta() {
 
     calcAgregarArchivo()
 
-    // Scroll al inicio
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
 }
@@ -648,7 +623,6 @@ function calcFinalizarVenta() {
     timestamp: Date.now(),
   };
 
-  // Actualizar registro de ventas
   if (calcMetodoPago === "efectivo") {
     calcRegistroVentas.efectivo += ventaDetalle.total;
   } else {
@@ -656,15 +630,12 @@ function calcFinalizarVenta() {
   }
   calcRegistroVentas.ventas.push(ventaDetalle);
 
-  // Guardar y sincronizar
   calcGuardarDatos();
 
-  // Actualizar la tabla de ventas
   if (typeof calcActualizarTabla === "function") {
     calcActualizarTabla();
   }
 
-  // Resetear la interfaz para una nueva venta
   document.getElementById("calcArchivosContainer").innerHTML = "";
   document.getElementById("calcPagoContainer").style.display = "none";
   calcArchivos = [];
@@ -677,21 +648,17 @@ function calcFinalizarVenta() {
 }
 
 function calcRestablecerVentas() {
-  // Primero pedir la contraseña
   const password = prompt("Ingresa la contraseña de administrador para restablecer las ventas:")
 
-  // Verificar si se canceló o no se ingresó contraseña
   if (password === null || password === "") {
-    return // Salir si se canceló o no se ingresó nada
+    return
   }
 
-  // Verificar la contraseña (puedes cambiar "admin123" por la contraseña que prefieras)
   if (password !== "admin123") {
     alert("Contraseña incorrecta. No se puede restablecer el registro de ventas.")
     return
   }
 
-  // Si la contraseña es correcta, proceder con la confirmación original
   if (confirm("¿Estás seguro de que deseas restablecer todas las ventas del día?")) {
     const resetTimestamp = Date.now()
 
@@ -700,7 +667,7 @@ function calcRestablecerVentas() {
       transferencia: 0,
       ventas: [],
       resetTimestamp: resetTimestamp,
-      isReset: true, // Flag adicional para identificar resets
+      isReset: true,
     }
 
     calcGuardarDatosLocal()
@@ -731,7 +698,6 @@ function calcRestablecerVentas() {
   }
 }
 
-// Restablecer ventas con backup en Firebase
 async function calcRestablecerVentas() {
   const password = prompt("Ingresa la contraseña de administrador para restablecer las ventas:");
   if (password === null || password === "") return;
@@ -740,7 +706,6 @@ async function calcRestablecerVentas() {
     return;
   }
 
-  // Backup antes de borrar
   if (isFirebaseEnabled && database && currentFotocopiado) {
     try {
       const ventasRef = window.firebaseRef(database, `fotocopiados/${currentFotocopiado}`);
@@ -788,7 +753,6 @@ async function calcRestablecerVentas() {
   }
 }
 
-// Recuperar el último backup desde Firebase
 async function calcRecuperarBackup() {
   if (!isFirebaseEnabled || !database || !currentFotocopiado) {
     alert("Firebase no está disponible.");
@@ -805,7 +769,6 @@ async function calcRecuperarBackup() {
         alert("No hay backup disponible.");
         return;
       }
-      // Restaurar ventas en Firebase y local
       const ventasRef = window.firebaseRef(database, `fotocopiados/${currentFotocopiado}`);
       await window.firebaseSet(ventasRef, ultimoBackup);
       calcRegistroVentas = {
@@ -826,7 +789,6 @@ async function calcRecuperarBackup() {
   }
 }
 
-// Funciones para la comparativa entre institutos
 async function calcMostrarComparativa() {
   const calculatorScreen = document.getElementById("calculatorScreen");
   const comparativaScreen = document.getElementById("calcComparativaScreen");
@@ -841,7 +803,6 @@ async function calcMostrarComparativa() {
     }, 500);
   }, 400);
 
-  // Sincronizar tema
   const themeTextComp = document.getElementById("themeTextComp")
   const currentTheme = document.documentElement.getAttribute("data-theme")
   if (themeTextComp) {
@@ -851,7 +812,6 @@ async function calcMostrarComparativa() {
   await calcCargarDatosComparativa()
 }
 
-// Animación al salir del apartado de estadísticas
 function calcVolverDesdeComparativa() {
   const calculatorScreen = document.getElementById("calculatorScreen");
   const comparativaScreen = document.getElementById("calcComparativaScreen");
@@ -866,7 +826,6 @@ function calcVolverDesdeComparativa() {
     }, 500);
   }, 400);
 
-  // Mostrar el selector de turno solo si vuelve a calculadora
   if (document.getElementById("calculatorScreen").style.display === "block") {
     document.getElementById("turnoSelectorFixed").style.display = "flex";
   }
@@ -882,7 +841,6 @@ async function calcCargarDatosComparativa() {
     const institutos = ["salud", "sociales", "ingenieria"]
     const datosInstitutos = {}
 
-    // Cargar datos de todos los institutos
     for (const instituto of institutos) {
       const fotocopiadoRef = window.firebaseRef(database, `fotocopiados/${instituto}`)
       const snapshot = await window.firebaseGet(fotocopiadoRef)
@@ -905,7 +863,6 @@ async function calcCargarDatosComparativa() {
 }
 
 function calcMostrarDatosComparativa(datos) {
-  // Calcular totales generales
   let totalGeneral = 0
   let ventasTotales = 0
   let institutoLider = ""
@@ -920,23 +877,19 @@ function calcMostrarDatosComparativa(datos) {
     }
   })
 
-  // Actualizar cards de resumen con IDs correctos
   document.getElementById("calcTotalGeneralComp").textContent = `$${totalGeneral.toLocaleString("es-AR")}`
   document.getElementById("calcInstitutoLider").textContent = institutoLider || "Sin datos"
   document.getElementById("calcVentasTotales").textContent = ventasTotales
 
-  // Crear gráficos
   calcCrearGraficoIngresos(datos)
   calcCrearGraficoMetodos(datos)
 
-  // Mostrar detalles
   calcMostrarDetallesComparativa(datos)
 }
 
 function calcCrearGraficoIngresos(datos) {
   const ctx = document.getElementById("calcChartIngresos").getContext("2d")
 
-  // Destruir gráfico anterior si existe
   if (comparativaCharts.ingresos) {
     comparativaCharts.ingresos.destroy()
   }
@@ -953,9 +906,9 @@ function calcCrearGraficoIngresos(datos) {
           label: "Ingresos Totales",
           data: totales,
           backgroundColor: [
-            "rgba(34, 197, 94, 0.8)", // Verde para Salud
-            "rgba(59, 130, 246, 0.8)", // Azul para Sociales
-            "rgba(239, 68, 68, 0.8)", // Rojo para Ingeniería
+            "rgba(34, 197, 94, 0.8)", 
+            "rgba(59, 130, 246, 0.8)", 
+            "rgba(239, 68, 68, 0.8)", 
           ],
           borderColor: ["rgba(34, 197, 94, 1)", "rgba(59, 130, 246, 1)", "rgba(239, 68, 68, 1)"],
           borderWidth: 2,
@@ -986,7 +939,6 @@ function calcCrearGraficoIngresos(datos) {
 function calcCrearGraficoMetodos(datos) {
   const ctx = document.getElementById("calcChartMetodos").getContext("2d")
 
-  // Destruir gráfico anterior si existe
   if (comparativaCharts.metodos) {
     comparativaCharts.metodos.destroy()
   }
@@ -1082,14 +1034,11 @@ function mostrarTurnoModal() {
   const select = document.getElementById("turnoModalSelect");
   const btn = document.getElementById("turnoModalBtn");
 
-  // Reset selección
   select.value = "";
   modal.style.display = "flex";
 
-  // Evitar cerrar con click fuera
   modal.onclick = function(e) {
     if (e.target === modal) {
-      // No cerrar, es obligatorio elegir turno
       e.stopPropagation();
     }
   };
@@ -1100,11 +1049,9 @@ function mostrarTurnoModal() {
       alert("Debes seleccionar un turno para continuar.");
       return;
     }
-    // Guardar turno y actualizar selector principal
     currentTurno = turnoElegido;
     localStorage.setItem("currentTurno", currentTurno);
 
-    // Actualizar el selector de turnos de la calculadora
     const turnoSelect = document.getElementById("turnoSelect");
     if (turnoSelect) turnoSelect.value = currentTurno;
 
@@ -1113,7 +1060,6 @@ function mostrarTurnoModal() {
   };
 }
 
-// Sobrescribir login para forzar selección de turno antes de mostrar calculadora
 function login(tipo = null) {
   const fotocopiadoType = tipo || selectedFotocopiado
   const password = document.getElementById(`passwordInput-${fotocopiadoType}`).value
@@ -1126,7 +1072,7 @@ function login(tipo = null) {
   if (password === calcInstitutos[fotocopiadoType].password) {
     currentFotocopiado = fotocopiadoType
     localStorage.setItem("currentFotocopiado", currentFotocopiado)
-    mostrarTurnoModal(); // <-- Mostrar modal de turno obligatorio
+    mostrarTurnoModal();
   } else {
     alert("Contraseña incorrecta")
     const passwordInput = document.getElementById(`passwordInput-${fotocopiadoType}`)
@@ -1137,9 +1083,7 @@ function login(tipo = null) {
   }
 }
 
-// Cuando el usuario cambia el selector de turno manualmente, actualizar currentTurno y localStorage
 document.addEventListener("DOMContentLoaded", () => {
-  // ...existing code...
   const turnoSelect = document.getElementById("turnoSelect");
   if (turnoSelect) {
     turnoSelect.value = currentTurno;
@@ -1148,7 +1092,6 @@ document.addEventListener("DOMContentLoaded", () => {
       localStorage.setItem("currentTurno", currentTurno);
     }
   }
-  // ...existing code...
 });
 
 function listenToFirebaseChanges() {
@@ -1165,7 +1108,6 @@ function listenToFirebaseChanges() {
       try {
         if (snapshot.exists()) {
           const data = snapshot.val();
-          // Actualizar todos los campos, incluyendo pérdidas
           calcRegistroVentas.efectivo = data.efectivo || 0;
           calcRegistroVentas.transferencia = data.transferencia || 0;
           calcRegistroVentas.ventas = data.ventas || [];
@@ -1189,7 +1131,6 @@ function listenToFirebaseChanges() {
 }
 
 function showSyncNotification(message) {
-  // Crear notificación temporal
   const notification = document.createElement("div")
   notification.style.cssText = `
     position: fixed;
@@ -1207,7 +1148,6 @@ function showSyncNotification(message) {
   `
   notification.textContent = message
 
-  // Agregar animación CSS
   const style = document.createElement("style")
   style.textContent = `
     @keyframes slideIn {
@@ -1219,7 +1159,6 @@ function showSyncNotification(message) {
 
   document.body.appendChild(notification)
 
-  // Remover después de 3 segundos
   setTimeout(() => {
     notification.style.animation = "slideIn 0.3s ease-out reverse"
     setTimeout(() => {
@@ -1232,24 +1171,18 @@ function showSyncNotification(message) {
 
 function addOutsideClickListener() {
   document.addEventListener("click", (event) => {
-    // Si el modal de turno está visible, ignorar clicks fuera
     const turnoModal = document.getElementById("turnoModal");
     if (turnoModal && turnoModal.style.display === "flex") {
-      // Si el click fue dentro del modal, no hacer nada
       if (turnoModal.contains(event.target)) return;
-      // Si el click fue fuera del modal, tampoco cerrar paneles de login
       return;
     }
 
-    // Solo aplicar en la pantalla de login
     const loginScreen = document.getElementById("loginScreen");
     if (!loginScreen || loginScreen.style.display === "none") return;
 
-    // Verificar si el clic fue fuera de las tarjetas de fotocopiado
     const clickedCard = event.target.closest(".fotocopiado-card");
     const clickedPasswordSection = event.target.closest(".password-section-inline");
 
-    // Si no se hizo clic en una tarjeta ni en una sección de contraseña, deseleccionar
     if (!clickedCard && !clickedPasswordSection) {
       cancelLogin();
     }
@@ -1257,7 +1190,6 @@ function addOutsideClickListener() {
 }
 
 function checkExistingSession() {
-  // Clear any existing session to ensure fresh data sync
   localStorage.removeItem("currentFotocopiado")
   currentFotocopiado = null
   showLoginScreen()
@@ -1274,11 +1206,9 @@ function showLoginScreen() {
     loginScreen.classList.remove("animated-fadeInUp");
   }, 500);
 
-  // Ocultar el selector de turno fuera de calculadora
   document.getElementById("turnoSelectorFixed").style.display = "none";
 }
 
-// Mostrar/ocultar el selector de turno SOLO en la pantalla de calculadora
 function showCalculatorScreen() {
   const loginScreen = document.getElementById("loginScreen");
   const calculatorScreen = document.getElementById("calculatorScreen");
@@ -1293,10 +1223,8 @@ function showCalculatorScreen() {
     }, 500);
   }, 400);
 
-  // Mostrar el selector de turno solo en calculadora
   document.getElementById("turnoSelectorFixed").style.display = "flex";
 
-  // Si es mobile, mover el selector arriba del título
   if (window.innerWidth <= 900) {
     const header = document.querySelector('.calc-header-text');
     const selector = document.getElementById("turnoSelectorFixed");
@@ -1305,14 +1233,12 @@ function showCalculatorScreen() {
     }
   }
 
-  // Actualizar título y subtítulo
   const fotocopiado = calcInstitutos[currentFotocopiado]
   document.getElementById("fotocopiadoTitle").textContent = fotocopiado.name
   document.getElementById("fotocopiadoSubtitle").textContent = fotocopiado.fullName
 
   showSyncNotification("Cargando datos más recientes del servidor...")
 
-  // Cargar datos específicos del fotocopiado
   loadFromFirebase().then(() => {
     if (calcArchivos.length === 0) {
       calcAgregarArchivo()
@@ -1359,7 +1285,7 @@ function login(tipo = null) {
   if (password === calcInstitutos[fotocopiadoType].password) {
     currentFotocopiado = fotocopiadoType
     localStorage.setItem("currentFotocopiado", currentFotocopiado)
-    mostrarTurnoModal(); // <-- Mostrar modal de turno obligatorio
+    mostrarTurnoModal();
   } else {
     alert("Contraseña incorrecta")
     const passwordInput = document.getElementById(`passwordInput-${fotocopiadoType}`)
@@ -1376,14 +1302,12 @@ function cancelLogin(tipo = null) {
     if (passwordSection) {
       passwordSection.style.display = "none"
     }
-    // Remover selección de la tarjeta específica
     document.querySelectorAll(".fotocopiado-card").forEach((card) => {
       if (card.onclick.toString().includes(tipo)) {
         card.classList.remove("selected")
       }
     })
   } else {
-    // Comportamiento original para compatibilidad
     selectedFotocopiado = null
     document.querySelectorAll(".password-section-inline").forEach((section) => {
       section.style.display = "none"
@@ -1477,14 +1401,14 @@ function loadFromFirebase() {
           resolve()
         } catch (error) {
           console.error("[v0] Error cargando desde Firebase:", error)
-          calcCargarDatos() // Fallback a localStorage solo en caso de error
+          calcCargarDatos() 
           updateSyncStatus("🔴", "Error cargando datos")
           resolve()
         }
       })
       .catch((error) => {
         console.error("[v0] Error accediendo a Firebase:", error)
-        calcCargarDatos() // Fallback a localStorage solo in case of error
+        calcCargarDatos() 
         updateSyncStatus("🔴", "Error de conexión")
         resolve()
       })
@@ -1505,12 +1429,10 @@ function calcExportarExcel() {
   const fechaHoy = ahora.toLocaleDateString("es-ES")
   const nombreCopiado = calcInstitutos[currentFotocopiado]?.name || "Copiado"
 
-  // Obtener ventas por método
   const ventasEfectivo = (calcRegistroVentas.ventas || []).filter(v => v.metodoPago === "efectivo").map(v => v.total)
   const ventasTransferencia = (calcRegistroVentas.ventas || []).filter(v => v.metodoPago === "transferencia").map(v => v.total)
-  const maxFilas = Math.max(ventasEfectivo.length, ventasTransferencia.length, 1) // Siempre al menos una fila
+  const maxFilas = Math.max(ventasEfectivo.length, ventasTransferencia.length, 1)
 
-  // Construir filas de ventas
   const filasVentas = []
   for (let i = 0; i < maxFilas; i++) {
     filasVentas.push([
@@ -1519,12 +1441,10 @@ function calcExportarExcel() {
     ])
   }
 
-  // Totales
   const totalEfectivo = ventasEfectivo.reduce((a, b) => a + (parseFloat(b) || 0), 0)
   const totalTransferencia = ventasTransferencia.reduce((a, b) => a + (parseFloat(b) || 0), 0)
   const totalGeneral = totalEfectivo + totalTransferencia
 
-  // Estructura final
   const datos = [
     ["Registro de ventas: " + nombreCopiado],
     [`Mes: ${mes.charAt(0).toUpperCase() + mes.slice(1)}   Año: ${año}`],
@@ -1537,31 +1457,26 @@ function calcExportarExcel() {
     [`$${totalEfectivo}`, `$${totalTransferencia}`, `$${totalGeneral}`]
   ]
 
-  // Crear hoja y libro
   const ws = XLSX.utils.aoa_to_sheet(datos)
   const wb = XLSX.utils.book_new()
   XLSX.utils.book_append_sheet(wb, ws, "Ventas")
 
-  // Nombre de archivo
   const nombreArchivo = `${nombreCopiado.replace(/\s/g, "_")}_${mes}_${año}.xlsx`
   XLSX.writeFile(wb, nombreArchivo)
 }
 
 function calcExportarPDF() {
-  // Datos principales
   const ahora = new Date();
   const mes = ahora.toLocaleString("es-ES", { month: "long" });
   const año = ahora.getFullYear();
   const nombreCopiado = calcInstitutos[currentFotocopiado]?.name || "Copiado";
   const turno = currentTurno === "TM" ? "Mañana" : "Tarde";
 
-  // Obtener ventas
   const ventas = calcRegistroVentas.ventas || [];
   const totalEfectivo = ventas.filter(v => v.metodoPago === 'efectivo').reduce((acc, v) => acc + v.total, 0);
   const totalTransferencia = ventas.filter(v => v.metodoPago === 'transferencia').reduce((acc, v) => acc + v.total, 0);
   const totalGeneral = totalEfectivo + totalTransferencia;
 
-  // Crear PDF
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   doc.setFontSize(16);
@@ -1570,7 +1485,6 @@ function calcExportarPDF() {
   doc.text(`Mes: ${mes.charAt(0).toUpperCase() + mes.slice(1)} ${año}`, 14, 26);
   doc.text(`Turno: ${turno}`, 14, 34);
 
-  // Preparar datos para la tabla principal
   const ventasEfectivo = ventas.filter(v => v.metodoPago === 'efectivo').map(v => `$${v.total}`);
   const ventasTransferencia = ventas.filter(v => v.metodoPago === 'transferencia').map(v => `$${v.total}`);
   const maxFilas = Math.max(ventasEfectivo.length, ventasTransferencia.length);
@@ -1597,7 +1511,6 @@ function calcExportarPDF() {
   });
   y = doc.lastAutoTable.finalY + 10;
 
-  // Tabla de totales
   doc.setFontSize(13);
   doc.text('Totales:', 14, y);
   y += 8;
@@ -1615,7 +1528,6 @@ function calcExportarPDF() {
     bodyStyles: { fillColor: [245, 245, 245] }
   });
 
-  // Guardar PDF
   doc.save(`RegistroVentas_${nombreCopiado}_${mes}_${año}_${turno}.pdf`);
 }
 
@@ -1631,7 +1543,6 @@ function calcExportarEstadisticasPDF() {
   doc.setFontSize(12)
   doc.text(`Mes: ${mes.charAt(0).toUpperCase() + mes.slice(1)}   Año: ${año}`, 14, 32)
 
-  // Resumen general desde DOM
   const totalGeneral = document.getElementById("calcTotalGeneralComp")?.textContent || "$0"
   const institutoLider = document.getElementById("calcInstitutoLider")?.textContent || "-"
   const ventasTotales = document.getElementById("calcVentasTotales")?.textContent || "0"
@@ -1640,7 +1551,6 @@ function calcExportarEstadisticasPDF() {
   doc.text(`Instituto Líder: ${institutoLider}`, 14, 50)
   doc.text(`Ventas Totales: ${ventasTotales}`, 14, 58)
 
-  // Detalles por instituto desde DOM
   const grid = document.getElementById("calcDetallesGrid")
   if (grid) {
     let tabla = [["Instituto", "Total de Ingresos", "Ventas en Efectivo", "Ventas por Transferencia", "Número de Ventas", "Promedio por Venta"]]
@@ -1667,7 +1577,6 @@ function calcExportarEstadisticasPDF() {
     })
   }
 
-  // Graficos: capturar canvas y agregar como imagen
   let yOffset = doc.lastAutoTable?.finalY ? doc.lastAutoTable.finalY + 10 : 90
   const chartIngresos = document.getElementById("calcChartIngresos")
   const chartMetodos = document.getElementById("calcChartMetodos")
@@ -1690,7 +1599,6 @@ function calcExportarEstadisticasPDF() {
   doc.save(nombreArchivo)
 }
 
-// Exportar los 3 registros de ventas en PDF y empaquetar en ZIP
 async function exportarTodosLosRegistrosPDFZip() {
   const institutos = ["salud", "sociales", "ingenieria"];
   const nombres = {
@@ -1705,7 +1613,6 @@ async function exportarTodosLosRegistrosPDFZip() {
   const turno = currentTurno || "TM";
 
   for (const tipo of institutos) {
-    // Cargar datos de Firebase para cada copiado
     let data = null;
     if (isFirebaseEnabled && database) {
       const ref = window.firebaseRef(database, `fotocopiados/${tipo}`);
@@ -1714,7 +1621,6 @@ async function exportarTodosLosRegistrosPDFZip() {
     } else {
       data = JSON.parse(localStorage.getItem(`calcRegistroVentas_${tipo}`) || "{}");
     }
-    // Generar PDF usando jsPDF igual que en calcExportarPDF
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     doc.setFontSize(16);
@@ -1769,13 +1675,11 @@ async function exportarTodosLosRegistrosPDFZip() {
       bodyStyles: { fillColor: [245, 245, 245] }
     });
 
-    // Guardar PDF en el ZIP
     const nombrePDF = `${nombres[tipo]}_${mes}_${año}_${turno}.pdf`;
     const pdfBlob = doc.output("blob");
     zip.file(nombrePDF, pdfBlob);
   }
 
-  // Generar y descargar el ZIP
   const nombreZip = `Registros_Copiados_UNAJ_${mes}_${año}_${turno}.zip`;
   zip.generateAsync({ type: "blob" }).then(function(content) {
     const link = document.createElement("a");
@@ -1791,7 +1695,6 @@ async function exportarTodosLosRegistrosPDFZip() {
 }
 
 function calcActualizarTabla() {
-  // Actualiza los totales y la cantidad de ventas en la tabla de registro de ventas
   const efectivo = calcRegistroVentas.efectivo || 0;
   const transferencia = calcRegistroVentas.transferencia || 0;
   const total = efectivo + transferencia;
@@ -1799,11 +1702,7 @@ function calcActualizarTabla() {
   const ventasTransferencia = (calcRegistroVentas.ventas || []).filter(v => v.metodoPago === "transferencia").length;
   const ventasTotales = (calcRegistroVentas.ventas || []).length;
 
- 
 
-
-
-  // Tabla desktop
   document.getElementById("calcTotalEfectivo").innerText = `$${efectivo.toLocaleString("es-AR")}`;
   document.getElementById("calcTotalTransferencia").innerText = `$${transferencia.toLocaleString("es-AR")}`;
   document.getElementById("calcTotalGeneral").innerText = `$${total.toLocaleString("es-AR")}`;
@@ -1811,8 +1710,8 @@ function calcActualizarTabla() {
   document.getElementById("calcCountTransferencia").innerText = ventasTransferencia;
   document.getElementById("calcTotalVentas").innerText = `${ventasTotales} ventas`;
 
-  // Tabla mobile (¡AGREGA ESTO!)
   document.getElementById("calcTotalEfectivoMobile").innerText = `$${efectivo.toLocaleString("es-AR")}`;
+  
    document.getElementById("calcTotalTransferenciaMobile").innerText = `$${transferencia.toLocaleString("es-AR")}`;
   document.getElementById("calcTotalGeneralMobile").innerText = `$${total.toLocaleString("es-AR")}`;
   document.getElementById("calcCountEfectivoMobile").innerText = ventasEfectivo;
@@ -1820,19 +1719,15 @@ function calcActualizarTabla() {
   document.getElementById("calcTotalVentasMobile").innerText = `${ventasTotales} ventas`;
 }
 
-// Mostrar detalles de ventas por método (efectivo o transferencia)
 function calcMostrarDetalles(tipo) {
   const container = document.getElementById("calcDetallesContainer");
   const content = document.getElementById("calcDetallesContent");
   const title = document.getElementById("calcDetallesTitle");
 
-  // Filtrar ventas por método de pago
   const ventas = (calcRegistroVentas.ventas || []).filter(v => v.metodoPago === tipo);
 
-  // Título dinámico
   title.textContent = `Detalles de Ventas (${tipo === "efectivo" ? "Efectivo" : "Transferencia"})`;
 
-  // Opciones de ajustes
   const ajustesOpciones = {
     "1": "Simple/Doble faz",
     "2": "Doble faz (2 pág/carilla)",
@@ -1841,7 +1736,6 @@ function calcMostrarDetalles(tipo) {
     "9": "Doble faz (9 pág/carilla)"
   };
 
-  // Si no hay ventas, mostrar mensaje
   if (ventas.length === 0) {
     content.innerHTML = `<div style="padding: 24px; text-align: center; color: var(--text-secondary);">No hay ventas registradas para este método de pago.</div>`;
   } else {
@@ -1856,7 +1750,6 @@ function calcMostrarDetalles(tipo) {
           <b>Archivos de la venta:</b>
           <div>
             ${venta.archivos.map((archivo, i) => {
-              // Calcular precio individual del archivo
               const paginasPorCarilla = Number.parseInt(archivo.tipo) || 1;
               const hojasNecesarias = Math.ceil(archivo.paginas / paginasPorCarilla);
               const precioHoja = archivo.color === "color" ? venta.precioHojaColor : venta.precioHojaBN;
@@ -1883,43 +1776,35 @@ function calcMostrarDetalles(tipo) {
     `).join("");
   }
 
-  // Ajustar altura de la card para ver más ventas cómodamente
   container.style.display = "block";
   container.style.maxHeight = "80vh";
   container.style.overflowY = "auto";
   container.style.minHeight = "500px";
-  window.ventaDetalleIdMostrado = null; // Oculta botón de propina por defecto
+  window.ventaDetalleIdMostrado = null;
 }
 
-// Devuelve el índice global de la venta en el array original (para acciones)
 function getVentaIndiceGlobal(venta) {
   return (calcRegistroVentas.ventas || []).findIndex(v => v.id === venta.id);
 }
 
-// Eliminar venta por índice global
 function eliminarVentaPorIndice(idx, tipo) {
   if (!confirm("¿Seguro que deseas eliminar esta venta?")) return;
   const venta = calcRegistroVentas.ventas[idx];
   if (!venta) return;
-  // Restar del acumulado
   if (venta.metodoPago === "efectivo") {
     calcRegistroVentas.efectivo -= venta.total;
   } else {
     calcRegistroVentas.transferencia -= venta.total;
   }
-  // Eliminar venta
   calcRegistroVentas.ventas.splice(idx, 1);
   calcGuardarDatos();
   calcActualizarTabla();
-  // Refrescar detalles en el método actual
   calcMostrarDetalles(tipo);
 }
 
-// Cambiar método de pago de una venta y mover la tarjeta al otro método
 function cambiarMetodoPagoVenta(idx, tipoActual) {
   const venta = calcRegistroVentas.ventas[idx];
   if (!venta) return;
-  // Restar del método actual y sumar al nuevo
   if (venta.metodoPago === "efectivo") {
     calcRegistroVentas.efectivo -= venta.total;
     calcRegistroVentas.transferencia += venta.total;
@@ -1931,20 +1816,16 @@ function cambiarMetodoPagoVenta(idx, tipoActual) {
   }
   calcGuardarDatos();
   calcActualizarTabla();
-  // Refrescar detalles: mostrar el método actual (ya no contiene la venta movida)
   calcMostrarDetalles(tipoActual);
-  // Mostrar notificación para que el usuario pueda ver la venta en el otro método
   showSyncNotification("La venta fue movida al otro método de pago. Haz clic en 'Ver detalles' del otro método para verla.");
 }
 
-// Mostrar input para modificar propina
 function mostrarPropinaDetalle(idx) {
   const venta = calcRegistroVentas.ventas[idx];
   if (!venta) return;
   const nuevaPropina = prompt("Ingrese la nueva propina para esta venta:", venta.propina || 0);
   if (nuevaPropina === null) return;
   const propinaNum = Number.parseFloat(nuevaPropina) || 0;
-  // Actualizar totales
   if (venta.metodoPago === "efectivo") {
     calcRegistroVentas.efectivo -= venta.total;
     venta.total = venta.total - (venta.propina || 0) + propinaNum;
@@ -1957,20 +1838,18 @@ function mostrarPropinaDetalle(idx) {
   venta.propina = propinaNum;
   calcGuardarDatos();
   calcActualizarTabla();
-  // Refrescar detalles
   calcMostrarDetalles(venta.metodoPago);
 }
 
 function pedirPasswordRecuperarBackup() {
   const pass = prompt("Ingrese la contraseña de administrador para recuperar el último registro:");
-  if (pass !== "admin123") { // Unificado a minúscula
+  if (pass !== "admin123") {
     alert("Contraseña incorrecta. No se realizó la acción.");
     return;
   }
   calcRecuperarBackup();
 }
 
-// Recuperar el último backup desde Firebase o localStorage
 async function calcRecuperarBackup() {
   if (isFirebaseEnabled && database && currentFotocopiado) {
     try {
@@ -1984,7 +1863,6 @@ async function calcRecuperarBackup() {
           alert("No hay backup disponible.");
           return;
         }
-        // Restaurar ventas en Firebase y local
         const ventasRef = window.firebaseRef(database, `fotocopiados/${currentFotocopiado}`);
         await window.firebaseSet(ventasRef, ultimoBackup);
         calcRegistroVentas = {
@@ -2004,7 +1882,6 @@ async function calcRecuperarBackup() {
       alert("Error al restaurar el backup.");
     }
   } else {
-    // Restaurar desde localStorage si no hay Firebase
     const backup = localStorage.getItem(`calcRegistroVentas_backup_${currentFotocopiado}`);
     if (backup) {
       try {
@@ -2028,15 +1905,12 @@ function actualizarYRefrescarTabla() {
   });
 }
 
-// 1. Agregar estructura para pérdidas en el registro de ventas
 if (!calcRegistroVentas.perdidas) {
   calcRegistroVentas.perdidas = [];
   calcRegistroVentas.totalPerdidas = 0;
 }
 
-// 2. Función para mostrar el modal de pérdidas
 function mostrarModalPerdidas() {
-  // Si ya existe, mostrarlo
   let modal = document.getElementById("modalPerdidas");
   if (!modal) {
     modal = document.createElement("div");
@@ -2075,7 +1949,6 @@ function mostrarModalPerdidas() {
     modal.style.display = "flex";
   }
 
-  // Eventos
   document.getElementById("btnAgregarPerdida").onclick = function() {
     const cantidad = parseInt(document.getElementById("perdidasCantidad").value) || 0;
     const motivo = document.getElementById("perdidasMotivo").value.trim();
@@ -2092,7 +1965,6 @@ function mostrarModalPerdidas() {
   };
 }
 
-// 3. Función para agregar la pérdida al registro y sincronizar
 function agregarPerdidaRegistro(cantidad, motivo, tipo) {
   const precioHojaBN = Number.parseFloat(document.getElementById("calcPrecioHoja").value) || 0;
   const precioHojaColor = Number.parseFloat(document.getElementById("calcPrecioHojaColor").value) || 0;
@@ -2118,15 +1990,12 @@ function agregarPerdidaRegistro(cantidad, motivo, tipo) {
   showSyncNotification("Pérdida registrada y sincronizada.");
 }
 
-// 4. Modificar calcActualizarTabla para mostrar pérdidas
 const oldCalcActualizarTabla = calcActualizarTabla;
 calcActualizarTabla = function() {
   oldCalcActualizarTabla();
-  // Mostrar total de pérdidas
   const totalPerdidas = calcRegistroVentas.totalPerdidas || 0;
   let perdidasRow = document.getElementById("calcTotalPerdidasRow");
   if (!perdidasRow) {
-    // Insertar fila en tabla desktop
     const table = document.querySelector(".calc-table tbody");
     if (table) {
       perdidasRow = document.createElement("tr");
@@ -2140,9 +2009,8 @@ calcActualizarTabla = function() {
           </button>
         </td>
       `;
-      table.insertBefore(perdidasRow, table.lastElementChild); // antes del total general
+      table.insertBefore(perdidasRow, table.lastElementChild);
     }
-    // Insertar card en mobile
     const mobile = document.querySelector(".calc-table-mobile");
     if (mobile && !document.getElementById("calcTotalPerdidasMobile")) {
       const card = document.createElement("div");
@@ -2161,7 +2029,6 @@ calcActualizarTabla = function() {
       mobile.insertBefore(card, mobile.lastElementChild);
     }
   }
-  // Actualizar valores
   document.getElementById("calcTotalPerdidas").innerText = `$${totalPerdidas.toLocaleString("es-AR")}`;
   document.getElementById("calcTotalPerdidasMobile").innerText = `$${totalPerdidas.toLocaleString("es-AR")}`;
   const count = (calcRegistroVentas.perdidas || []).length;
@@ -2169,7 +2036,6 @@ calcActualizarTabla = function() {
   document.getElementById("calcCountPerdidasMobile").innerText = count;
 };
 
-// 5. Modificar calcMostrarDetalles para mostrar detalles de pérdidas
 const oldCalcMostrarDetalles = calcMostrarDetalles;
 calcMostrarDetalles = function(tipo) {
   if (tipo !== "perdidas") {
@@ -2206,7 +2072,6 @@ calcMostrarDetalles = function(tipo) {
   container.style.minHeight = "500px";
 };
 
-// 6. Eliminar pérdida
 function eliminarPerdidaPorIndice(idx) {
   if (!confirm("¿Seguro que deseas eliminar esta pérdida?")) return;
   const perdida = calcRegistroVentas.perdidas[idx];
@@ -2218,8 +2083,6 @@ function eliminarPerdidaPorIndice(idx) {
   calcMostrarDetalles("perdidas");
 }
 
-// 7. Sincronizar pérdidas en tiempo real (ya lo hace calcGuardarDatos y listenToFirebaseChanges)
-// Solo asegurarse de incluir pérdidas en la sincronización:
 const oldSyncToFirebase = syncToFirebase;
 syncToFirebase = function() {
   if (!isFirebaseEnabled || !database || !currentFotocopiado) {
@@ -2258,7 +2121,6 @@ syncToFirebase = function() {
   });
 };
 
-// 8. Asegurarse de cargar pérdidas al cargar datos
 const oldCalcCargarDatos = calcCargarDatos;
 calcCargarDatos = function() {
   oldCalcCargarDatos();
@@ -2266,7 +2128,6 @@ calcCargarDatos = function() {
   if (!calcRegistroVentas.totalPerdidas) calcRegistroVentas.totalPerdidas = 0;
 };
 
-// 9. Asegurarse de cargar pérdidas desde Firebase
 const oldLoadFromFirebase = loadFromFirebase;
 loadFromFirebase = function() {
   return new Promise((resolve) => {
@@ -2278,7 +2139,6 @@ loadFromFirebase = function() {
   });
 };
 
-// 10. Asegurarse de mostrar pérdidas al escuchar cambios de Firebase
 const oldListenToFirebaseChanges = listenToFirebaseChanges;
 listenToFirebaseChanges = function() {
   if (!isFirebaseEnabled || !database || !currentFotocopiado) return;
@@ -2289,7 +2149,6 @@ listenToFirebaseChanges = function() {
       try {
         if (snapshot.exists()) {
           const data = snapshot.val();
-          // Actualizar todos los campos, incluyendo pérdidas
           calcRegistroVentas.efectivo = data.efectivo || 0;
           calcRegistroVentas.transferencia = data.transferencia || 0;
           calcRegistroVentas.ventas = data.ventas || [];
@@ -2312,7 +2171,6 @@ listenToFirebaseChanges = function() {
   );
 };
 
-// 11. Agregar el botón junto a "Agregar archivo" (solo si no existe)
 document.addEventListener("DOMContentLoaded", () => {
   setTimeout(() => {
     const btnArchivo = document.querySelector('button[onclick*="calcAgregarArchivo"]');

@@ -5,17 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Fotocopiados - UNAJ</title>
     <link rel="stylesheet" href="/Style.css">
-    <!-- Agregando librería SheetJS para exportación a Excel -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <!-- Agregando Chart.js para gráficos de comparativa -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Cambiando a Firebase v9+ moderno con módulos ES6 -->
     <script type="module">
-        // Importar Firebase v9+
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
         import { getDatabase, ref, set, get, onValue, off } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js';
-        
-        // Configuración de Firebase
+
         const firebaseConfig = {
             apiKey: "AIzaSyC0YFv49AUWjZtEl2KxgiytnFG4bzv5sMA",
             authDomain: "fotocopiado-unaj.firebaseapp.com",
@@ -26,12 +21,10 @@
             appId: "1:198572714385:web:2ec73dfa4386daa47a5230",
             measurementId: "G-SNQ58PSQJ2"
         };
-        
-        // Inicializar Firebase
+
         const app = initializeApp(firebaseConfig);
         const database = getDatabase(app);
-        
-        // Hacer Firebase disponible globalmente
+
         window.firebaseApp = app;
         window.firebaseDatabase = database;
         window.firebaseRef = ref;
@@ -40,13 +33,12 @@
         window.firebaseOnValue = onValue;
         window.firebaseOff = off;
         window.firebaseInitialized = true;
-        
+
         console.log("[v0] Firebase v9+ inicializado correctamente");
     </script>
     <link rel="icon" type="image/png" href="/imagenes/unaj-removebg-preview.png">
 </head>
 <body>
-    <!-- Selector de turno fijo arriba a la derecha SOLO en la pantalla de calculadora -->
     <div id="turnoSelectorFixed" style="display:none;position:fixed;top:18px;right:18px;z-index:1001;background:var(--bg-card);padding:6px 12px 6px 10px;border-radius:8px;box-shadow:0 2px 8px var(--shadow);border:1px solid var(--border-color);display:flex;align-items:center;gap:6px;font-size:0.95rem;min-width:110px;">
         <label for="turnoSelect" style="font-weight:600;font-size:0.97rem;">Turno:</label>
         <select id="turnoSelect" class="calc-select" style="width:auto;display:inline-block;font-size:0.97rem;padding:6px 18px 6px 8px;">
@@ -55,36 +47,31 @@
         </select>
     </div>
 
-    <!-- MODAL DE SELECCIÓN DE TURNO (nuevo, obligatorio al ingresar) -->
     <div id="turnoModal" style="display:none;position:fixed;z-index:2000;top:0;left:0;width:100vw;height:100vh;background:rgba(30,41,59,0.45);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
-      <div style="background:var(--bg-card);padding:32px 24px;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.18);max-width:95vw;width:340px;text-align:center;">
-        <h2 style="margin-bottom:18px;font-size:1.3rem;color:var(--text-heading);">Selecciona el turno</h2>
-        <select id="turnoModalSelect" class="calc-select" style="width:100%;font-size:1.1rem;margin-bottom:24px;">
-          <option value="" disabled selected>Elige un turno...</option>
-          <option value="TM">Mañana</option>
-          <option value="TT">Tarde</option>
-        </select>
-        <button id="turnoModalBtn" class="calc-btn calc-btn-primary" style="width:100%;">Confirmar turno</button>
-      </div>
+        <div style="background:var(--bg-card);padding:32px 24px;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.18);max-width:95vw;width:340px;text-align:center;">
+            <h2 style="margin-bottom:18px;font-size:1.3rem;color:var(--text-heading);">Selecciona el turno</h2>
+            <select id="turnoModalSelect" class="calc-select" style="width:100%;font-size:1.1rem;margin-bottom:24px;">
+                <option value="" disabled selected>Elige un turno...</option>
+                <option value="TM">Mañana</option>
+                <option value="TT">Tarde</option>
+            </select>
+            <button id="turnoModalBtn" class="calc-btn calc-btn-primary" style="width:100%;">Confirmar turno</button>
+        </div>
     </div>
 
-    <!-- Pantalla de selección de fotocopiado -->
     <div id="loginScreen" class="login-screen">
         <div class="login-container">
             <div class="login-header">
                 <h1>Sistema de Fotocopiados UNAJ</h1>
                 <p>Selecciona tu fotocopiado e ingresa la contraseña</p>
             </div>
-            
             <div class="fotocopiados-grid">
                 <div class="fotocopiado-card" onclick="selectFotocopiado('salud')">
-                    <!-- Actualizando ruta de imagen según código del usuario -->
                     <div class="fotocopiado-icon">
                         <img src="/imagenes/institutodesaludperfil.jpg" alt="Instituto de Ciencias de la Salud" class="instituto-logo">
                     </div>
                     <h3>Copiados Salud</h3>
                     <p>Instituto de Salud</p>
-                    <!-- Agregando sección de contraseña inline para cada perfil -->
                     <div id="passwordSection-salud" class="password-section-inline" style="display: none;">
                         <div class="password-card-inline">
                             <div class="password-input-group">
@@ -95,15 +82,12 @@
                         </div>
                     </div>
                 </div>
-                
                 <div class="fotocopiado-card" onclick="selectFotocopiado('sociales')">
-                    <!-- Actualizando ruta de imagen según código del usuario -->
                     <div class="fotocopiado-icon">
                         <img src="/imagenes/intitutodecienciassocialesperfil.png" alt="Instituto de Ciencias Sociales y Administración" class="instituto-logo">
                     </div>
                     <h3>Copiados Sociales</h3>
                     <p>Instituto de Ciencias Sociales</p>
-                    <!-- Agregando sección de contraseña inline para cada perfil -->
                     <div id="passwordSection-sociales" class="password-section-inline" style="display: none;">
                         <div class="password-card-inline">
                             <div class="password-input-group">
@@ -114,15 +98,12 @@
                         </div>
                     </div>
                 </div>
-                
                 <div class="fotocopiado-card" onclick="selectFotocopiado('ingenieria')">
-                    <!-- Actualizando ruta de imagen según código del usuario -->
                     <div class="fotocopiado-icon">
                         <img src="/imagenes/institutodeingenieriayagronomiaperfil.jpg" alt="Instituto de Ingeniería y Agronomía" class="instituto-logo">
                     </div>
                     <h3>Copiados Ingeniería</h3>
                     <p>Instituto de Ingeniería</p>
-                    <!-- Agregando sección de contraseña inline para cada perfil -->
                     <div id="passwordSection-ingenieria" class="password-section-inline" style="display: none;">
                         <div class="password-card-inline">
                             <div class="password-input-group">
@@ -137,32 +118,29 @@
         </div>
     </div>
 
-    <!-- Sistema de calculadora con header actualizado -->
     <div id="calculatorScreen" class="calculadora-container" style="display: none;">
         <div class="calculadora-wrapper">
             <header class="calc-header">
-    <div class="calc-header-content">
-        <div class="calc-header-text">
-            <h1 id="fotocopiadoTitle">Calculadora de cobro</h1>
-            <p id="fotocopiadoSubtitle">Sistema para empleados - Cálculo de impresiones</p>
-        </div>
-        <div class="header-controls">
-            <button onclick="calcMostrarComparativa()" class="calc-btn calc-btn-outline header-btn header-btn-estadisticas" title="Ver comparativa entre institutos">
-                Estadisticas
-            </button>
-            <button id="calcThemeToggle" class="calc-theme-toggle header-btn" onclick="calcToggleTheme()" title="Cambiar tema">
-                <span class="calc-theme-icon calc-sun-icon"></span>
-                <span class="calc-theme-icon calc-moon-icon"></span>
-            </button>
-            <button onclick="logout()" class="logout-btn header-btn" title="Cerrar sesión">
-                Salir
-            </button>
-        </div>
-    </div>
-</header>
-
+                <div class="calc-header-content">
+                    <div class="calc-header-text">
+                        <h1 id="fotocopiadoTitle">Calculadora de cobro</h1>
+                        <p id="fotocopiadoSubtitle">Sistema para empleados - Cálculo de impresiones</p>
+                    </div>
+                    <div class="header-controls">
+                        <button onclick="calcMostrarComparativa()" class="calc-btn calc-btn-outline header-btn header-btn-estadisticas" title="Ver comparativa entre institutos">
+                            Estadisticas
+                        </button>
+                        <button id="calcThemeToggle" class="calc-theme-toggle header-btn" onclick="calcToggleTheme()" title="Cambiar tema">
+                            <span class="calc-theme-icon calc-sun-icon"></span>
+                            <span class="calc-theme-icon calc-moon-icon"></span>
+                        </button>
+                        <button onclick="logout()" class="logout-btn header-btn" title="Cerrar sesión">
+                            Salir
+                        </button>
+                    </div>
+                </div>
+            </header>
             <div id="calcMainContent">
-                <!-- Configuración de precio -->
                 <div class="calc-card">
                     <div class="calc-card-header">
                         <div class="calc-card-title">
@@ -175,7 +153,6 @@
                                 <label class="calc-label">Precio hoja blanco y negro:</label>
                                 <div class="calc-flex">
                                     <input type="number" id="calcPrecioHoja" value="40" min="1" class="calc-input calc-input-small">
-                                    <!-- Eliminando texto "pesos" según código del usuario -->
                                     <span style="color: var(--text-secondary);"></span>
                                 </div>
                             </div>
@@ -183,7 +160,6 @@
                                 <label class="calc-label">Precio hoja a color:</label>
                                 <div class="calc-flex">
                                     <input type="number" id="calcPrecioHojaColor" value="115" min="1" class="calc-input calc-input-small">
-                                    <!-- Eliminando texto "pesos" según código del usuario -->
                                     <span style="color: var(--text-secondary);"></span>
                                 </div>
                             </div>
@@ -195,11 +171,7 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Container de archivos -->
                 <div id="calcArchivosContainer"></div>
-
-                <!-- Botón calcular total -->
                 <div style="text-align: center; margin: 30px 0;">
                     <div class="calc-botones-venta">
                         <button onclick="calcCalcularTotal()" class="calc-btn calc-btn-primary">
@@ -210,8 +182,6 @@
                         </button>
                     </div>
                 </div>
-
-                <!-- Resultado y pago -->
                 <div id="calcPagoContainer" class="calc-card calc-pago-card" style="display:none;">
                     <div class="calc-card-header">
                         <div class="calc-card-title" style="color: #059669;">
@@ -224,7 +194,6 @@
                             <label id="calcPropinaLabel" for="calcPropinaInput">Propina:</label>
                             <input type="number" id="calcPropinaInput" class="calc-input" min="0" step="1" placeholder="$0">
                         </div>
-                        
                         <div style="border-top: 1px solid var(--border-color); padding-top: 20px;">
                             <label class="calc-label">Método de pago:</label>
                             <div class="calc-checkbox-group">
@@ -238,7 +207,6 @@
                                 </label>
                             </div>
                         </div>
-
                         <div class="calc-cambio-group">
                             <label class="calc-label" for="calcDineroCliente">Dinero que entrega el cliente:</label>
                             <input type="number" id="calcDineroCliente" placeholder="Ingrese el monto" class="calc-input calc-input-small">
@@ -246,9 +214,7 @@
                                 Calcular Cambio
                             </button>
                         </div>
-
                         <div id="calcResultadoCambio" style="display:none;"></div>
-
                         <div style="text-align: center; margin-top: 20px;">
                             <button onclick="calcFinalizarVenta()" class="calc-btn calc-btn-success" style="padding: 12px 24px; font-size: 1.1rem;" id="calcBtnFinalizar" disabled>
                                 Finalizar Venta
@@ -257,21 +223,17 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Tabla de registro de ventas -->
             <div class="calc-card">
                 <div class="calc-card-header">
                     <div class="calc-flex-between">
                         <div class="calc-card-title">
                             Registro de Ventas
-                            <!-- indicador de sincronización -->
                             <span id="syncStatus" class="sync-indicator" title="Estado de sincronización">🔄</span>
                         </div>
                         <div class="calc-flex" style="gap: 12px;">
                             <button onclick="calcExportarExcel()" class="calc-btn calc-btn-outline">
                                 Exportar a Excel
                             </button>
-                            <!-- opción de exportar a PDF -->
                             <button onclick="calcExportarPDF()" class="calc-btn calc-btn-outline">
                                 Exportar a PDF
                             </button>
@@ -279,7 +241,6 @@
                     </div>
                 </div>
                 <div class="calc-card-content">
-                    <!-- Tabla Desktop -->
                     <table class="calc-table">
                         <thead>
                             <tr>
@@ -293,7 +254,6 @@
                                 <td>Efectivo</td>
                                 <td style="text-align: right; font-family: monospace; font-size: 1.1rem;" id="calcTotalEfectivo">$0</td>
                                 <td style="text-align: center;">
-                                    <!-- Cambiando "Ver" por "Ver detalles" para consistencia -->
                                     <button onclick="calcMostrarDetalles('efectivo')" class="calc-btn calc-btn-outline" style="padding: 6px 12px; font-size: 0.9rem;">
                                         Ver detalles (<span id="calcCountEfectivo">0</span>)
                                     </button>
@@ -317,8 +277,6 @@
                             </tr>
                         </tbody>
                     </table>
-
-                    <!-- Cards Mobile -->
                     <div class="calc-table-mobile">
                         <div class="calc-mobile-card">
                             <div class="calc-mobile-card-header">
@@ -331,7 +289,6 @@
                                 </button>
                             </div>
                         </div>
-
                         <div class="calc-mobile-card">
                             <div class="calc-mobile-card-header">
                                 <span>Transferencia</span>
@@ -343,7 +300,6 @@
                                 </button>
                             </div>
                         </div>
-
                         <div class="calc-mobile-card calc-mobile-total-card">
                             <div class="calc-mobile-card-header">
                                 <span>Total General</span>
@@ -352,23 +308,19 @@
                             <div style="text-align: center; font-size: 0.9rem; color: var(--text-secondary);" id="calcTotalVentasMobile">0 ventas</div>
                         </div>
                     </div>
-
-                    <!-- Botones de acciones en la parte inferior de la tarjeta -->
                     <div class="registros-ventas-btn-group">
-    <button onclick="actualizarYRefrescarTabla()" class="calc-btn calc-btn-primary">
-        Actualizar
-    </button>
-    <button onclick="calcRestablecerVentas()" class="calc-btn calc-btn-warning">
-        Restablecer
-    </button>
-    <button onclick="pedirPasswordRecuperarBackup()" class="calc-btn calc-btn-secondary">
-        Recuperar último registro
-    </button>
-</div>
+                        <button onclick="actualizarYRefrescarTabla()" class="calc-btn calc-btn-primary">
+                            Actualizar
+                        </button>
+                        <button onclick="calcRestablecerVentas()" class="calc-btn calc-btn-warning">
+                            Restablecer
+                        </button>
+                        <button onclick="pedirPasswordRecuperarBackup()" class="calc-btn calc-btn-secondary">
+                            Recuperar último registro
+                        </button>
+                    </div>
                 </div>
             </div>
-
-            <!-- Detalles de ventas -->
             <div id="calcDetallesContainer" class="calc-card" style="display:none;">
                 <div class="calc-card-header">
                     <div class="calc-flex-between">
@@ -380,45 +332,41 @@
                 </div>
                 <div class="calc-card-content">
                     <div id="calcDetallesContent" class="calc-detalles"></div>
-                    <!-- Botón para agregar/modificar propina en el detalle de venta -->
                     <div style="margin-top:16px; text-align:center;">
-    <button id="btnAgregarPropinaDetalle" class="calc-btn calc-btn-success" style="display:none;" onclick="agregarPropinaADetalle(window.ventaDetalleIdMostrado)">Agregar/Modificar propina</button>
-</div>
+                        <button id="btnAgregarPropinaDetalle" class="calc-btn calc-btn-success" style="display:none;" onclick="agregarPropinaADetalle(window.ventaDetalleIdMostrado)">Agregar/Modificar propina</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Nueva pantalla de comparativa entre institutos -->
     <div id="calcComparativaScreen" class="calculadora-container" style="display: none;">
         <div class="calculadora-wrapper">
             <header class="calc-header">
-<div class="calc-header-content">
-    <div class="calc-header-text">
-        <h1>Comparativa por Fotocopiado</h1>
-        <p>Análisis de ventas y rendimiento por fotocopiado</p>
-    </div>
-    <div class="header-controls">
-        <button onclick="calcActualizarComparativa()" class="calc-btn calc-btn-primary" title="Actualizar datos">
-            Actualizar
-        </button>
-        <button onclick="calcExportarEstadisticasPDF()" class="calc-btn calc-btn-outline" title="Exportar estadísticas a PDF">
-            Exportar
-        </button>
-        <button onclick="exportarTodosLosRegistrosPDFZip()" class="calc-btn calc-btn-success" title="Descargar registros de los 3 copiados en ZIP">
-            Descargar ZIP de registros PDF
-        </button>
-        <button id="calcThemeToggleComp" class="calc-theme-toggle" onclick="calcToggleTheme()" title="Cambiar tema">
-            <span id="themeTextComp" class="calc-theme-text">🌙 Oscuro</span>
-        </button>
-        <button onclick="calcVolverDesdeComparativa()" class="calc-btn calc-btn-secondary" title="Volver">
-            Volver
-        </button>
-    </div>
-</div>
-</header>
-
-            <!-- Cards de resumen -->
+                <div class="calc-header-content">
+                    <div class="calc-header-text">
+                        <h1>Comparativa por Fotocopiado</h1>
+                        <p>Análisis de ventas y rendimiento por fotocopiado</p>
+                    </div>
+                    <div class="header-controls">
+                        <button onclick="calcActualizarComparativa()" class="calc-btn calc-btn-primary" title="Actualizar datos">
+                            Actualizar
+                        </button>
+                        <button onclick="calcExportarEstadisticasPDF()" class="calc-btn calc-btn-outline" title="Exportar estadísticas a PDF">
+                            Exportar
+                        </button>
+                        <button onclick="exportarTodosLosRegistrosPDFZip()" class="calc-btn calc-btn-success" title="Descargar registros de los 3 copiados en ZIP">
+                            Descargar ZIP de registros PDF
+                        </button>
+                        <button id="calcThemeToggleComp" class="calc-theme-toggle" onclick="calcToggleTheme()" title="Cambiar tema">
+                            <span id="themeTextComp" class="calc-theme-text">🌙 Oscuro</span>
+                        </button>
+                        <button onclick="calcVolverDesdeComparativa()" class="calc-btn calc-btn-secondary" title="Volver">
+                            Volver
+                        </button>
+                    </div>
+                </div>
+            </header>
             <div class="calc-grid calc-grid-cols-3" style="margin-bottom: 32px;">
                 <div class="calc-card">
                     <div class="calc-card-content" style="text-align: center;">
@@ -439,8 +387,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Gráficos -->
             <div class="calc-grid calc-grid-cols-2" style="margin-bottom: 32px;">
                 <div class="calc-card">
                     <div class="calc-card-header">
@@ -463,8 +409,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Detalles por instituto -->
             <div class="calc-card">
                 <div class="calc-card-header">
                     <div class="calc-card-title">Detalles por Fotocopiado</div>
@@ -476,7 +420,6 @@
         </div>
     </div>
 
-    <!-- Agregando footer con marca de agua que aparece en todas las pantallas -->
     <footer class="watermark-footer">
         <p>Web y software creados y diseñados por <a href="https://mauricioricotti.free.nf/?i=1" target="_blank" rel="noopener noreferrer">Mauricio Ricotti</a></p>
     </footer>
@@ -484,7 +427,6 @@
     <script src="/Code.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-    <!-- Agregando librería JSZip para exportar ZIP de PDFs -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </body>
 </html>
