@@ -211,6 +211,8 @@ function syncToFirebase() {
           efectivo: calcRegistroVentas.efectivo || 0,
           transferencia: calcRegistroVentas.transferencia || 0,
           ventas: calcRegistroVentas.ventas || [],
+          perdidas: calcRegistroVentas.perdidas || [],
+          totalPerdidas: calcRegistroVentas.totalPerdidas || 0,
           lastUpdated: Date.now(),
           deviceId: deviceId,
           resetTimestamp: calcRegistroVentas.resetTimestamp || 0,
@@ -1161,60 +1163,29 @@ function listenToFirebaseChanges() {
     fotocopiadoRef,
     (snapshot) => {
       try {
-        const data = snapshot.val()
-        console.log("[v0] Cambio detectado en Firebase:", data)
-
-        if (data && data.deviceId !== deviceId) {
-          const localResetTimestamp = calcRegistroVentas.resetTimestamp || 0
-          const firebaseResetTimestamp = data.resetTimestamp || 0
-
-          if (data.isReset || firebaseResetTimestamp > localResetTimestamp) {
-            console.log("[v0] Reset detectado desde otro dispositivo, invalidando datos locales")
-            calcRegistroVentas = {
-              efectivo: data.efectivo || 0,
-              transferencia: data.transferencia || 0,
-              ventas: data.ventas || [],
-              resetTimestamp: firebaseResetTimestamp,
-            }
-            calcGuardarDatosLocal() // Actualizar localStorage
-            calcActualizarTabla()
-            updateSyncStatus("🔄", "Datos restablecidos desde otro dispositivo")
-            showSyncNotification("Las ventas fueron restablecidas desde otro dispositivo")
-            return
-          }
-
-          // Solo actualizar si los datos vienen de otro dispositivo y son más recientes
-          const newData = {
-            efectivo: data.efectivo || 0,
-            transferencia: data.transferencia || 0,
-            ventas: data.ventas || [],
-            resetTimestamp: firebaseResetTimestamp,
-          }
-
-          const currentTimestamp = calcRegistroVentas.lastUpdated || 0
-          const newTimestamp = data.lastUpdated || 0
-
-          if (newTimestamp > currentTimestamp) {
-            console.log("[v0] Actualizando datos desde otro dispositivo")
-            calcRegistroVentas = newData
-            calcRegistroVentas.lastUpdated = newTimestamp
-            calcGuardarDatosLocal() // Guardar también en localStorage
-            calcActualizarTabla()
-            updateSyncStatus("🔄", "Datos actualizados desde otro dispositivo")
-
-            // Mostrar notificación visual
-            showSyncNotification("Datos actualizados desde otro dispositivo")
-          }
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          // Actualizar todos los campos, incluyendo pérdidas
+          calcRegistroVentas.efectivo = data.efectivo || 0;
+          calcRegistroVentas.transferencia = data.transferencia || 0;
+          calcRegistroVentas.ventas = data.ventas || [];
+          calcRegistroVentas.perdidas = data.perdidas || [];
+          calcRegistroVentas.totalPerdidas = data.totalPerdidas || 0;
+          calcRegistroVentas.resetTimestamp = data.resetTimestamp || 0;
+          calcRegistroVentas.lastUpdated = data.lastUpdated || 0;
+          calcGuardarDatosLocal();
+          calcActualizarTabla();
+          updateSyncStatus("🔄", "Datos actualizados desde servidor");
         }
       } catch (error) {
-        console.error("[v0] Error procesando datos de Firebase:", error)
+        console.error("[v0] Error procesando cambios de Firebase:", error);
       }
     },
     (error) => {
-      console.error("[v0] Error escuchando cambios de Firebase:", error)
-      updateSyncStatus("🔴", "Error de conexión")
-    },
-  )
+      console.error("[v0] Error escuchando cambios de Firebase:", error);
+      updateSyncStatus("🔴", "Error de conexión");
+    }
+  );
 }
 
 function showSyncNotification(message) {
@@ -1842,7 +1813,7 @@ function calcActualizarTabla() {
 
   // Tabla mobile (¡AGREGA ESTO!)
   document.getElementById("calcTotalEfectivoMobile").innerText = `$${efectivo.toLocaleString("es-AR")}`;
-  document.getElementById("calcTotalTransferenciaMobile").innerText = `$${transferencia.toLocaleString("es-AR")}`;
+   document.getElementById("calcTotalTransferenciaMobile").innerText = `$${transferencia.toLocaleString("es-AR")}`;
   document.getElementById("calcTotalGeneralMobile").innerText = `$${total.toLocaleString("es-AR")}`;
   document.getElementById("calcCountEfectivoMobile").innerText = ventasEfectivo;
   document.getElementById("calcCountTransferenciaMobile").innerText = ventasTransferencia;
@@ -2056,3 +2027,303 @@ function actualizarYRefrescarTabla() {
     showSyncNotification("Datos actualizados desde el servidor.");
   });
 }
+
+// 1. Agregar estructura para pérdidas en el registro de ventas
+if (!calcRegistroVentas.perdidas) {
+  calcRegistroVentas.perdidas = [];
+  calcRegistroVentas.totalPerdidas = 0;
+}
+
+// 2. Función para mostrar el modal de pérdidas
+function mostrarModalPerdidas() {
+  // Si ya existe, mostrarlo
+  let modal = document.getElementById("modalPerdidas");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "modalPerdidas";
+    modal.style.cssText = `
+      position:fixed;z-index:3000;top:0;left:0;width:100vw;height:100vh;
+      background:rgba(30,41,59,0.45);backdrop-filter:blur(2px);
+      display:flex;align-items:center;justify-content:center;
+    `;
+    modal.innerHTML = `
+      <div style="background:var(--bg-card);padding:32px 24px;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.18);max-width:95vw;width:340px;text-align:center;">
+        <h2 style="margin-bottom:18px;font-size:1.2rem;color:var(--text-heading);">Registrar pérdida</h2>
+        <div style="margin-bottom:14px;">
+          <label style="font-weight:600;">Cantidad de hojas:</label>
+          <input type="number" id="perdidasCantidad" min="1" value="1" class="calc-input" style="margin-top:6px;">
+        </div>
+        <div style="margin-bottom:14px;">
+          <label style="font-weight:600;">Motivo:</label>
+          <input type="text" id="perdidasMotivo" maxlength="80" class="calc-input" style="margin-top:6px;">
+        </div>
+        <div style="margin-bottom:18px;">
+          <label style="font-weight:600;">Tipo:</label>
+          <select id="perdidasTipo" class="calc-select" style="margin-top:6px;">
+            <option value="bn">Blanco y Negro</option>
+            <option value="color">Color</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button class="calc-btn calc-btn-primary" id="btnAgregarPerdida">Agregar</button>
+          <button class="calc-btn calc-btn-secondary" id="btnCancelarPerdida">Cancelar</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  } else {
+    modal.style.display = "flex";
+  }
+
+  // Eventos
+  document.getElementById("btnAgregarPerdida").onclick = function() {
+    const cantidad = parseInt(document.getElementById("perdidasCantidad").value) || 0;
+    const motivo = document.getElementById("perdidasMotivo").value.trim();
+    const tipo = document.getElementById("perdidasTipo").value;
+    if (cantidad <= 0 || !motivo) {
+      alert("Debe ingresar una cantidad válida y un motivo.");
+      return;
+    }
+    agregarPerdidaRegistro(cantidad, motivo, tipo);
+    modal.style.display = "none";
+  };
+  document.getElementById("btnCancelarPerdida").onclick = function() {
+    modal.style.display = "none";
+  };
+}
+
+// 3. Función para agregar la pérdida al registro y sincronizar
+function agregarPerdidaRegistro(cantidad, motivo, tipo) {
+  const precioHojaBN = Number.parseFloat(document.getElementById("calcPrecioHoja").value) || 0;
+  const precioHojaColor = Number.parseFloat(document.getElementById("calcPrecioHojaColor").value) || 0;
+  const precio = tipo === "color" ? precioHojaColor : precioHojaBN;
+  const total = cantidad * precio;
+  const perdida = {
+    id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    fecha: new Date().toLocaleDateString("es-ES"),
+    hora: new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }),
+    cantidad,
+    motivo,
+    tipo,
+    precioUnitario: precio,
+    total,
+    deviceId: deviceId,
+    timestamp: Date.now()
+  };
+  if (!calcRegistroVentas.perdidas) calcRegistroVentas.perdidas = [];
+  calcRegistroVentas.perdidas.push(perdida);
+  calcRegistroVentas.totalPerdidas = (calcRegistroVentas.totalPerdidas || 0) + total;
+  calcGuardarDatos();
+  calcActualizarTabla();
+  showSyncNotification("Pérdida registrada y sincronizada.");
+}
+
+// 4. Modificar calcActualizarTabla para mostrar pérdidas
+const oldCalcActualizarTabla = calcActualizarTabla;
+calcActualizarTabla = function() {
+  oldCalcActualizarTabla();
+  // Mostrar total de pérdidas
+  const totalPerdidas = calcRegistroVentas.totalPerdidas || 0;
+  let perdidasRow = document.getElementById("calcTotalPerdidasRow");
+  if (!perdidasRow) {
+    // Insertar fila en tabla desktop
+    const table = document.querySelector(".calc-table tbody");
+    if (table) {
+      perdidasRow = document.createElement("tr");
+      perdidasRow.id = "calcTotalPerdidasRow";
+      perdidasRow.innerHTML = `
+        <td>Pérdidas</td>
+        <td style="text-align: right; font-family: monospace; font-size: 1.1rem;" id="calcTotalPerdidas">$0</td>
+        <td style="text-align: center;">
+          <button onclick="calcMostrarDetalles('perdidas')" class="calc-btn calc-btn-outline" style="padding: 6px 12px; font-size: 0.9rem;">
+            Ver detalles (<span id="calcCountPerdidas">0</span>)
+          </button>
+        </td>
+      `;
+      table.insertBefore(perdidasRow, table.lastElementChild); // antes del total general
+    }
+    // Insertar card en mobile
+    const mobile = document.querySelector(".calc-table-mobile");
+    if (mobile && !document.getElementById("calcTotalPerdidasMobile")) {
+      const card = document.createElement("div");
+      card.className = "calc-mobile-card";
+      card.innerHTML = `
+        <div class="calc-mobile-card-header">
+          <span>Pérdidas</span>
+          <span class="calc-mobile-card-total" id="calcTotalPerdidasMobile">$0</span>
+        </div>
+        <div class="calc-mobile-card-actions">
+          <button onclick="calcMostrarDetalles('perdidas')" class="calc-btn calc-btn-outline" style="padding: 8px 16px; font-size: 0.9rem;">
+            Ver detalles (<span id="calcCountPerdidasMobile">0</span>)
+          </button>
+        </div>
+      `;
+      mobile.insertBefore(card, mobile.lastElementChild);
+    }
+  }
+  // Actualizar valores
+  document.getElementById("calcTotalPerdidas").innerText = `$${totalPerdidas.toLocaleString("es-AR")}`;
+  document.getElementById("calcTotalPerdidasMobile").innerText = `$${totalPerdidas.toLocaleString("es-AR")}`;
+  const count = (calcRegistroVentas.perdidas || []).length;
+  document.getElementById("calcCountPerdidas").innerText = count;
+  document.getElementById("calcCountPerdidasMobile").innerText = count;
+};
+
+// 5. Modificar calcMostrarDetalles para mostrar detalles de pérdidas
+const oldCalcMostrarDetalles = calcMostrarDetalles;
+calcMostrarDetalles = function(tipo) {
+  if (tipo !== "perdidas") {
+    oldCalcMostrarDetalles(tipo);
+    return;
+  }
+  const container = document.getElementById("calcDetallesContainer");
+  const content = document.getElementById("calcDetallesContent");
+  const title = document.getElementById("calcDetallesTitle");
+  const perdidas = calcRegistroVentas.perdidas || [];
+  title.textContent = "Detalles de Pérdidas";
+  if (perdidas.length === 0) {
+    content.innerHTML = `<div style="padding: 24px; text-align: center; color: var(--text-secondary);">No hay pérdidas registradas.</div>`;
+  } else {
+    content.innerHTML = perdidas.map((p, idx) => `
+      <div class="calc-venta-item" style="margin-bottom:18px;">
+        <ul>
+          <li><b>#${idx + 1}</b> - <b>Fecha:</b> ${p.fecha} <b>Hora:</b> ${p.hora}</li>
+          <li><b>Cantidad de hojas:</b> ${p.cantidad}</li>
+          <li><b>Motivo:</b> ${p.motivo}</li>
+          <li><b>Tipo:</b> ${p.tipo === "color" ? "Color" : "Blanco y Negro"}</li>
+          <li><b>Precio unitario:</b> $${p.precioUnitario}</li>
+          <li><b>Total pérdida:</b> $${p.total.toLocaleString("es-AR")}</li>
+        </ul>
+        <div style="margin-top:12px;">
+          <button class="calc-btn calc-btn-danger" onclick="eliminarPerdidaPorIndice(${idx})">Eliminar</button>
+        </div>
+      </div>
+    `).join("");
+  }
+  container.style.display = "block";
+  container.style.maxHeight = "80vh";
+  container.style.overflowY = "auto";
+  container.style.minHeight = "500px";
+};
+
+// 6. Eliminar pérdida
+function eliminarPerdidaPorIndice(idx) {
+  if (!confirm("¿Seguro que deseas eliminar esta pérdida?")) return;
+  const perdida = calcRegistroVentas.perdidas[idx];
+  if (!perdida) return;
+  calcRegistroVentas.totalPerdidas -= perdida.total;
+  calcRegistroVentas.perdidas.splice(idx, 1);
+  calcGuardarDatos();
+  calcActualizarTabla();
+  calcMostrarDetalles("perdidas");
+}
+
+// 7. Sincronizar pérdidas en tiempo real (ya lo hace calcGuardarDatos y listenToFirebaseChanges)
+// Solo asegurarse de incluir pérdidas en la sincronización:
+const oldSyncToFirebase = syncToFirebase;
+syncToFirebase = function() {
+  if (!isFirebaseEnabled || !database || !currentFotocopiado) {
+    return Promise.resolve();
+  }
+  return areLocalDataValid().then((isValid) => {
+    if (!isValid) return calcCargarDatosIniciales();
+    return new Promise((resolve, reject) => {
+      try {
+        const dataToSync = {
+          efectivo: calcRegistroVentas.efectivo || 0,
+          transferencia: calcRegistroVentas.transferencia || 0,
+          ventas: calcRegistroVentas.ventas || [],
+          perdidas: calcRegistroVentas.perdidas || [],
+          totalPerdidas: calcRegistroVentas.totalPerdidas || 0,
+          lastUpdated: Date.now(),
+          deviceId: deviceId,
+          resetTimestamp: calcRegistroVentas.resetTimestamp || 0,
+        };
+        const fotocopiadoRef = window.firebaseRef(database, `fotocopiados/${currentFotocopiado}`);
+        window.firebaseSet(fotocopiadoRef, dataToSync)
+          .then(() => {
+            updateSyncStatus("🟢", "Sincronizado");
+            calcRegistroVentas.lastUpdated = dataToSync.lastUpdated;
+            resolve();
+          })
+          .catch((error) => {
+            updateSyncStatus("🔴", "Error de sincronización");
+            reject(error);
+          });
+      } catch (error) {
+        updateSyncStatus("🔴", "Error de sincronización");
+        reject(error);
+      }
+    });
+  });
+};
+
+// 8. Asegurarse de cargar pérdidas al cargar datos
+const oldCalcCargarDatos = calcCargarDatos;
+calcCargarDatos = function() {
+  oldCalcCargarDatos();
+  if (!calcRegistroVentas.perdidas) calcRegistroVentas.perdidas = [];
+  if (!calcRegistroVentas.totalPerdidas) calcRegistroVentas.totalPerdidas = 0;
+};
+
+// 9. Asegurarse de cargar pérdidas desde Firebase
+const oldLoadFromFirebase = loadFromFirebase;
+loadFromFirebase = function() {
+  return new Promise((resolve) => {
+    oldLoadFromFirebase().then(() => {
+      if (!calcRegistroVentas.perdidas) calcRegistroVentas.perdidas = [];
+      if (!calcRegistroVentas.totalPerdidas) calcRegistroVentas.totalPerdidas = 0;
+      resolve();
+    });
+  });
+};
+
+// 10. Asegurarse de mostrar pérdidas al escuchar cambios de Firebase
+const oldListenToFirebaseChanges = listenToFirebaseChanges;
+listenToFirebaseChanges = function() {
+  if (!isFirebaseEnabled || !database || !currentFotocopiado) return;
+  const fotocopiadoRef = window.firebaseRef(database, `fotocopiados/${currentFotocopiado}`);
+  window.firebaseOnValue(
+    fotocopiadoRef,
+    (snapshot) => {
+      try {
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          // Actualizar todos los campos, incluyendo pérdidas
+          calcRegistroVentas.efectivo = data.efectivo || 0;
+          calcRegistroVentas.transferencia = data.transferencia || 0;
+          calcRegistroVentas.ventas = data.ventas || [];
+          calcRegistroVentas.perdidas = data.perdidas || [];
+          calcRegistroVentas.totalPerdidas = data.totalPerdidas || 0;
+          calcRegistroVentas.resetTimestamp = data.resetTimestamp || 0;
+          calcRegistroVentas.lastUpdated = data.lastUpdated || 0;
+          calcGuardarDatosLocal();
+          calcActualizarTabla();
+          updateSyncStatus("🔄", "Datos actualizados desde servidor");
+        }
+      } catch (error) {
+        console.error("[v0] Error procesando cambios de Firebase:", error);
+      }
+    },
+    (error) => {
+      console.error("[v0] Error escuchando cambios de Firebase:", error);
+      updateSyncStatus("🔴", "Error de conexión");
+    }
+  );
+};
+
+// 11. Agregar el botón junto a "Agregar archivo" (solo si no existe)
+document.addEventListener("DOMContentLoaded", () => {
+  setTimeout(() => {
+    const btnArchivo = document.querySelector('button[onclick*="calcAgregarArchivo"]');
+    if (btnArchivo && !document.getElementById("btnRegistroPerdidas")) {
+      const btn = document.createElement("button");
+      btn.className = "calc-btn calc-btn-warning";
+      btn.id = "btnRegistroPerdidas";
+      btn.innerText = "Registro de pérdidas";
+      btn.style.marginLeft = "10px";
+      btn.onclick = mostrarModalPerdidas;
+      btnArchivo.parentNode.appendChild(btn);
+    }
+  }, 500);
+});
