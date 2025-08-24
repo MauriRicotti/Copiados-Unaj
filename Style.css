@@ -1305,3 +1305,77 @@ body {
   background: #d91b06;
   color: #fff;
 }
+
+/* Modal de comparar históricos mejorado */
+#modalCompararHistoricos .modal-historicos-content {
+  background: var(--bg-card);
+  padding: 32px 24px;
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  max-width: 95vw;
+  width: 340px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+#modalCompararHistoricos h2 {
+  margin-bottom: 10px;
+  font-size: 1.3rem;
+  color: var(--text-heading);
+  font-weight: 700;
+}
+
+#modalCompararHistoricos label {
+  font-weight: 600;
+  margin-bottom: 6px;
+  display: block;
+}
+
+#modalCompararHistoricos select {
+  margin-bottom: 10px;
+}
+
+#modalCompararHistoricos .modal-historicos-botones {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+  justify-content: center;
+}
+
+#modalCompararHistoricos table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  background: var(--bg-card-header);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+#modalCompararHistoricos th, #modalCompararHistoricos td {
+  padding: 8px 6px;
+  text-align: center;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.98rem;
+}
+
+#modalCompararHistoricos th {
+  background: var(--bg-card-header);
+  color: var(--text-heading);
+  font-weight: 700;
+}
+
+/* Modal de comparar históricos más ancho en PC */
+#modalCompararHistoricos .modal-historicos-content {
+  max-width: 600px;
+  width: 480px;
+}
+
+@media (max-width: 700px) {
+  #modalCompararHistoricos .modal-historicos-content {
+    max-width: 95vw;
+    width: 98vw;
+    min-width: 0;
+  }
+}

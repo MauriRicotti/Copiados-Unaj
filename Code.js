@@ -873,7 +873,8 @@ async function calcCargarDatosComparativa() {
         transferencia: data?.transferencia || 0,
         ventas: data?.ventas || [],
         total: (data?.efectivo || 0) + (data?.transferencia || 0),
-        perdidas: (data?.perdidas || []).length // <-- NUEVO: cantidad de pérdidas
+        perdidas: (data?.perdidas || []).length,
+        totalPerdidas: data?.totalPerdidas || 0 // <-- NUEVO: suma total de pérdidas
       }
     }
 
@@ -1024,32 +1025,32 @@ function calcMostrarDetallesComparativa(datos) {
     card.className = "calc-detail-card"
 
     card.innerHTML = `
-            <h4>${instituto.name}</h4>
-            <div class="calc-detail-stat">
-                <span>Total de Ingresos:</span>
-                <span>$${instituto.total.toLocaleString("es-AR")}</span>
-            </div>
-            <div class="calc-detail-stat">
-                <span>Ventas en Efectivo:</span>
-                <span>$${instituto.efectivo.toLocaleString("es-AR")}</span>
-            </div>
-            <div class="calc-detail-stat">
-                <span>Ventas por Transferencia:</span>
-                <span>$${instituto.transferencia.toLocaleString("es-AR")}</span>
-            </div>
-            <div class="calc-detail-stat">
-                <span>Número de Ventas:</span>
-                <span>${instituto.ventas.length}</span>
-            </div>
-            <div class="calc-detail-stat">
-                <span>Promedio por Venta:</span>
-                <span>$${instituto.ventas.length > 0 ? Math.round(instituto.total / instituto.ventas.length).toLocaleString("es-AR") : 0}</span>
-            </div>
-            <div class="calc-detail-stat">
-                <span>Número de Pérdidas:</span>
-                <span>${instituto.perdidas}</span>
-            </div>
-        `
+  <h4>${instituto.name}</h4>
+  <div class="calc-detail-stat">
+      <span>Total de Ingresos:</span>
+      <span>$${instituto.total.toLocaleString("es-AR")}</span>
+  </div>
+  <div class="calc-detail-stat">
+      <span>Ventas en Efectivo:</span>
+      <span>$${instituto.efectivo.toLocaleString("es-AR")}</span>
+  </div>
+  <div class="calc-detail-stat">
+      <span>Ventas por Transferencia:</span>
+      <span>$${instituto.transferencia.toLocaleString("es-AR")}</span>
+  </div>
+  <div class="calc-detail-stat">
+      <span>Número de Ventas:</span>
+      <span>${instituto.ventas.length}</span>
+  </div>
+  <div class="calc-detail-stat">
+      <span>Promedio por Venta:</span>
+      <span>$${instituto.ventas.length > 0 ? Math.round(instituto.total / instituto.ventas.length).toLocaleString("es-AR") : 0}</span>
+  </div>
+  <div class="calc-detail-stat">
+      <span>Pérdidas:</span>
+      <span>${instituto.perdidas} ($${instituto.totalPerdidas.toLocaleString("es-AR")})</span>
+  </div>
+`
 
     grid.appendChild(card)
   })
