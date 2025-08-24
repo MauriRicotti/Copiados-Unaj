@@ -265,6 +265,8 @@ function calcCargarDatosIniciales() {
                 efectivo: firebaseData.efectivo || 0,
                 transferencia: firebaseData.transferencia || 0,
                 ventas: firebaseData.ventas || [],
+                perdidas: firebaseData.perdidas || [],
+                totalPerdidas: firebaseData.totalPerdidas || 0,
                 resetTimestamp: firebaseResetTimestamp,
               }
               calcGuardarDatosLocal() 
@@ -708,14 +710,31 @@ async function calcRestablecerVentas() {
 
   if (isFirebaseEnabled && database && currentFotocopiado) {
     try {
+      // Guardar backup normal
       const ventasRef = window.firebaseRef(database, `fotocopiados/${currentFotocopiado}`);
       const backupRef = window.firebaseRef(database, `backups/${currentFotocopiado}/${Date.now()}`);
       const snapshot = await window.firebaseGet(ventasRef);
       if (snapshot.exists()) {
         await window.firebaseSet(backupRef, snapshot.val());
       }
+
+      // Guardar resumen histórico
+      const ahora = new Date();
+      const añoMes = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, "0")}`;
+      const turno = currentTurno || "TM";
+      const historicoRef = window.firebaseRef(
+        database,
+        `historicos/${currentFotocopiado}/${añoMes}/${turno}/${Date.now()}`
+      );
+      const resumen = {
+        ...snapshot.val(),
+        fecha: ahora.toLocaleDateString("es-ES"),
+        turno: turno,
+        timestamp: Date.now(),
+      };
+      await window.firebaseSet(historicoRef, resumen);
     } catch (error) {
-      console.error("Error guardando backup en Firebase:", error);
+      console.error("Error guardando backup/histórico en Firebase:", error);
     }
   }
 
@@ -775,6 +794,8 @@ async function calcRecuperarBackup() {
         efectivo: ultimoBackup.efectivo || 0,
         transferencia: ultimoBackup.transferencia || 0,
         ventas: ultimoBackup.ventas || [],
+        perdidas: ultimoBackup.perdidas || [],
+        totalPerdidas: ultimoBackup.totalPerdidas || 0,
         resetTimestamp: ultimoBackup.resetTimestamp || Date.now(),
       };
       calcGuardarDatosLocal();
@@ -1387,6 +1408,8 @@ function loadFromFirebase() {
               efectivo: firebaseData.efectivo || 0,
               transferencia: firebaseData.transferencia || 0,
               ventas: firebaseData.ventas || [],
+              perdidas: firebaseData.perdidas || [],
+              totalPerdidas: firebaseData.totalPerdidas || 0,
               resetTimestamp: firebaseData.resetTimestamp || Date.now(),
             }
             console.log("[v0] Datos actualizados desde Firebase (fuente de verdad):", calcRegistroVentas)
@@ -1934,6 +1957,8 @@ async function calcRecuperarBackup() {
           efectivo: ultimoBackup.efectivo || 0,
           transferencia: ultimoBackup.transferencia || 0,
           ventas: ultimoBackup.ventas || [],
+          perdidas: ultimoBackup.perdidas || [],
+          totalPerdidas: ultimoBackup.totalPerdidas || 0,
           resetTimestamp: ultimoBackup.resetTimestamp || Date.now(),
         };
         calcGuardarDatosLocal();
@@ -1972,7 +1997,6 @@ function actualizarYRefrescarTabla() {
 
 if (!calcRegistroVentas.perdidas) {
   calcRegistroVentas.perdidas = [];
-  calcRegistroVentas.totalPerdidas = 0;
 }
 
 function mostrarModalPerdidas() {
@@ -2257,3 +2281,97 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }, 500);
 });
+
+
+
+
+
+// --- Comparar históricos ---
+
+function abrirCompararHistoricos() {
+  document.getElementById("modalCompararHistoricos").style.display = "flex";
+  document.getElementById("resultadoCompararHistoricos").innerHTML = "";
+}
+
+function cerrarModalCompararHistoricos() {
+  document.getElementById("modalCompararHistoricos").style.display = "none";
+}
+
+async function cargarComparativaHistoricos() {
+  const rango = document.getElementById("selectRangoHistorico").value;
+  const resultadoDiv = document.getElementById("resultadoCompararHistoricos");
+  resultadoDiv.innerHTML = "Cargando...";
+
+  if (!isFirebaseEnabled || !database) {
+    resultadoDiv.innerHTML = "Firebase no disponible.";
+    return;
+  }
+
+  // Calcular fechas de inicio y fin
+  const ahora = new Date();
+  let fechaInicio, fechaFin = new Date();
+  if (rango === "mes") {
+    fechaInicio = new Date(fechaFin.getFullYear(), fechaFin.getMonth(), 1);
+  } else {
+    fechaInicio = new Date();
+    fechaInicio.setDate(fechaFin.getDate() - Number(rango));
+  }
+
+  // Leer históricos de cada copiado
+  const institutos = ["salud", "sociales", "ingenieria"];
+  const resumenes = {};
+
+  for (const tipo of institutos) {
+    resumenes[tipo] = { ingresos: 0, ventas: 0, perdidas: 0, nombre: calcInstitutos[tipo].name };
+    // Buscar en todos los meses posibles del rango
+    let meses = [];
+    let d = new Date(fechaInicio);
+    while (d <= fechaFin) {
+      const mes = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      if (!meses.includes(mes)) meses.push(mes);
+      d.setMonth(d.getMonth() + 1);
+    }
+    for (const mes of meses) {
+      for (const turno of ["TM", "TT"]) {
+        const historicosRef = window.firebaseRef(database, `historicos/${tipo}/${mes}/${turno}`);
+        const snap = await window.firebaseGet(historicosRef);
+        if (snap.exists()) {
+          const historicos = snap.val();
+          for (const key in historicos) {
+            const h = historicos[key];
+            const fechaHist = new Date(h.timestamp || 0);
+            if (fechaHist >= fechaInicio && fechaHist <= fechaFin) {
+              resumenes[tipo].ingresos += (h.efectivo || 0) + (h.transferencia || 0);
+              resumenes[tipo].ventas += (h.ventas ? h.ventas.length : 0);
+              resumenes[tipo].perdidas += (h.perdidas ? h.perdidas.length : 0);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Mostrar tabla comparativa
+  resultadoDiv.innerHTML = `
+    <table style="width:100%;margin-top:10px;">
+      <thead>
+        <tr>
+          <th>Copiado</th>
+          <th>Ingresos</th>
+          <th>Ventas</th>
+          <th>Pérdidas</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${institutos.map(tipo => `
+          <tr>
+            <td>${resumenes[tipo].nombre}</td>
+            <td>$${resumenes[tipo].ingresos.toLocaleString("es-AR")}</td>
+            <td>${resumenes[tipo].ventas}</td>
+            <td>${resumenes[tipo].perdidas}</td>
+          </tr>
+        `).join("")}
+      </tbody>
+    </table>
+  `;
+}
