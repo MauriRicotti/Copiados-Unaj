@@ -1490,6 +1490,7 @@ function calcExportarPDF() {
   doc.text(`Mes: ${mes.charAt(0).toUpperCase() + mes.slice(1)} ${año}`, 14, 26);
   doc.text(`Turno: ${turno}`, 14, 34);
 
+  // Tabla de ventas
   const ventasEfectivo = ventas.filter(v => v.metodoPago === 'efectivo').map(v => `$${v.total}`);
   const ventasTransferencia = ventas.filter(v => v.metodoPago === 'transferencia').map(v => `$${v.total}`);
   const maxFilas = Math.max(ventasEfectivo.length, ventasTransferencia.length);
@@ -1532,6 +1533,34 @@ function calcExportarPDF() {
     headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold' },
     bodyStyles: { fillColor: [245, 245, 245] }
   });
+
+  // Añadir tabla de pérdidas si hay datos
+  const perdidas = calcRegistroVentas.perdidas || [];
+  if (perdidas.length > 0) {
+    y = doc.lastAutoTable.finalY + 10;
+    doc.setFontSize(13);
+    doc.text('Pérdidas registradas:', 14, y);
+    y += 8;
+    const tablaPerdidas = perdidas.map(p => [
+      p.fecha,
+      p.hora,
+      p.nombre || "-",
+      p.cantidad,
+      p.tipo === "color" ? "Color" : "BN",
+      p.motivo,
+      `$${p.precioUnitario}`,
+      `$${p.total}`
+    ]);
+    doc.autoTable({
+      head: [['Fecha', 'Hora', 'Nombre', 'Cantidad', 'Tipo', 'Motivo', 'Precio unitario', 'Total']],
+      body: tablaPerdidas,
+      startY: y,
+      theme: 'grid',
+      styles: { fontSize: 11 },
+      headStyles: { fillColor: [245, 158, 11], textColor: 255, fontStyle: 'bold' },
+      bodyStyles: { fillColor: [255, 251, 235] }
+    });
+  }
 
   doc.save(`RegistroVentas_${nombreCopiado}_${mes}_${año}_${turno}.pdf`);
 }
@@ -1622,9 +1651,12 @@ async function exportarTodosLosRegistrosPDFZip() {
     if (isFirebaseEnabled && database) {
       const ref = window.firebaseRef(database, `fotocopiados/${tipo}`);
       const snap = await window.firebaseGet(ref);
-      data = snap.exists() ? snap.val() : { efectivo: 0, transferencia: 0, ventas: [] };
+      data = snap.exists() ? snap.val() : { efectivo: 0, transferencia: 0, ventas: [], perdidas: [], totalPerdidas: 0 };
     } else {
+      // Cargar todos los campos, incluyendo perdidas y totalPerdidas
       data = JSON.parse(localStorage.getItem(`calcRegistroVentas_${tipo}`) || "{}");
+      if (!data.perdidas) data.perdidas = [];
+      if (!data.totalPerdidas) data.totalPerdidas = 0;
     }
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
@@ -1679,6 +1711,34 @@ async function exportarTodosLosRegistrosPDFZip() {
       headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold' },
       bodyStyles: { fillColor: [245, 245, 245] }
     });
+
+    // Añadir tabla de pérdidas si hay datos
+    const perdidas = data.perdidas || [];
+    if (perdidas.length > 0) {
+      y = doc.lastAutoTable.finalY + 10;
+      doc.setFontSize(13);
+      doc.text('Pérdidas registradas:', 14, y);
+      y += 8;
+      const tablaPerdidas = perdidas.map(p => [
+        p.fecha,
+        p.hora,
+        p.nombre || "-",
+        p.cantidad,
+        p.tipo === "color" ? "Color" : "BN",
+        p.motivo,
+        `$${p.precioUnitario}`,
+        `$${p.total}`
+      ]);
+      doc.autoTable({
+        head: [['Fecha', 'Hora', 'Nombre', 'Cantidad', 'Tipo', 'Motivo', 'Precio unitario', 'Total']],
+        body: tablaPerdidas,
+        startY: y,
+        theme: 'grid',
+        styles: { fontSize: 11 },
+        headStyles: { fillColor: [245, 158, 11], textColor: 255, fontStyle: 'bold' },
+        bodyStyles: { fillColor: [255, 251, 235] }
+      });
+    }
 
     const nombrePDF = `${nombres[tipo]}_${mes}_${año}_${turno}.pdf`;
     const pdfBlob = doc.output("blob");
@@ -1749,7 +1809,7 @@ function calcMostrarDetalles(tipo) {
         <ul>
           <li><b>#${idx + 1}</b> - <b>Fecha:</b> ${venta.fecha} <b>Hora:</b> ${venta.hora}</li>
           <li><b>Total:</b> $${venta.total.toLocaleString("es-AR")}${venta.propina && venta.propina > 0 ? ` (Propina: $${venta.propina})` : ""}</li>
-          <li><b>Precios:</b> BN $${venta.precioHojaBN} / Color $${venta.precioHojaColor}</li>
+                            <li><b>Precios:</b> BN $${venta.precioHojaBN} / Color $${venta.precioHojaColor}</li>
         </ul>
         <div style="margin-top:10px;">
           <b>Archivos de la venta:</b>
@@ -2188,8 +2248,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnArchivo = document.querySelector('button[onclick*="calcAgregarArchivo"]');
     if (btnArchivo && !document.getElementById("btnRegistroPerdidas")) {
       const btn = document.createElement("button");
-      btn.className = "calc-btn calc-btn-warning";
       btn.id = "btnRegistroPerdidas";
+      btn.className = "calc-btn calc-btn-warning";
       btn.innerText = "Registro de pérdidas";
       btn.style.marginLeft = "10px";
       btn.onclick = mostrarModalPerdidas;
