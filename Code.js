@@ -852,6 +852,7 @@ async function calcCargarDatosComparativa() {
         transferencia: data?.transferencia || 0,
         ventas: data?.ventas || [],
         total: (data?.efectivo || 0) + (data?.transferencia || 0),
+        perdidas: (data?.perdidas || []).length // <-- NUEVO: cantidad de pérdidas
       }
     }
 
@@ -1022,6 +1023,10 @@ function calcMostrarDetallesComparativa(datos) {
             <div class="calc-detail-stat">
                 <span>Promedio por Venta:</span>
                 <span>$${instituto.ventas.length > 0 ? Math.round(instituto.total / instituto.ventas.length).toLocaleString("es-AR") : 0}</span>
+            </div>
+            <div class="calc-detail-stat">
+                <span>Número de Pérdidas:</span>
+                <span>${instituto.perdidas}</span>
             </div>
         `
 
@@ -1924,6 +1929,10 @@ function mostrarModalPerdidas() {
       <div style="background:var(--bg-card);padding:32px 24px;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.18);max-width:95vw;width:340px;text-align:center;">
         <h2 style="margin-bottom:18px;font-size:1.2rem;color:var(--text-heading);">Registrar pérdida</h2>
         <div style="margin-bottom:14px;">
+          <label style="font-weight:600;">Nombre y apellido:</label>
+          <input type="text" id="perdidasNombre" maxlength="60" class="calc-input" style="margin-top:6px;" placeholder="Nombre y apellido">
+        </div>
+        <div style="margin-bottom:14px;">
           <label style="font-weight:600;">Cantidad de hojas:</label>
           <input type="number" id="perdidasCantidad" min="1" value="1" class="calc-input" style="margin-top:6px;">
         </div>
@@ -1950,14 +1959,15 @@ function mostrarModalPerdidas() {
   }
 
   document.getElementById("btnAgregarPerdida").onclick = function() {
+    const nombre = document.getElementById("perdidasNombre").value.trim();
     const cantidad = parseInt(document.getElementById("perdidasCantidad").value) || 0;
     const motivo = document.getElementById("perdidasMotivo").value.trim();
     const tipo = document.getElementById("perdidasTipo").value;
-    if (cantidad <= 0 || !motivo) {
-      alert("Debe ingresar una cantidad válida y un motivo.");
+    if (!nombre || cantidad <= 0 || !motivo) {
+      alert("Debe ingresar nombre y apellido, una cantidad válida y un motivo.");
       return;
     }
-    agregarPerdidaRegistro(cantidad, motivo, tipo);
+    agregarPerdidaRegistro(cantidad, motivo, tipo, nombre);
     modal.style.display = "none";
   };
   document.getElementById("btnCancelarPerdida").onclick = function() {
@@ -1965,7 +1975,7 @@ function mostrarModalPerdidas() {
   };
 }
 
-function agregarPerdidaRegistro(cantidad, motivo, tipo) {
+function agregarPerdidaRegistro(cantidad, motivo, tipo, nombre) {
   const precioHojaBN = Number.parseFloat(document.getElementById("calcPrecioHoja").value) || 0;
   const precioHojaColor = Number.parseFloat(document.getElementById("calcPrecioHojaColor").value) || 0;
   const precio = tipo === "color" ? precioHojaColor : precioHojaBN;
@@ -1977,6 +1987,7 @@ function agregarPerdidaRegistro(cantidad, motivo, tipo) {
     cantidad,
     motivo,
     tipo,
+    nombre: nombre || "",
     precioUnitario: precio,
     total,
     deviceId: deviceId,
@@ -2054,6 +2065,7 @@ calcMostrarDetalles = function(tipo) {
       <div class="calc-venta-item" style="margin-bottom:18px;">
         <ul>
           <li><b>#${idx + 1}</b> - <b>Fecha:</b> ${p.fecha} <b>Hora:</b> ${p.hora}</li>
+          <li><b>Nombre y apellido:</b> ${p.nombre ? p.nombre : "-"}</li>
           <li><b>Cantidad de hojas:</b> ${p.cantidad}</li>
           <li><b>Motivo:</b> ${p.motivo}</li>
           <li><b>Tipo:</b> ${p.tipo === "color" ? "Color" : "Blanco y Negro"}</li>
