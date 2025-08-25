@@ -649,56 +649,6 @@ function calcFinalizarVenta() {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-function calcRestablecerVentas() {
-  const password = prompt("Ingresa la contraseña de administrador para restablecer las ventas:")
-
-  if (password === null || password === "") {
-    return
-  }
-
-  if (password !== "admin123") {
-    alert("Contraseña incorrecta. No se puede restablecer el registro de ventas.")
-    return
-  }
-
-  if (confirm("¿Estás seguro de que deseas restablecer todas las ventas del día?")) {
-    const resetTimestamp = Date.now()
-
-    calcRegistroVentas = {
-      efectivo: 0,
-      transferencia: 0,
-      ventas: [],
-      resetTimestamp: resetTimestamp,
-      isReset: true,
-    }
-
-    calcGuardarDatosLocal()
-    calcActualizarTabla()
-
-    if (isFirebaseEnabled && database && currentFotocopiado) {
-      const fotocopiadoRef = window.firebaseRef(database, `fotocopiados/${currentFotocopiado}`)
-      const resetData = {
-        efectivo: 0,
-        transferencia: 0,
-        ventas: [],
-        resetTimestamp: resetTimestamp,
-        isReset: true,
-        lastUpdated: resetTimestamp,
-        deviceId: deviceId,
-      }
-
-      window
-        .firebaseSet(fotocopiadoRef, resetData)
-        .then(() => {
-          console.log("[v0] Reset sincronizado a Firebase")
-          updateSyncStatus("🟢", "Ventas restablecidas y sincronizadas")
-        })
-        .catch((error) => {
-          console.error("[v0] Error sincronizando reset:", error)
-        })
-    }
-  }
-}
 
 async function calcRestablecerVentas() {
   const password = prompt("Ingresa la contraseña de administrador para restablecer las ventas:");
@@ -769,44 +719,6 @@ async function calcRestablecerVentas() {
           console.error("Error sincronizando reset:", error);
         });
     }
-  }
-}
-
-async function calcRecuperarBackup() {
-  if (!isFirebaseEnabled || !database || !currentFotocopiado) {
-    alert("Firebase no está disponible.");
-    return;
-  }
-  try {
-    const backupsRef = window.firebaseRef(database, `backups/${currentFotocopiado}`);
-    const snapshot = await window.firebaseGet(backupsRef);
-    if (snapshot.exists()) {
-      const backups = snapshot.val();
-      const timestamps = Object.keys(backups).sort((a, b) => b - a);
-      const ultimoBackup = backups[timestamps[0]];
-      if (!ultimoBackup) {
-        alert("No hay backup disponible.");
-        return;
-      }
-      const ventasRef = window.firebaseRef(database, `fotocopiados/${currentFotocopiado}`);
-      await window.firebaseSet(ventasRef, ultimoBackup);
-      calcRegistroVentas = {
-        efectivo: ultimoBackup.efectivo || 0,
-        transferencia: ultimoBackup.transferencia || 0,
-        ventas: ultimoBackup.ventas || [],
-        perdidas: ultimoBackup.perdidas || [],
-        totalPerdidas: ultimoBackup.totalPerdidas || 0,
-        resetTimestamp: ultimoBackup.resetTimestamp || Date.now(),
-      };
-      calcGuardarDatosLocal();
-      calcActualizarTabla();
-      alert("Backup restaurado correctamente y sincronizado.");
-    } else {
-      alert("No hay backup disponible.");
-    }
-  } catch (error) {
-    console.error("Error restaurando backup:", error);
-    alert("Error al restaurar el backup.");
   }
 }
 
@@ -1085,29 +997,6 @@ function mostrarTurnoModal() {
     modal.style.display = "none";
     showCalculatorScreen();
   };
-}
-
-function login(tipo = null) {
-  const fotocopiadoType = tipo || selectedFotocopiado
-  const password = document.getElementById(`passwordInput-${fotocopiadoType}`).value
-
-  if (!fotocopiadoType) {
-    alert("Por favor selecciona un fotocopiado")
-    return
-  }
-
-  if (password === calcInstitutos[fotocopiadoType].password) {
-    currentFotocopiado = fotocopiadoType
-    localStorage.setItem("currentFotocopiado", currentFotocopiado)
-    mostrarTurnoModal();
-  } else {
-    alert("Contraseña incorrecta")
-    const passwordInput = document.getElementById(`passwordInput-${fotocopiadoType}`)
-    if (passwordInput) {
-      passwordInput.value = ""
-      passwordInput.focus()
-    }
-  }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -2268,27 +2157,6 @@ listenToFirebaseChanges = function() {
   );
 };
 
-document.addEventListener("DOMContentLoaded", () => {
-  setTimeout(() => {
-    const btnArchivo = document.querySelector('button[onclick*="calcAgregarArchivo"]');
-    if (btnArchivo && !document.getElementById("btnRegistroPerdidas")) {
-      const btn = document.createElement("button");
-      btn.id = "btnRegistroPerdidas";
-      btn.className = "calc-btn calc-btn-warning";
-      btn.innerText = "Registro de pérdidas";
-      btn.style.marginLeft = "10px";
-      btn.onclick = mostrarModalPerdidas;
-      btnArchivo.parentNode.appendChild(btn);
-    }
-  }, 500);
-});
-
-
-
-
-
-// --- Comparar históricos ---
-
 function abrirCompararHistoricos() {
   document.getElementById("modalCompararHistoricos").style.display = "flex";
   document.getElementById("resultadoCompararHistoricos").innerHTML = "";
@@ -2308,7 +2176,6 @@ async function cargarComparativaHistoricos() {
     return;
   }
 
-  // Calcular fechas de inicio y fin
   const ahora = new Date();
   let fechaInicio, fechaFin = new Date();
   if (rango === "mes") {
@@ -2318,13 +2185,11 @@ async function cargarComparativaHistoricos() {
     fechaInicio.setDate(fechaFin.getDate() - Number(rango));
   }
 
-  // Leer históricos de cada copiado
   const institutos = ["salud", "sociales", "ingenieria"];
   const resumenes = {};
 
   for (const tipo of institutos) {
     resumenes[tipo] = { ingresos: 0, ventas: 0, perdidas: 0, nombre: calcInstitutos[tipo].name };
-    // Buscar en todos los meses posibles del rango
     let meses = [];
     let d = new Date(fechaInicio);
     while (d <= fechaFin) {
@@ -2352,7 +2217,6 @@ async function cargarComparativaHistoricos() {
     }
   }
 
-  // Mostrar tabla comparativa
   resultadoDiv.innerHTML = `
     <table style="width:100%;margin-top:10px;">
       <thead>
