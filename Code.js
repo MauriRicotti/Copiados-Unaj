@@ -1016,6 +1016,180 @@ function calcMostrarDetallesComparativa(datos) {
   })
 }
 
+// --- COMPARATIVA DE FACTURACIÓN POR MESES ---
+
+// Abre el modal de comparación de meses
+function abrirCompararMesesFacturacion() {
+  // Si ya existe, solo mostrarlo
+  let modal = document.getElementById("modalCompararMesesFacturacion");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "modalCompararMesesFacturacion";
+    modal.style.cssText = `
+      position:fixed;z-index:4000;top:0;left:0;width:100vw;height:100vh;
+      background:rgba(30,41,59,0.45);backdrop-filter:blur(2px);
+      display:flex;align-items:center;justify-content:center;
+    `;
+    modal.innerHTML = `
+      <div class="modal-comparar-meses-horizontal">
+        <div class="modal-comparar-meses-col selector">
+          <h2>Comparar facturación por meses</h2>
+          <div id="contenedorSelectorMeses"></div>
+          <div style="margin:18px 0;">
+            <button class="calc-btn calc-btn-primary" onclick="compararFacturacionMeses()">Comparar</button>
+            <button class="calc-btn calc-btn-secondary" onclick="cerrarModalCompararMesesFacturacion()">Cerrar</button>
+          </div>
+        </div>
+        <div class="modal-comparar-meses-col resultados">
+          <div id="resultadoCompararMeses"></div>
+          <canvas id="graficoFacturacionMeses" style="margin-top:20px;max-width:100%;"></canvas>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    cargarOpcionesMesesFacturacion();
+  } else {
+    modal.style.display = "flex";
+  }
+}
+
+// Cierra el modal
+function cerrarModalCompararMesesFacturacion() {
+  const modal = document.getElementById("modalCompararMesesFacturacion");
+  if (modal) modal.style.display = "none";
+}
+
+// Carga los meses disponibles desde Firebase (de los históricos)
+async function cargarOpcionesMesesFacturacion() {
+  const cont = document.getElementById("contenedorSelectorMeses");
+  cont.innerHTML = "Cargando meses...";
+  if (!isFirebaseEnabled || !database) {
+    cont.innerHTML = "Firebase no disponible.";
+    return;
+  }
+  // Buscar meses disponibles en el primer copiado (asumimos que todos tienen los mismos meses)
+  const institutos = ["salud", "sociales", "ingenieria"];
+  let mesesSet = new Set();
+  for (const tipo of institutos) {
+    const historicosRef = window.firebaseRef(database, `historicos/${tipo}`);
+    const snap = await window.firebaseGet(historicosRef);
+    if (snap.exists()) {
+      Object.keys(snap.val()).forEach(mes => mesesSet.add(mes));
+    }
+  }
+  const meses = Array.from(mesesSet).sort().reverse(); // Más recientes primero
+  if (meses.length === 0) {
+    cont.innerHTML = "No hay meses históricos disponibles.";
+    return;
+  }
+  // Mostrar selector múltiple
+  cont.innerHTML = `
+    <label style="font-weight:600;">Selecciona los meses:</label>
+    <select id="selectorMesesFacturacion" multiple size="6" style="width:100%;margin-top:8px;padding:8px 4px;">
+      ${meses.map(m => `<option value="${m}">${formatearMes(m)}</option>`).join("")}
+    </select>
+    <div style="font-size:0.92rem;color:var(--text-secondary);margin-top:6px;">(Ctrl/Cmd + clic para seleccionar varios)</div>
+  `;
+}
+
+// Formatea "2025-03" a "Marzo 2025"
+function formatearMes(mesStr) {
+  const [anio, mes] = mesStr.split("-");
+  const meses = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+  return `${meses[parseInt(mes,10)-1]} ${anio}`;
+}
+
+// Lógica principal: compara facturación de los meses seleccionados
+let chartFacturacionMeses = null;
+async function compararFacturacionMeses() {
+  const select = document.getElementById("selectorMesesFacturacion");
+  if (!select) return;
+  const seleccionados = Array.from(select.selectedOptions).map(opt => opt.value);
+  const resultadoDiv = document.getElementById("resultadoCompararMeses");
+  const canvas = document.getElementById("graficoFacturacionMeses");
+  resultadoDiv.innerHTML = "Cargando...";
+
+  if (!isFirebaseEnabled || !database) {
+    resultadoDiv.innerHTML = "Firebase no disponible.";
+    return;
+  }
+  if (seleccionados.length === 0) {
+    resultadoDiv.innerHTML = "Selecciona al menos un mes.";
+    if (chartFacturacionMeses) chartFacturacionMeses.destroy();
+    return;
+  }
+
+  // Sumar facturación de todos los copiados por mes
+  const institutos = ["salud", "sociales", "ingenieria"];
+  const datosPorMes = {};
+  for (const mes of seleccionados) {
+    let total = 0;
+    for (const tipo of institutos) {
+      const historicosRef = window.firebaseRef(database, `historicos/${tipo}/${mes}`);
+      const snap = await window.firebaseGet(historicosRef);
+      if (snap.exists()) {
+        const turnos = snap.val();
+        for (const turno in turnos) {
+          for (const key in turnos[turno]) {
+            const h = turnos[turno][key];
+            total += (h.efectivo || 0) + (h.transferencia || 0);
+          }
+        }
+      }
+    }
+    datosPorMes[mes] = total;
+  }
+
+  // Mostrar tabla
+  let mayorMes = null, mayorValor = -1;
+  let tabla = `<table border="1" style="width:100%;margin-top:10px;"><thead><tr><th>Mes</th><th>Total Facturado</th></tr></thead><tbody>`;
+  seleccionados.forEach(mes => {
+    const total = datosPorMes[mes] || 0;
+    if (total > mayorValor) {
+      mayorValor = total;
+      mayorMes = mes;
+    }
+    tabla += `<tr${total === mayorValor ? ' style="background:#d1fae5;font-weight:700;"' : ""}><td>${formatearMes(mes)}</td><td class="total-facturado">$${total.toLocaleString("es-AR")}</td></tr>`;
+  });
+  tabla += `</tbody></table>`;
+  tabla += `<div style="margin-top:10px;font-weight:600;">Mes con mayor facturación: <span class="mes-mayor">${formatearMes(mayorMes)} ($${mayorValor.toLocaleString("es-AR")})</span></div>`;
+  resultadoDiv.innerHTML = tabla;
+
+  // Mostrar gráfico
+  const labels = seleccionados.map(formatearMes);
+  const valores = seleccionados.map(mes => datosPorMes[mes] || 0);
+  const ctx = canvas.getContext("2d");
+  if (chartFacturacionMeses) chartFacturacionMeses.destroy();
+  chartFacturacionMeses = new window.Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: labels,
+      datasets: [{
+        label: "Facturación total",
+        data: valores,
+        backgroundColor: labels.map((_,i) => valores[i] === mayorValor ? "rgba(16,185,129,0.8)" : "rgba(59,130,246,0.7)"),
+        borderColor: labels.map((_,i) => valores[i] === mayorValor ? "rgba(16,185,129,1)" : "rgba(59,130,246,1)"),
+        borderWidth: 2,
+        borderRadius: 8,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { callback: v => "$" + v.toLocaleString("es-AR") }
+        }
+      }
+    }
+  });
+}
+
+// --- FIN COMPARATIVA DE FACTURACIÓN POR MESES ---
+
 function mostrarTurnoModal() {
   const modal = document.getElementById("turnoModal");
   const select = document.getElementById("turnoModalSelect");
@@ -2247,7 +2421,7 @@ async function cargarComparativaHistoricos() {
     }
     for (const mes of meses) {
       for (const turno of ["TM", "TT"]) {
-        const historicosRef = window.firebaseRef(database, `historicos/${tipo}/${mes}/${turno}`);
+        const historicosRef = window.firebaseRef(database, `historicos/${tipo}/${mes}`);
         const snap = await window.firebaseGet(historicosRef);
         if (snap.exists()) {
           const historicos = snap.val();
@@ -2298,31 +2472,4 @@ function mostrarEstadisticasDesdeLogin() {
     document.getElementById("calcComparativaScreen").classList.remove("animated-fadeInUp");
   }, 500);
   calcCargarDatosComparativa();
-}
-
-function calcVolverDesdeComparativa() {
-  const calculatorScreen = document.getElementById("calculatorScreen");
-  const comparativaScreen = document.getElementById("calcComparativaScreen");
-  comparativaScreen.classList.add("animated-fadeOutDown", "animating");
-  setTimeout(() => {
-    comparativaScreen.style.display = "none";
-    comparativaScreen.classList.remove("animated-fadeOutDown", "animating");
-    if (cameFromLogin) {
-      document.getElementById("loginScreen").style.display = "flex";
-      cameFromLogin = false; // Resetea para futuros usos
-    } else {
-      calculatorScreen.style.display = "block";
-      calculatorScreen.classList.add("animated-fadeInUp");
-      setTimeout(() => {
-        calculatorScreen.classList.remove("animated-fadeInUp");
-      }, 500);
-      if (document.getElementById("calculatorScreen").style.display === "block") {
-        document.getElementById("turnoSelectorFixed").style.display = "flex";
-      }
-    }
-  }, 400);
-
-  if (document.getElementById("calculatorScreen").style.display === "block") {
-    document.getElementById("turnoSelectorFixed").style.display = "flex";
-  }
 }

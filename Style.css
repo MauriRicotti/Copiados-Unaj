@@ -1360,3 +1360,157 @@ body {
     min-width: 0;
   }
 }
+
+
+/* Mejorar el selector de meses del modal de comparación */
+#modalCompararMesesFacturacion select#selectorMesesFacturacion {
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 1.08rem;
+  padding: 10px 12px;
+  min-height: 120px;
+  outline: none;
+  transition: border-color 0.2s;
+  box-shadow: 0 2px 8px var(--shadow);
+  margin-bottom: 8px;
+}
+
+#modalCompararMesesFacturacion select#selectorMesesFacturacion:focus {
+  border-color: #3b82f6;
+}
+
+#modalCompararMesesFacturacion option {
+  padding: 8px 10px;
+  border-radius: 6px;
+  margin: 2px 0;
+  font-size: 1.05rem;
+}
+
+#modalCompararMesesFacturacion label {
+  font-size: 1.08rem;
+  color: var(--text-heading);
+  margin-bottom: 6px;
+  display: block;
+  font-weight: 600;
+}
+
+/* Mejoras visuales para el modal de comparación de meses */
+#modalCompararMesesFacturacion > div {
+  max-height: 95vh;
+  overflow-y: auto;
+}
+
+#modalCompararMesesFacturacion select#selectorMesesFacturacion {
+  max-height: 180px;
+  min-height: 80px;
+  overflow-y: auto;
+}
+
+#modalCompararMesesFacturacion table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  background: var(--bg-card-header);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+#modalCompararMesesFacturacion th, 
+#modalCompararMesesFacturacion td {
+  padding: 8px 6px;
+  text-align: center;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 1rem;
+}
+
+#modalCompararMesesFacturacion th {
+  background: var(--bg-card-header);
+  color: var(--text-heading);
+  font-weight: 700;
+}
+
+#modalCompararMesesFacturacion tr[style*="background:#d1fae5"] td {
+  background: #d1fae5 !important;
+  color: #059669 !important;
+}
+
+[data-theme="dark"] #modalCompararMesesFacturacion tr[style*="background:#d1fae5"] td {
+  background: #134e4a !important;
+  color: #34d399 !important;
+}
+
+#modalCompararMesesFacturacion .mes-mayor {
+  font-weight: 700;
+  color: #059669;
+}
+
+[data-theme="dark"] #modalCompararMesesFacturacion .mes-mayor {
+  color: #34d399;
+}
+
+#modalCompararMesesFacturacion .total-facturado {
+  font-weight: 700;
+  color: #1e293b;
+}
+
+[data-theme="dark"] #modalCompararMesesFacturacion .total-facturado {
+  color: #f8fafc;
+}
+
+/* Modal comparar meses horizontal */
+#modalCompararMesesFacturacion .modal-comparar-meses-horizontal {
+  display: flex;
+  flex-direction: row;
+  gap: 32px;
+  background: var(--bg-card);
+  padding: 32px 24px;
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  max-width: 900px;
+  width: 98vw;
+  min-width: 0;
+  text-align: left;
+  align-items: flex-start;
+  overflow: auto;
+}
+#modalCompararMesesFacturacion .modal-comparar-meses-col.selector {
+  min-width: 260px;
+  max-width: 320px;
+  flex: 1 1 320px;
+  border-right: 1px solid var(--border-color);
+  padding-right: 24px;
+}
+#modalCompararMesesFacturacion .modal-comparar-meses-col.resultados {
+  flex: 2 1 400px;
+  min-width: 0;
+  padding-left: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+#modalCompararMesesFacturacion h2 {
+  margin-bottom: 18px;
+  font-size: 1.2rem;
+  color: var(--text-heading);
+  text-align: left;
+}
+#modalCompararMesesFacturacion #resultadoCompararMeses {
+  margin-bottom: 16px;
+  overflow-x: auto;
+}
+@media (max-width: 800px) {
+  #modalCompararMesesFacturacion .modal-comparar-meses-horizontal {
+    flex-direction: column;
+    padding: 18px 6px;
+    gap: 18px;
+    max-width: 98vw;
+  }
+  #modalCompararMesesFacturacion .modal-comparar-meses-col.selector,
+  #modalCompararMesesFacturacion .modal-comparar-meses-col.resultados {
+    max-width: 100vw;
+    padding: 0;
+    border: none;
+  }
+}
