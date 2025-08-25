@@ -49,6 +49,7 @@ const comparativaCharts = {
 }
 
 let currentTurno = localStorage.getItem("currentTurno") || "TM";
+let cameFromLogin = false;
 
 function calcCargarTema() {
   const temaGuardado = localStorage.getItem("calcTema") || "light"
@@ -98,6 +99,45 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
   });
+
+  // Estadísticas desde login
+  const btnEstadisticasLogin = document.getElementById("btnEstadisticasLogin");
+  if (btnEstadisticasLogin) {
+    btnEstadisticasLogin.onclick = function() {
+      document.getElementById("modalEstadisticasAdmin").style.display = "flex";
+      document.getElementById("inputPasswordEstadisticas").value = "";
+      document.getElementById("msgEstadisticasAdmin").textContent = "";
+      setTimeout(() => {
+        document.getElementById("inputPasswordEstadisticas").focus();
+      }, 100);
+    };
+  }
+  // Modal acciones
+  const btnCancelarEstadisticas = document.getElementById("btnCancelarEstadisticas");
+  if (btnCancelarEstadisticas) {
+    btnCancelarEstadisticas.onclick = function() {
+      document.getElementById("modalEstadisticasAdmin").style.display = "none";
+    };
+  }
+  const btnConfirmarEstadisticas = document.getElementById("btnConfirmarEstadisticas");
+  if (btnConfirmarEstadisticas) {
+    btnConfirmarEstadisticas.onclick = function() {
+      const pass = document.getElementById("inputPasswordEstadisticas").value;
+      if (pass === "admin123") {
+        document.getElementById("modalEstadisticasAdmin").style.display = "none";
+        mostrarEstadisticasDesdeLogin();
+      } else {
+        document.getElementById("msgEstadisticasAdmin").textContent = "Contraseña incorrecta.";
+      }
+    };
+  }
+  // Enter para el input
+  const inputPasswordEstadisticas = document.getElementById("inputPasswordEstadisticas");
+  if (inputPasswordEstadisticas) {
+    inputPasswordEstadisticas.addEventListener("keydown", function(e) {
+      if (e.key === "Enter") btnConfirmarEstadisticas.click();
+    });
+  }
 })
 
 function initializeFirebase() {
@@ -752,11 +792,19 @@ function calcVolverDesdeComparativa() {
   setTimeout(() => {
     comparativaScreen.style.display = "none";
     comparativaScreen.classList.remove("animated-fadeOutDown", "animating");
-    calculatorScreen.style.display = "block";
-    calculatorScreen.classList.add("animated-fadeInUp");
-    setTimeout(() => {
-      calculatorScreen.classList.remove("animated-fadeInUp");
-    }, 500);
+    if (cameFromLogin) {
+      document.getElementById("loginScreen").style.display = "flex";
+      cameFromLogin = false; // Resetea para futuros usos
+    } else {
+      calculatorScreen.style.display = "block";
+      calculatorScreen.classList.add("animated-fadeInUp");
+      setTimeout(() => {
+        calculatorScreen.classList.remove("animated-fadeInUp");
+      }, 500);
+      if (document.getElementById("calculatorScreen").style.display === "block") {
+        document.getElementById("turnoSelectorFixed").style.display = "flex";
+      }
+    }
   }, 400);
 
   if (document.getElementById("calculatorScreen").style.display === "block") {
@@ -2239,4 +2287,42 @@ async function cargarComparativaHistoricos() {
       </tbody>
     </table>
   `;
+}
+
+function mostrarEstadisticasDesdeLogin() {
+  cameFromLogin = true; // <--- Agrega esto
+  document.getElementById("loginScreen").style.display = "none";
+  document.getElementById("calcComparativaScreen").style.display = "block";
+  document.getElementById("calcComparativaScreen").classList.add("animated-fadeInUp");
+  setTimeout(() => {
+    document.getElementById("calcComparativaScreen").classList.remove("animated-fadeInUp");
+  }, 500);
+  calcCargarDatosComparativa();
+}
+
+function calcVolverDesdeComparativa() {
+  const calculatorScreen = document.getElementById("calculatorScreen");
+  const comparativaScreen = document.getElementById("calcComparativaScreen");
+  comparativaScreen.classList.add("animated-fadeOutDown", "animating");
+  setTimeout(() => {
+    comparativaScreen.style.display = "none";
+    comparativaScreen.classList.remove("animated-fadeOutDown", "animating");
+    if (cameFromLogin) {
+      document.getElementById("loginScreen").style.display = "flex";
+      cameFromLogin = false; // Resetea para futuros usos
+    } else {
+      calculatorScreen.style.display = "block";
+      calculatorScreen.classList.add("animated-fadeInUp");
+      setTimeout(() => {
+        calculatorScreen.classList.remove("animated-fadeInUp");
+      }, 500);
+      if (document.getElementById("calculatorScreen").style.display === "block") {
+        document.getElementById("turnoSelectorFixed").style.display = "flex";
+      }
+    }
+  }, 400);
+
+  if (document.getElementById("calculatorScreen").style.display === "block") {
+    document.getElementById("turnoSelectorFixed").style.display = "flex";
+  }
 }

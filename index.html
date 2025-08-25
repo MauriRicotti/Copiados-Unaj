@@ -115,7 +115,26 @@
                     </div>
                 </div>
             </div>
+            <!-- Botón de estadísticas en login -->
+            <div style="margin-top:32px; text-align:center;">
+                <button id="btnEstadisticasLogin" class="calc-btn calc-btn-outline header-btn header-btn-estadisticas" style="min-width:180px;">
+                    Estadisticas
+                </button>
+            </div>
         </div>
+    </div>
+
+    <!-- Modal para contraseña admin -->
+    <div id="modalEstadisticasAdmin" style="display:none;position:fixed;z-index:3000;top:0;left:0;width:100vw;height:100vh;background:rgba(30,41,59,0.45);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
+      <div style="background:var(--bg-card);padding:32px 24px;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.18);max-width:95vw;width:340px;text-align:center;">
+        <h2 style="margin-bottom:18px;font-size:1.2rem;color:var(--text-heading);">Acceso a Estadísticas</h2>
+        <input type="password" id="inputPasswordEstadisticas" class="calc-input" placeholder="Contraseña de administrador" style="margin-bottom:18px;">
+        <div style="display:flex;gap:10px;">
+          <button class="calc-btn calc-btn-primary" id="btnConfirmarEstadisticas">Ingresar</button>
+          <button class="calc-btn calc-btn-secondary" id="btnCancelarEstadisticas">Cancelar</button>
+        </div>
+        <div id="msgEstadisticasAdmin" style="color:#ef4444;margin-top:12px;font-size:0.98rem;"></div>
+      </div>
     </div>
 
     <div id="calculatorScreen" class="calculadora-container" style="display: none;">
@@ -167,6 +186,9 @@
                         <div class="calc-flex">
                             <button onclick="calcAgregarArchivo()" class="calc-btn calc-btn-primary">
                                 Agregar Archivo
+                            </button>
+                            <button onclick="mostrarModalPerdidas()" class="calc-btn calc-btn-danger">
+                                Registrar pérdida
                             </button>
                         </div>
                     </div>
