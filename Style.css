@@ -1214,6 +1214,19 @@ body {
 }
 
 @media (min-width: 601px) {
+  .header-controls {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .header-controls .btn-full-width {
+    flex-basis: 100%;
+    max-width: 100%;
+    min-width: 220px;
+    justify-content: center;
+  }
+}
+
+@media (min-width: 601px) {
   .calc-grid-cols-3 {
     display: grid !important;
     grid-template-columns: repeat(3, 1fr) !important;
@@ -1787,4 +1800,30 @@ body.overflow-hidden {
   .header-controls > *:nth-last-child(1):nth-child(odd) {
     grid-column: 1 / span 2;
   }
+}
+
+#btnCierreTurno {
+  background: #fff;
+  color: var(--text-primary);
+  border: 2px solid var(--border-color);
+  font-weight: 600;
+}
+#btnCierreTurno:hover {
+  background: var(--hover-bg);
+  border-color: #3b82f6;
+}
+
+[data-theme="light"] .header-controls .calc-btn-outline {
+  background: #fff;
+  color: var(--text-primary);
+  border: 2px solid var(--border-color);
+}
+[data-theme="light"] .header-controls .calc-btn-outline:hover {
+  background: var(--hover-bg);
+  border-color: #3b82f6;
+}
+
+.header-controls .header-btn {
+  padding-left: 32px;
+  padding-right: 32px;
 }
