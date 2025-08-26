@@ -1677,6 +1677,7 @@ body.overflow-hidden {
   color: #fff;
   outline: none;
 }
+
 @media (max-width: 600px) {
   .panel-control-btn {
     width: 100%;
@@ -1687,7 +1688,6 @@ body.overflow-hidden {
 }
 
 @media (max-width: 600px) {
-  /* Quitar padding lateral del body y login */
   body,
   .login-screen,
   .login-container {
@@ -1695,7 +1695,6 @@ body.overflow-hidden {
     padding-right: 0 !important;
   }
 
-  /* Agregar padding solo a los contenedores internos */
   .calculadora-container,
   .calculadora-wrapper,
   #calculatorScreen,
@@ -1713,7 +1712,6 @@ body.overflow-hidden {
 }
 
 @media (min-width: 601px) and (max-width: 1024px) {
-  /* Quitar padding lateral del body y login */
   body,
   .login-screen,
   .login-container {
@@ -1721,7 +1719,6 @@ body.overflow-hidden {
     padding-right: 0 !important;
   }
 
-  /* Agregar padding solo a los contenedores internos */
   .calculadora-container,
   .calculadora-wrapper,
   #calculatorScreen,
@@ -1736,7 +1733,6 @@ body.overflow-hidden {
     padding-right: 8px !important;
     box-sizing: border-box;
   }
-  /* Excluir login-screen y login-container */
   .login-screen,
   .login-container {
     padding-left: 10px !important;
@@ -1750,7 +1746,6 @@ body.overflow-hidden {
     padding-right: 0 !important;
   }
 
-  /* Más padding solo en la selección de perfiles */
   .login-screen,
   .login-container {
     padding-left: 18px !important;
@@ -1758,7 +1753,6 @@ body.overflow-hidden {
     box-sizing: border-box;
   }
 
-  /* Padding general para el resto */
   .calculadora-container,
   .calculadora-wrapper,
   #calculatorScreen,
@@ -1769,8 +1763,8 @@ body.overflow-hidden {
   #modalCompararMesesFacturacion .modal-comparar-meses-horizontal,
   #modalCompararMesesFacturacion .modal-comparar-meses-col.selector,
   #modalCompararMesesFacturacion .modal-comparar-meses-col.resultados {
-    padding-left: 4px !important;
-    padding-right: 4px !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
     box-sizing: border-box;
   }
 }
@@ -1790,7 +1784,6 @@ body.overflow-hidden {
     box-sizing: border-box;
     margin-bottom: 0 !important;
   }
-  /* Si hay cantidad impar, el último ocupa dos columnas */
   .header-controls > *:nth-last-child(1):nth-child(odd) {
     grid-column: 1 / span 2;
   }
