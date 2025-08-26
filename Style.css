@@ -86,7 +86,6 @@ body {
   transition: all 0.3s ease;
 }
 
-/* Pantalla de login */
 .login-screen {
   min-height: 100vh;
   display: flex;
@@ -574,7 +573,6 @@ body {
   cursor: not-allowed;
 }
 
-/* Badges */
 .calc-badge {
   background: var(--bg-card-header);
   color: var(--text-primary);
@@ -941,7 +939,6 @@ body {
   pointer-events: none;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .login-header h1 {
     font-size: 2rem;
@@ -1216,7 +1213,6 @@ body {
   }
 }
 
-/* Grilla de 3 columnas en tablets y desktop */
 @media (min-width: 601px) {
   .calc-grid-cols-3 {
     display: grid !important;
@@ -1379,7 +1375,7 @@ body {
 #modalCompararHistoricos th, #modalCompararHistoricos td {
   padding: 8px 6px;
   text-align: center;
-  border-bottom: 1px solid #334155; /* Un gris oscuro, puedes ajustar */
+  border-bottom: 1px solid #334155;
   font-size: 1rem;
   background: transparent;
 }
@@ -1404,7 +1400,6 @@ body {
 }
 
 
-/* Mejorar el selector de meses del modal de comparación */
 #modalCompararMesesFacturacion select#selectorMesesFacturacion {
   border: 2px solid var(--border-color);
   border-radius: 8px;
@@ -1438,7 +1433,6 @@ body {
   font-weight: 600;
 }
 
-/* Mejoras visuales para el modal de comparación de meses */
 #modalCompararMesesFacturacion > div {
   max-height: 95vh;
   overflow-y: auto;
@@ -1463,7 +1457,7 @@ body {
 #modalCompararMesesFacturacion td {
   padding: 8px 6px;
   text-align: center;
-  border-bottom: 1px solid #334155; /* Un gris oscuro, puedes ajustar */
+  border-bottom: 1px solid #334155;
   font-size: 1rem;
   background: transparent;
 }
@@ -1502,7 +1496,6 @@ body {
   color: #f8fafc;
 }
 
-/* Modal comparar meses horizontal */
 #modalCompararMesesFacturacion .modal-comparar-meses-horizontal {
   display: flex;
   flex-direction: row;
@@ -1534,7 +1527,6 @@ body {
   align-items: stretch;
 }
 
-/* Responsive para tablets: mantener horizontal */
 @media (max-width: 1024px) and (min-width: 600px) {
   #modalCompararMesesFacturacion .modal-comparar-meses-horizontal {
     flex-direction: row;
@@ -1550,7 +1542,6 @@ body {
   }
 }
 
-/* Responsive para móviles: apilar verticalmente */
 @media (max-width: 599px) {
   #modalCompararMesesFacturacion .modal-comparar-meses-horizontal {
     flex-direction: column;
@@ -1587,7 +1578,6 @@ body {
   }
 }
 
-/* Mejorar botones en mobile */
 @media (max-width: 599px) {
   #modalCompararMesesFacturacion .calc-btn {
     width: 100%;
@@ -1661,12 +1651,10 @@ body {
   }
 }
 
-/* Agregar clase para ocultar overflow en el body */
 body.overflow-hidden {
   overflow: hidden !important;
 }
 
-/* --- Panel de control button --- */
 .panel-control-btn {
   background: #1e40af;
   color: #fff;
@@ -1688,7 +1676,6 @@ body.overflow-hidden {
   box-shadow: 0 4px 16px rgba(30,64,175,0.13);
   color: #fff;
   outline: none;
-  /* Sin escala ni agrandamiento */
 }
 @media (max-width: 600px) {
   .panel-control-btn {
