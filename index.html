@@ -146,9 +146,14 @@
                         <p id="fotocopiadoSubtitle">Sistema para empleados - Cálculo de impresiones</p>
                     </div>
                     <div class="header-controls">
-                        <button onclick="calcMostrarComparativa()" class="calc-btn calc-btn-outline header-btn header-btn-estadisticas" title="Ver comparativa entre institutos">
+                        <!-- Eliminar el botón de estadísticas de aquí -->
+                        <!-- <button onclick="calcMostrarComparativa()" class="calc-btn calc-btn-outline header-btn header-btn-estadisticas" title="Ver comparativa entre institutos">
                             Estadisticas
-                        </button>
+                        </button> -->
+                        <button id="btnCierreTurno" class="calc-btn calc-btn-outline header-btn" title="Cierre de turno"
+        onclick="window.open('https://docs.google.com/forms/d/e/1FAIpQLSdlilE122kDBX8_lGz2FyAKIiNzsCBo0td4EknNtio4h25LWQ/viewform', '_blank')">
+        Cierre de turno
+    </button>
                         <button id="calcThemeToggle" class="calc-theme-toggle header-btn" onclick="calcToggleTheme()" title="Cambiar tema">
                             <span class="calc-theme-icon calc-sun-icon"></span>
                             <span class="calc-theme-icon calc-moon-icon"></span>
@@ -378,7 +383,7 @@
                             Exportar
                         </button>
                         <button onclick="exportarTodosLosRegistrosPDFZip()" class="calc-btn calc-btn-success" title="Descargar registros de los 3 copiados en ZIP">
-                            Descargar ZIP de registros PDF
+                            Descargar .ZIP
                         </button>
                         <button id="calcThemeToggleComp" class="calc-theme-toggle" onclick="calcToggleTheme()" title="Cambiar tema">
                             <span id="themeTextComp" class="calc-theme-text">🌙 Oscuro</span>
@@ -440,7 +445,74 @@
                     <div class="calc-card-title">Detalles por Fotocopiado</div>
                 </div>
                 <div class="calc-card-content">
-                    <div id="calcDetallesGrid" class="calc-details-grid"></div>
+                    <div id="calcDetallesGrid" class="calc-details-grid">
+                        <div class="calc-detail-card">
+                          <div class="calc-detail-header">
+                            <span class="calc-detail-title">Instituto de Ciencias de la Salud</span>
+                            <button class="calc-btn calc-btn-outline calc-btn-sm" onclick="abrirDetallesHistorico('salud')">
+                              Ver detalles
+                            </button>
+                          </div>
+                          <div class="calc-detail-content">
+                            <div class="calc-detail-row">
+                              <span class="calc-detail-label">Total Ventas:</span>
+                              <span class="calc-detail-value" id="totalVentasSalud">$0</span>
+                            </div>
+                            <div class="calc-detail-row">
+                              <span class="calc-detail-label">Total Ingresos:</span>
+                              <span class="calc-detail-value" id="totalIngresosSalud">$0</span>
+                            </div>
+                            <div class="calc-detail-row">
+                              <span class="calc-detail-label">Promedio por Venta:</span>
+                              <span class="calc-detail-value" id="promedioVentaSalud">$0</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="calc-detail-card">
+                          <div class="calc-detail-header">
+                            <span class="calc-detail-title">Instituto de Ciencias Sociales</span>
+                            <button class="calc-btn calc-btn-outline calc-btn-sm" onclick="abrirDetallesHistorico('sociales')">
+                              Ver detalles
+                            </button>
+                          </div>
+                          <div class="calc-detail-content">
+                            <div class="calc-detail-row">
+                              <span class="calc-detail-label">Total Ventas:</span>
+                              <span class="calc-detail-value" id="totalVentasSociales">$0</span>
+                            </div>
+                            <div class="calc-detail-row">
+                              <span class="calc-detail-label">Total Ingresos:</span>
+                              <span class="calc-detail-value" id="totalIngresosSociales">$0</span>
+                            </div>
+                            <div class="calc-detail-row">
+                              <span class="calc-detail-label">Promedio por Venta:</span>
+                              <span class="calc-detail-value" id="promedioVentaSociales">$0</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="calc-detail-card">
+                          <div class="calc-detail-header">
+                            <span class="calc-detail-title">Instituto de Ingeniería y Agronomía</span>
+                            <button class="calc-btn calc-btn-outline calc-btn-sm" onclick="abrirDetallesHistorico('ingenieria')">
+                              Ver detalles
+                            </button>
+                          </div>
+                          <div class="calc-detail-content">
+                            <div class="calc-detail-row">
+                              <span class="calc-detail-label">Total Ventas:</span>
+                              <span class="calc-detail-value" id="totalVentasIngenieria">$0</span>
+                            </div>
+                            <div class="calc-detail-row">
+                              <span class="calc-detail-label">Total Ingresos:</span>
+                              <span class="calc-detail-value" id="totalIngresosIngenieria">$0</span>
+                            </div>
+                            <div class="calc-detail-row">
+                              <span class="calc-detail-label">Promedio por Venta:</span>
+                              <span class="calc-detail-value" id="promedioVentaIngenieria">$0</span>
+                            </div>
+                          </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

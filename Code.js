@@ -1047,6 +1047,7 @@ function abrirCompararMesesFacturacion() {
       </div>
     `;
     document.body.appendChild(modal);
+    document.body.classList.add("overflow-hidden"); // Bloquea el scroll
     cargarOpcionesMesesFacturacion();
   } else {
     modal.style.display = "flex";
@@ -1057,6 +1058,7 @@ function abrirCompararMesesFacturacion() {
 function cerrarModalCompararMesesFacturacion() {
   const modal = document.getElementById("modalCompararMesesFacturacion");
   if (modal) modal.style.display = "none";
+  document.body.classList.remove("overflow-hidden"); // Habilita el scroll
 }
 
 // Carga los meses disponibles desde Firebase (de los históricos)
@@ -1067,7 +1069,6 @@ async function cargarOpcionesMesesFacturacion() {
     cont.innerHTML = "Firebase no disponible.";
     return;
   }
-  // Buscar meses disponibles en el primer copiado (asumimos que todos tienen los mismos meses)
   const institutos = ["salud", "sociales", "ingenieria"];
   let mesesSet = new Set();
   for (const tipo of institutos) {
@@ -1077,19 +1078,35 @@ async function cargarOpcionesMesesFacturacion() {
       Object.keys(snap.val()).forEach(mes => mesesSet.add(mes));
     }
   }
-  const meses = Array.from(mesesSet).sort().reverse(); // Más recientes primero
+  const meses = Array.from(mesesSet).sort().reverse();
   if (meses.length === 0) {
     cont.innerHTML = "No hay meses históricos disponibles.";
     return;
   }
-  // Mostrar selector múltiple
+
+  let selectedMeses = [];
+  if (meses.length >= 2) {
+    selectedMeses = [meses[0], meses[1]];
+  } else {
+    selectedMeses = [meses[0]];
+  }
+
   cont.innerHTML = `
     <label style="font-weight:600;">Selecciona los meses:</label>
     <select id="selectorMesesFacturacion" multiple size="6" style="width:100%;margin-top:8px;padding:8px 4px;">
-      ${meses.map(m => `<option value="${m}">${formatearMes(m)}</option>`).join("")}
+      ${meses.map(m => `<option value="${m}"${selectedMeses.includes(m) ? " selected" : ""}>${formatearMes(m)}</option>`).join("")}
     </select>
     <div style="font-size:0.92rem;color:var(--text-secondary);margin-top:6px;">(Ctrl/Cmd + clic para seleccionar varios)</div>
   `;
+
+  // Ejecutar la comparación automáticamente
+  setTimeout(compararFacturacionMeses, 100);
+
+  // Si el usuario cambia la selección, actualizar automáticamente
+  const selector = document.getElementById("selectorMesesFacturacion");
+  if (selector) {
+    selector.addEventListener("change", compararFacturacionMeses);
+  }
 }
 
 // Formatea "2025-03" a "Marzo 2025"
@@ -1142,7 +1159,7 @@ async function compararFacturacionMeses() {
 
   // Mostrar tabla
   let mayorMes = null, mayorValor = -1;
-  let tabla = `<table border="1" style="width:100%;margin-top:10px;"><thead><tr><th>Mes</th><th>Total Facturado</th></tr></thead><tbody>`;
+  let tabla = `<table style="width:100%;margin-top:10px;"><thead><tr><th>Mes</th><th>Total Facturado</th></tr></thead><tbody>`;
   seleccionados.forEach(mes => {
     const total = datosPorMes[mes] || 0;
     if (total > mayorValor) {
