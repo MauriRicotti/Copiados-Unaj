@@ -117,8 +117,8 @@
             </div>
             <!-- Botón de estadísticas en login -->
             <div style="margin-top:32px; text-align:center;">
-                <button id="btnEstadisticasLogin" class="calc-btn calc-btn-outline header-btn header-btn-estadisticas" style="min-width:180px;">
-                    Estadisticas
+                <button id="btnEstadisticasLogin" class="panel-control-btn">
+                    Panel de control
                 </button>
             </div>
         </div>
@@ -127,7 +127,7 @@
     <!-- Modal para contraseña admin -->
     <div id="modalEstadisticasAdmin" style="display:none;position:fixed;z-index:3000;top:0;left:0;width:100vw;height:100vh;background:rgba(30,41,59,0.45);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
       <div style="background:var(--bg-card);padding:32px 24px;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.18);max-width:95vw;width:340px;text-align:center;">
-        <h2 style="margin-bottom:18px;font-size:1.2rem;color:var(--text-heading);">Acceso a Estadísticas</h2>
+        <h2 style="margin-bottom:18px;font-size:1.2rem;color:var(--text-heading);">Acceso al panel de control</h2>
         <input type="password" id="inputPasswordEstadisticas" class="calc-input" placeholder="Contraseña de administrador" style="margin-bottom:18px;">
         <div style="display:flex;gap:10px;">
           <button class="calc-btn calc-btn-primary" id="btnConfirmarEstadisticas">Ingresar</button>
@@ -146,19 +146,25 @@
                         <p id="fotocopiadoSubtitle">Sistema para empleados - Cálculo de impresiones</p>
                     </div>
                     <div class="header-controls">
-                        <!-- Eliminar el botón de estadísticas de aquí -->
-                        <!-- <button onclick="calcMostrarComparativa()" class="calc-btn calc-btn-outline header-btn header-btn-estadisticas" title="Ver comparativa entre institutos">
-                            Estadisticas
-                        </button> -->
-                        <button id="btnCierreTurno" class="calc-btn calc-btn-outline header-btn" title="Cierre de turno"
-        onclick="window.open('https://docs.google.com/forms/d/e/1FAIpQLSdlilE122kDBX8_lGz2FyAKIiNzsCBo0td4EknNtio4h25LWQ/viewform', '_blank')">
-        Cierre de turno
-    </button>
-                        <button id="calcThemeToggle" class="calc-theme-toggle header-btn" onclick="calcToggleTheme()" title="Cambiar tema">
+                        <button
+                            id="btnCierreTurno"
+                            class="calc-btn calc-btn-outline header-btn"
+                            title="Cierre de turno"
+                            onclick="window.open('https://docs.google.com/forms/d/e/1FAIpQLSdlilE122kDBX8_lGz2FyAKIiNzsCBo0td4EknNtio4h25LWQ/viewform', '_blank')">
+                            Cierre de turno
+                        </button>
+                        <button
+                            id="calcThemeToggle"
+                            class="calc-theme-toggle header-btn"
+                            onclick="calcToggleTheme()"
+                            title="Cambiar tema">
                             <span class="calc-theme-icon calc-sun-icon"></span>
                             <span class="calc-theme-icon calc-moon-icon"></span>
                         </button>
-                        <button onclick="logout()" class="logout-btn header-btn" title="Cerrar sesión">
+                        <button
+                            onclick="logout()"
+                            class="logout-btn header-btn"
+                            title="Cerrar sesión">
                             Salir
                         </button>
                     </div>
@@ -376,7 +382,7 @@
                         <p>Análisis de ventas y rendimiento por fotocopiado</p>
                     </div>
                     <div class="header-controls">
-                        <button onclick="calcActualizarComparativa()" class="calc-btn calc-btn-primary" title="Actualizar datos">
+                        <button onclick="calcActualizarComparativa()" class="calc-btn calc-btn_primary" title="Actualizar datos">
                             Actualizar
                         </button>
                         <button onclick="calcExportarEstadisticasPDF()" class="calc-btn calc-btn-outline" title="Exportar estadísticas a PDF">
