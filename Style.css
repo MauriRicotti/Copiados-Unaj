@@ -1685,3 +1685,113 @@ body.overflow-hidden {
     padding: 14px 0;
   }
 }
+
+@media (max-width: 600px) {
+  /* Quitar padding lateral del body y login */
+  body,
+  .login-screen,
+  .login-container {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  /* Agregar padding solo a los contenedores internos */
+  .calculadora-container,
+  .calculadora-wrapper,
+  #calculatorScreen,
+  #calcComparativaScreen,
+  #turnoModal > div,
+  #modalEstadisticasAdmin > div,
+  #modalCompararHistoricos .modal-historicos-content,
+  #modalCompararMesesFacturacion .modal-comparar-meses-horizontal,
+  #modalCompararMesesFacturacion .modal-comparar-meses-col.selector,
+  #modalCompararMesesFacturacion .modal-comparar-meses-col.resultados {
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+    box-sizing: border-box;
+  }
+}
+
+@media (min-width: 601px) and (max-width: 1024px) {
+  /* Quitar padding lateral del body y login */
+  body,
+  .login-screen,
+  .login-container {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  /* Agregar padding solo a los contenedores internos */
+  .calculadora-container,
+  .calculadora-wrapper,
+  #calculatorScreen,
+  #calcComparativaScreen,
+  #turnoModal > div,
+  #modalEstadisticasAdmin > div,
+  #modalCompararHistoricos .modal-historicos-content,
+  #modalCompararMesesFacturacion .modal-comparar-meses-horizontal,
+  #modalCompararMesesFacturacion .modal-comparar-meses-col.selector,
+  #modalCompararMesesFacturacion .modal-comparar-meses-col.resultados {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    box-sizing: border-box;
+  }
+  /* Excluir login-screen y login-container */
+  .login-screen,
+  .login-container {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+}
+
+@media (max-width: 600px) {
+  body {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  /* Más padding solo en la selección de perfiles */
+  .login-screen,
+  .login-container {
+    padding-left: 18px !important;
+    padding-right: 18px !important;
+    box-sizing: border-box;
+  }
+
+  /* Padding general para el resto */
+  .calculadora-container,
+  .calculadora-wrapper,
+  #calculatorScreen,
+  #calcComparativaScreen,
+  #turnoModal > div,
+  #modalEstadisticasAdmin > div,
+  #modalCompararHistoricos .modal-historicos-content,
+  #modalCompararMesesFacturacion .modal-comparar-meses-horizontal,
+  #modalCompararMesesFacturacion .modal-comparar-meses-col.selector,
+  #modalCompararMesesFacturacion .modal-comparar-meses-col.resultados {
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+    box-sizing: border-box;
+  }
+}
+
+@media (max-width: 600px) {
+  .header-controls {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+    align-items: stretch;
+    justify-items: stretch;
+  }
+  .header-controls > * {
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box;
+    margin-bottom: 0 !important;
+  }
+  /* Si hay cantidad impar, el último ocupa dos columnas */
+  .header-controls > *:nth-last-child(1):nth-child(odd) {
+    grid-column: 1 / span 2;
+  }
+}

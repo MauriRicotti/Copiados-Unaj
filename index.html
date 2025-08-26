@@ -116,7 +116,7 @@
                 </div>
             </div>
             <div style="margin-top:32px; text-align:center;">
-                <button id="btnEstadisticasLogin" class="panel-control-btn">
+                <button id="btnEstadisticasLogin" class="calc-btn calc-btn-primary">
                     Panel de control
                 </button>
             </div>
@@ -389,16 +389,16 @@
                         <button onclick="exportarTodosLosRegistrosPDFZip()" class="calc-btn calc-btn-success" title="Descargar registros de los 3 copiados en ZIP">
                             Descargar .ZIP
                         </button>
+                        <button onclick="abrirCompararHistoricos()" class="calc-btn calc-btn-outline" id="btnCompararHistoricos">
+                            Historial de estadísticas
+                        </button>
+                        <button class="calc-btn calc-btn-outline" onclick="abrirCompararMesesFacturacion()">Comparar meses</button>
                         <button id="calcThemeToggleComp" class="calc-theme-toggle" onclick="calcToggleTheme()" title="Cambiar tema">
                             <span id="themeTextComp" class="calc-theme-text">🌙 Oscuro</span>
                         </button>
                         <button onclick="calcVolverDesdeComparativa()" class="calc-btn calc-btn-secondary" title="Volver">
                             Volver
                         </button>
-                        <button onclick="abrirCompararHistoricos()" class="calc-btn calc-btn-outline" id="btnCompararHistoricos">
-                          Historial de estadisticas
-                        </button>
-                        <button class="calc-btn calc-btn-outline" onclick="abrirCompararMesesFacturacion()">Comparar meses</button>
                     </div>
                 </div>
             </header>
