@@ -1806,7 +1806,6 @@ body.overflow-hidden {
   background: #fff;
   color: var(--text-primary);
   border: 2px solid var(--border-color);
-  font-weight: 600;
 }
 #btnCierreTurno:hover {
   background: var(--hover-bg);
@@ -1826,4 +1825,15 @@ body.overflow-hidden {
 .header-controls .header-btn {
   padding-left: 32px;
   padding-right: 32px;
+}
+
+[data-theme="dark"] #btnCierreTurno {
+  background: #334155;
+  color: #f1f5f9;
+  border: 2px solid var(--border-color);
+}
+[data-theme="dark"] #btnCierreTurno:hover {
+  background: #1e293b;
+  color: #fff;
+  border-color: #3b82f6;
 }
