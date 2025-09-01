@@ -242,6 +242,7 @@ function syncToFirebase() {
           ventas: calcRegistroVentas.ventas || [],
           perdidas: calcRegistroVentas.perdidas || [],
           totalPerdidas: calcRegistroVentas.totalPerdidas || 0,
+          extras: calcRegistroVentas.extras || [], // <-- Agregado
           lastUpdated: Date.now(),
           deviceId: deviceId,
           resetTimestamp: calcRegistroVentas.resetTimestamp || 0,
@@ -1892,6 +1893,28 @@ async function exportarTodosLosRegistrosPDFZip() {
       });
     }
 
+    // Extras
+    const extras = data.extras || [];
+    if (extras.length > 0) {
+      y = doc.lastAutoTable.finalY + 10;
+      doc.setFontSize(13);
+      doc.text('Extras registrados:', 14, y);
+      y += 8;
+      const tablaExtras = extras.map(e => [
+        e.descripcion,
+        `$${e.precio}`
+      ]);
+      doc.autoTable({
+        head: [['Descripción', 'Precio']],
+        body: tablaExtras,
+        startY: y,
+        theme: 'grid',
+        styles: { fontSize: 11 },
+        headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold' },
+        bodyStyles: { fillColor: [245, 245, 245] }
+      });
+    }
+
     const nombrePDF = `${nombres[tipo]}_${mes}_${año}_${turno}.pdf`;
     const pdfBlob = doc.output("blob");
     zip.file(nombrePDF, pdfBlob);
@@ -2214,9 +2237,103 @@ function agregarPerdidaRegistro(cantidad, motivo, tipo, nombre) {
   showSyncNotification("Pérdida registrada y sincronizada.");
 }
 
+// ...existing code...
+
+function mostrarModalExtras() {
+  let modal = document.getElementById("modalExtras");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "modalExtras";
+    modal.style.cssText = `
+      position:fixed;z-index:3000;top:0;left:0;width:100vw;height:100vh;
+      background:rgba(30,41,59,0.45);backdrop-filter:blur(2px);
+      display:flex;align-items:center;justify-content:center;
+    `;
+    modal.innerHTML = `
+      <div style="background:var(--bg-card);padding:32px 24px;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.18);max-width:95vw;width:340px;text-align:center;">
+        <h2 style="margin-bottom:18px;font-size:1.2rem;color:var(--text-heading);">Registrar extra</h2>
+        <div style="margin-bottom:14px;">
+          <label style="font-weight:600;">Cantidad de hojas:</label>
+          <input type="number" id="extrasCantidad" min="1" value="1" class="calc-input" style="margin-top:6px;">
+        </div>
+        <div style="margin-bottom:14px;">
+          <label style="font-weight:600;">Motivo:</label>
+          <input type="text" id="extrasMotivo" maxlength="80" class="calc-input" style="margin-top:6px;" placeholder="Motivo del extra">
+        </div>
+        <div style="margin-bottom:14px;">
+          <label style="font-weight:600;">Tipo:</label>
+          <select id="extrasTipo" class="calc-select" style="margin-top:6px;">
+            <option value="bn">Blanco y Negro</option>
+            <option value="color">Color</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button class="calc-btn calc-btn-primary" id="btnAgregarExtra">Agregar</button>
+          <button class="calc-btn calc-btn-secondary" id="btnCancelarExtra">Cancelar</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  } else {
+    modal.style.display = "flex";
+  }
+
+  document.getElementById("btnAgregarExtra").onclick = function() {
+    const cantidad = parseInt(document.getElementById("extrasCantidad").value) || 0;
+    const motivo = document.getElementById("extrasMotivo").value.trim();
+    const tipo = document.getElementById("extrasTipo").value;
+    if (cantidad <= 0 || !motivo) {
+      alert("Debe ingresar una cantidad válida y motivo.");
+      return;
+    }
+    agregarExtraRegistro(cantidad, motivo, tipo);
+    modal.style.display = "none";
+  };
+  document.getElementById("btnCancelarExtra").onclick = function() {
+    modal.style.display = "none";
+  };
+}
+
+function agregarExtraRegistro(cantidad, motivo, tipo) {
+  const precioHojaBN = Number.parseFloat(document.getElementById("calcPrecioHoja").value) || 0;
+  const precioHojaColor = Number.parseFloat(document.getElementById("calcPrecioHojaColor").value) || 0;
+  const precioUnitario = tipo === "color" ? precioHojaColor : precioHojaBN;
+  const precio = cantidad * precioUnitario;
+  const extra = {
+    id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    fecha: new Date().toLocaleDateString("es-ES"),
+    hora: new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }),
+    cantidad,
+    motivo,
+    tipo,
+    precioUnitario,
+    precio,
+    deviceId: deviceId,
+    timestamp: Date.now()
+  };
+  if (!calcRegistroVentas.extras) calcRegistroVentas.extras = [];
+  calcRegistroVentas.extras.push(extra);
+  calcGuardarDatos();
+  calcActualizarTabla();
+  showSyncNotification("Extra registrado y sincronizado.");
+}
+
+// ...existing code...
+
+function eliminarExtraPorIndice(idx) {
+  if (!confirm("¿Seguro que deseas eliminar este extra?")) return;
+  calcRegistroVentas.extras.splice(idx, 1);
+  calcGuardarDatos();
+  calcActualizarTabla();
+  calcMostrarDetalles('extras');
+}
+
+// ...existing code...
+
 const oldCalcActualizarTabla = calcActualizarTabla;
 calcActualizarTabla = function() {
   oldCalcActualizarTabla();
+  // Pérdidas
   const totalPerdidas = calcRegistroVentas.totalPerdidas || 0;
   let perdidasRow = document.getElementById("calcTotalPerdidasRow");
   if (!perdidasRow) {
@@ -2258,56 +2375,123 @@ calcActualizarTabla = function() {
   const count = (calcRegistroVentas.perdidas || []).length;
   document.getElementById("calcCountPerdidas").innerText = count;
   document.getElementById("calcCountPerdidasMobile").innerText = count;
+
+  // Extras
+  const extras = calcRegistroVentas.extras || [];
+  let extrasRow = document.getElementById("calcTotalExtrasRow");
+  if (!extrasRow) {
+    const table = document.querySelector(".calc-table tbody");
+    if (table) {
+      extrasRow = document.createElement("tr");
+      extrasRow.id = "calcTotalExtrasRow";
+      extrasRow.innerHTML = `
+        <td>Extras</td>
+        <td style="text-align: right; font-family: monospace; font-size: 1.1rem;" id="calcTotalExtras">$0</td>
+        <td style="text-align: center;">
+          <button onclick="calcMostrarDetalles('extras')" class="calc-btn calc-btn-outline" style="padding: 6px 12px; font-size: 0.9rem;">
+            Ver detalles (<span id="calcCountExtras">0</span>)
+          </button>
+        </td>
+      `;
+      table.insertBefore(extrasRow, table.lastElementChild);
+    }
+  }
+  const totalExtras = extras.reduce((acc, e) => acc + (e.precio || 0), 0);
+  document.getElementById("calcTotalExtras").innerText = `$${totalExtras.toLocaleString("es-AR")}`;
+  document.getElementById("calcCountExtras").innerText = extras.length;
 };
 
+// Unifica la redefinición de calcMostrarDetalles
 const oldCalcMostrarDetalles = calcMostrarDetalles;
 calcMostrarDetalles = function(tipo) {
-  if (tipo !== "perdidas") {
-    oldCalcMostrarDetalles(tipo);
+  if (tipo === "perdidas") {
+    const container = document.getElementById("calcDetallesContainer");
+    const content = document.getElementById("calcDetallesContent");
+    const title = document.getElementById("calcDetallesTitle");
+    const perdidas = calcRegistroVentas.perdidas || [];
+    title.textContent = "Detalles de Pérdidas";
+    if (perdidas.length === 0) {
+      content.innerHTML = `<div style="padding: 24px; text-align: center; color: var(--text-secondary);">No hay pérdidas registradas.</div>`;
+    } else {
+      content.innerHTML = perdidas.map((p, idx) => `
+        <div class="calc-venta-item" style="margin-bottom:18px;">
+          <ul>
+            <li><b>#${idx + 1}</b> - <b>Fecha:</b> ${p.fecha} <b>Hora:</b> ${p.hora}</li>
+            <li><b>Nombre y apellido:</b> ${p.nombre ? p.nombre : "-"}</li>
+            <li><b>Cantidad de hojas:</b> ${p.cantidad}</li>
+            <li><b>Motivo:</b> ${p.motivo}</li>
+            <li><b>Tipo:</b> ${p.tipo === "color" ? "Color" : "Blanco y Negro"}</li>
+            <li><b>Precio unitario:</b> $${p.precioUnitario}</li>
+            <li><b>Total pérdida:</b> $${p.total.toLocaleString("es-AR")}</li>
+          </ul>
+          <div style="margin-top:12px;">
+            <button class="calc-btn calc-btn-danger" onclick="eliminarPerdidaPorIndice(${idx})">Eliminar</button>
+          </div>
+        </div>
+      `).join("");
+    }
+    container.style.display = "block";
+    container.style.maxHeight = "80vh";
+    container.style.overflowY = "auto";
+    container.style.minHeight = "500px";
     return;
   }
-  const container = document.getElementById("calcDetallesContainer");
-  const content = document.getElementById("calcDetallesContent");
-  const title = document.getElementById("calcDetallesTitle");
-  const perdidas = calcRegistroVentas.perdidas || [];
-  title.textContent = "Detalles de Pérdidas";
-  if (perdidas.length === 0) {
-    content.innerHTML = `<div style="padding: 24px; text-align: center; color: var(--text-secondary);">No hay pérdidas registradas.</div>`;
-  } else {
-    content.innerHTML = perdidas.map((p, idx) => `
-      <div class="calc-venta-item" style="margin-bottom:18px;">
-        <ul>
-          <li><b>#${idx + 1}</b> - <b>Fecha:</b> ${p.fecha} <b>Hora:</b> ${p.hora}</li>
-          <li><b>Nombre y apellido:</b> ${p.nombre ? p.nombre : "-"}</li>
-          <li><b>Cantidad de hojas:</b> ${p.cantidad}</li>
-          <li><b>Motivo:</b> ${p.motivo}</li>
-          <li><b>Tipo:</b> ${p.tipo === "color" ? "Color" : "Blanco y Negro"}</li>
-          <li><b>Precio unitario:</b> $${p.precioUnitario}</li>
-          <li><b>Total pérdida:</b> $${p.total.toLocaleString("es-AR")}</li>
-        </ul>
-        <div style="margin-top:12px;">
-          <button class="calc-btn calc-btn-danger" onclick="eliminarPerdidaPorIndice(${idx})">Eliminar</button>
+  if (tipo === "extras") {
+    const container = document.getElementById("calcDetallesContainer");
+    const content = document.getElementById("calcDetallesContent");
+    const title = document.getElementById("calcDetallesTitle");
+    const extras = calcRegistroVentas.extras || [];
+    title.textContent = "Detalles de Extras";
+    if (extras.length === 0) {
+      content.innerHTML = `<div style="padding: 24px; text-align: center; color: var(--text-secondary);">No hay extras registrados.</div>`;
+    } else {
+      content.innerHTML = extras.map((e, idx) => `
+        <div class="calc-venta-item" style="margin-bottom:18px;">
+          <ul>
+            <li><b>#${idx + 1}</b> - <b>Fecha:</b> ${e.fecha} <b>Hora:</b> ${e.hora}</li>
+            <li><b>Motivo:</b> ${e.motivo}</li>
+            <li><b>Cantidad de hojas:</b> ${e.cantidad}</li>
+            <li><b>Tipo:</b> ${e.tipo === "color" ? "Color" : "Blanco y Negro"}</li>
+            <li><b>Precio:</b> $${(e.precio || 0).toLocaleString("es-AR")}</li>
+          </ul>
+          <div style="margin-top:12px;">
+            <button class="calc-btn calc-btn-danger" onclick="eliminarExtraPorIndice(${idx})">Eliminar</button>
+          </div>
         </div>
-      </div>
-    `).join("");
+      `).join("");
+    }
+    container.style.display = "block";
+    container.style.maxHeight = "80vh";
+    container.style.overflowY = "auto";
+    container.style.minHeight = "500px";
+    return;
   }
-  container.style.display = "block";
-  container.style.maxHeight = "80vh";
-  container.style.overflowY = "auto";
-  container.style.minHeight = "500px";
+  oldCalcMostrarDetalles(tipo);
 };
 
-function eliminarPerdidaPorIndice(idx) {
-  if (!confirm("¿Seguro que deseas eliminar esta pérdida?")) return;
-  const perdida = calcRegistroVentas.perdidas[idx];
-  if (!perdida) return;
-  calcRegistroVentas.totalPerdidas -= perdida.total;
-  calcRegistroVentas.perdidas.splice(idx, 1);
-  calcGuardarDatos();
-  calcActualizarTabla();
-  calcMostrarDetalles("perdidas");
-}
+// Inicializa extras al cargar datos
+const oldCalcCargarDatos = calcCargarDatos;
+calcCargarDatos = function() {
+  oldCalcCargarDatos();
+  if (!calcRegistroVentas.perdidas) calcRegistroVentas.perdidas = [];
+  if (!calcRegistroVentas.totalPerdidas) calcRegistroVentas.totalPerdidas = 0;
+  if (!calcRegistroVentas.extras) calcRegistroVentas.extras = [];
+};
 
+// Inicializa extras al cargar desde Firebase
+const oldLoadFromFirebase = loadFromFirebase;
+loadFromFirebase = function() {
+  return new Promise((resolve) => {
+    oldLoadFromFirebase().then(() => {
+      if (!calcRegistroVentas.perdidas) calcRegistroVentas.perdidas = [];
+      if (!calcRegistroVentas.totalPerdidas) calcRegistroVentas.totalPerdidas = 0;
+      if (!calcRegistroVentas.extras) calcRegistroVentas.extras = [];
+      resolve();
+    });
+  });
+};
+
+// Sincroniza extras con Firebase
 const oldSyncToFirebase = syncToFirebase;
 syncToFirebase = function() {
   if (!isFirebaseEnabled || !database || !currentFotocopiado) {
@@ -2323,6 +2507,7 @@ syncToFirebase = function() {
           ventas: calcRegistroVentas.ventas || [],
           perdidas: calcRegistroVentas.perdidas || [],
           totalPerdidas: calcRegistroVentas.totalPerdidas || 0,
+          extras: calcRegistroVentas.extras || [], // <-- Agregado
           lastUpdated: Date.now(),
           deviceId: deviceId,
           resetTimestamp: calcRegistroVentas.resetTimestamp || 0,
@@ -2345,148 +2530,3 @@ syncToFirebase = function() {
     });
   });
 };
-
-const oldCalcCargarDatos = calcCargarDatos;
-calcCargarDatos = function() {
-  oldCalcCargarDatos();
-  if (!calcRegistroVentas.perdidas) calcRegistroVentas.perdidas = [];
-  if (!calcRegistroVentas.totalPerdidas) calcRegistroVentas.totalPerdidas = 0;
-};
-
-const oldLoadFromFirebase = loadFromFirebase;
-loadFromFirebase = function() {
-  return new Promise((resolve) => {
-    oldLoadFromFirebase().then(() => {
-      if (!calcRegistroVentas.perdidas) calcRegistroVentas.perdidas = [];
-      if (!calcRegistroVentas.totalPerdidas) calcRegistroVentas.totalPerdidas = 0;
-      resolve();
-    });
-  });
-};
-
-const oldListenToFirebaseChanges = listenToFirebaseChanges;
-listenToFirebaseChanges = function() {
-  if (!isFirebaseEnabled || !database || !currentFotocopiado) return;
-  const fotocopiadoRef = window.firebaseRef(database, `fotocopiados/${currentFotocopiado}`);
-  window.firebaseOnValue(
-    fotocopiadoRef,
-    (snapshot) => {
-      try {
-        if (snapshot.exists()) {
-          const data = snapshot.val();
-          calcRegistroVentas.efectivo = data.efectivo || 0;
-          calcRegistroVentas.transferencia = data.transferencia || 0;
-          calcRegistroVentas.ventas = data.ventas || [];
-          calcRegistroVentas.perdidas = data.perdidas || [];
-          calcRegistroVentas.totalPerdidas = data.totalPerdidas || 0;
-          calcRegistroVentas.resetTimestamp = data.resetTimestamp || 0;
-          calcRegistroVentas.lastUpdated = data.lastUpdated || 0;
-          calcGuardarDatosLocal();
-          calcActualizarTabla();
-          updateSyncStatus("🔄", "Datos actualizados desde servidor");
-        }
-      } catch (error) {
-        console.error("[v0] Error procesando cambios de Firebase:", error);
-      }
-    },
-    (error) => {
-      console.error("[v0] Error escuchando cambios de Firebase:", error);
-      updateSyncStatus("🔴", "Error de conexión");
-    }
-  );
-};
-
-function abrirCompararHistoricos() {
-  document.getElementById("modalCompararHistoricos").style.display = "flex";
-  document.getElementById("resultadoCompararHistoricos").innerHTML = "";
-}
-
-function cerrarModalCompararHistoricos() {
-  document.getElementById("modalCompararHistoricos").style.display = "none";
-}
-
-async function cargarComparativaHistoricos() {
-  const rango = document.getElementById("selectRangoHistorico").value;
-  const resultadoDiv = document.getElementById("resultadoCompararHistoricos");
-  resultadoDiv.innerHTML = "Cargando...";
-
-  if (!isFirebaseEnabled || !database) {
-    resultadoDiv.innerHTML = "Firebase no disponible.";
-    return;
-  }
-
-  const ahora = new Date();
-  let fechaInicio, fechaFin = new Date();
-  if (rango === "mes") {
-    fechaInicio = new Date(fechaFin.getFullYear(), fechaFin.getMonth(), 1);
-  } else {
-    fechaInicio = new Date();
-    fechaInicio.setDate(fechaFin.getDate() - Number(rango));
-  }
-
-  const institutos = ["salud", "sociales", "ingenieria"];
-  const resumenes = {};
-
-  for (const tipo of institutos) {
-    resumenes[tipo] = { ingresos: 0, ventas: 0, perdidas: 0, nombre: calcInstitutos[tipo].name };
-    let meses = [];
-    let d = new Date(fechaInicio);
-    while (d <= fechaFin) {
-      const mes = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-      if (!meses.includes(mes)) meses.push(mes);
-      d.setMonth(d.getMonth() + 1);
-    }
-    for (const mes of meses) {
-      for (const turno of ["TM", "TT"]) {
-        const historicosRef = window.firebaseRef(database, `historicos/${tipo}/${mes}`);
-        const snap = await window.firebaseGet(historicosRef);
-        if (snap.exists()) {
-          const historicos = snap.val();
-          for (const key in historicos) {
-            const h = historicos[key];
-            const fechaHist = new Date(h.timestamp || 0);
-            if (fechaHist >= fechaInicio && fechaHist <= fechaFin) {
-              resumenes[tipo].ingresos += (h.efectivo || 0) + (h.transferencia || 0);
-              resumenes[tipo].ventas += (h.ventas ? h.ventas.length : 0);
-              resumenes[tipo].perdidas += (h.perdidas ? h.perdidas.length : 0);
-            }
-          }
-        }
-      }
-    }
-  }
-
-  resultadoDiv.innerHTML = `
-    <table style="width:100%;margin-top:10px;">
-      <thead>
-        <tr>
-          <th>Copiado</th>
-          <th>Ingresos</th>
-          <th>Ventas</th>
-          <th>Pérdidas</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${institutos.map(tipo => `
-          <tr>
-            <td>${resumenes[tipo].nombre}</td>
-            <td>$${resumenes[tipo].ingresos.toLocaleString("es-AR")}</td>
-            <td>${resumenes[tipo].ventas}</td>
-            <td>${resumenes[tipo].perdidas}</td>
-          </tr>
-        `).join("")}
-      </tbody>
-    </table>
-  `;
-}
-
-function mostrarEstadisticasDesdeLogin() {
-  cameFromLogin = true; // <--- Agrega esto
-  document.getElementById("loginScreen").style.display = "none";
-  document.getElementById("calcComparativaScreen").style.display = "block";
-  document.getElementById("calcComparativaScreen").classList.add("animated-fadeInUp");
-  setTimeout(() => {
-    document.getElementById("calcComparativaScreen").classList.remove("animated-fadeInUp");
-  }, 500);
-  calcCargarDatosComparativa();
-}
