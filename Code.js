@@ -1269,6 +1269,7 @@ function listenToFirebaseChanges() {
           calcRegistroVentas.ventas = data.ventas || [];
           calcRegistroVentas.perdidas = data.perdidas || [];
           calcRegistroVentas.totalPerdidas = data.totalPerdidas || 0;
+          calcRegistroVentas.extras = data.extras || []; // <-- Agregado
           calcRegistroVentas.resetTimestamp = data.resetTimestamp || 0;
           calcRegistroVentas.lastUpdated = data.lastUpdated || 0;
           calcGuardarDatosLocal();
@@ -2530,3 +2531,11 @@ syncToFirebase = function() {
     });
   });
 };
+
+
+function mostrarEstadisticasDesdeLogin() {
+  cameFromLogin = true;
+  document.getElementById("loginScreen").style.display = "none";
+  document.getElementById("calcComparativaScreen").style.display = "block";
+  calcMostrarComparativa();
+}
