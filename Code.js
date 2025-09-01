@@ -835,7 +835,8 @@ async function calcCargarDatosComparativa() {
         ventas: data?.ventas || [],
         total: (data?.efectivo || 0) + (data?.transferencia || 0),
         perdidas: (data?.perdidas || []).length,
-        totalPerdidas: data?.totalPerdidas || 0 // <-- NUEVO: suma total de pérdidas
+        totalPerdidas: data?.totalPerdidas || 0,
+        extras: data?.extras || [] // <-- Agregado correctamente
       }
     }
 
@@ -868,7 +869,45 @@ function calcMostrarDatosComparativa(datos) {
   calcCrearGraficoIngresos(datos)
   calcCrearGraficoMetodos(datos)
 
-  calcMostrarDetallesComparativa(datos)
+  // Mostrar detalles por fotocopiado con pérdidas y extras
+  const grid = document.getElementById("calcDetallesGrid")
+  grid.innerHTML = ""
+  Object.entries(datos).forEach(([key, instituto]) => {
+    const card = document.createElement("div")
+    card.className = "calc-detail-card"
+    card.innerHTML = `
+      <h4>${instituto.name}</h4>
+      <div class="calc-detail-stat">
+          <span>Total de Ingresos:</span>
+          <span>$${instituto.total.toLocaleString("es-AR")}</span>
+      </div>
+      <div class="calc-detail-stat">
+          <span>Ventas en Efectivo:</span>
+          <span>$${instituto.efectivo.toLocaleString("es-AR")}</span>
+      </div>
+      <div class="calc-detail-stat">
+          <span>Ventas por Transferencia:</span>
+          <span>$${instituto.transferencia.toLocaleString("es-AR")}</span>
+      </div>
+      <div class="calc-detail-stat">
+          <span>Número de Ventas:</span>
+          <span>${instituto.ventas.length}</span>
+      </div>
+      <div class="calc-detail-stat">
+          <span>Promedio por Venta:</span>
+          <span>$${instituto.ventas.length > 0 ? Math.round(instituto.total / instituto.ventas.length).toLocaleString("es-AR") : 0}</span>
+      </div>
+      <div class="calc-detail-stat">
+          <span>Pérdidas:</span>
+          <span>${instituto.perdidas} ($${instituto.totalPerdidas.toLocaleString("es-AR")})</span>
+      </div>
+      <div class="calc-detail-stat">
+          <span>Extras:</span>
+          <span>${instituto.extras?.length || 0} ($${instituto.extras?.reduce((acc, e) => acc + (e.precio || 0), 0).toLocaleString("es-AR")})</span>
+      </div>
+    `
+    grid.appendChild(card)
+  })
 }
 
 function calcCrearGraficoIngresos(datos) {
@@ -1010,6 +1049,10 @@ function calcMostrarDetallesComparativa(datos) {
   <div class="calc-detail-stat">
       <span>Pérdidas:</span>
       <span>${instituto.perdidas} ($${instituto.totalPerdidas.toLocaleString("es-AR")})</span>
+  </div>
+  <div class="calc-detail-stat">
+      <span>Extras:</span>
+      <span>${instituto.extras?.length || 0} ($${instituto.extras?.reduce((acc, e) => acc + (e.precio || 0), 0).toLocaleString("es-AR")})</span>
   </div>
 `
 
@@ -1759,7 +1802,7 @@ function calcExportarEstadisticasPDF() {
       head: [tabla[0]],
       body: tabla.slice(1),
       startY: 65,
-      styles: { fontSize: 11 },
+      styles: { fontSize:  11 },
       headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' },
       bodyStyles: { fillColor: [245, 245, 245] }
     })
