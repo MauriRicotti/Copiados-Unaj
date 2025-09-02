@@ -1023,39 +1023,37 @@ function calcMostrarDetallesComparativa(datos) {
   Object.entries(datos).forEach(([key, instituto]) => {
     const card = document.createElement("div")
     card.className = "calc-detail-card"
-
     card.innerHTML = `
-  <h4>${instituto.name}</h4>
-  <div class="calc-detail-stat">
-      <span>Total de Ingresos:</span>
-      <span>$${instituto.total.toLocaleString("es-AR")}</span>
-  </div>
-  <div class="calc-detail-stat">
-      <span>Ventas en Efectivo:</span>
-      <span>$${instituto.efectivo.toLocaleString("es-AR")}</span>
-  </div>
-  <div class="calc-detail-stat">
-      <span>Ventas por Transferencia:</span>
-      <span>$${instituto.transferencia.toLocaleString("es-AR")}</span>
-  </div>
-  <div class="calc-detail-stat">
-      <span>Número de Ventas:</span>
-      <span>${instituto.ventas.length}</span>
-  </div>
-  <div class="calc-detail-stat">
-      <span>Promedio por Venta:</span>
-      <span>$${instituto.ventas.length > 0 ? Math.round(instituto.total / instituto.ventas.length).toLocaleString("es-AR") : 0}</span>
-  </div>
-  <div class="calc-detail-stat">
-      <span>Pérdidas:</span>
-      <span>${instituto.perdidas} ($${instituto.totalPerdidas.toLocaleString("es-AR")})</span>
-  </div>
-  <div class="calc-detail-stat">
-      <span>Extras:</span>
-      <span>${instituto.extras?.length || 0} ($${instituto.extras?.reduce((acc, e) => acc + (e.precio || 0), 0).toLocaleString("es-AR")})</span>
-  </div>
-`
-
+      <h4>${instituto.name}</h4>
+      <div class="calc-detail-stat">
+          <span>Total de Ingresos:</span>
+          <span>$${instituto.total.toLocaleString("es-AR")}</span>
+      </div>
+      <div class="calc-detail-stat">
+          <span>Ventas en Efectivo:</span>
+          <span>$${instituto.efectivo.toLocaleString("es-AR")}</span>
+      </div>
+      <div class="calc-detail-stat">
+          <span>Ventas por Transferencia:</span>
+          <span>$${instituto.transferencia.toLocaleString("es-AR")}</span>
+      </div>
+      <div class="calc-detail-stat">
+          <span>Número de Ventas:</span>
+          <span>${instituto.ventas.length}</span>
+      </div>
+      <div class="calc-detail-stat">
+          <span>Promedio por Venta:</span>
+          <span>$${instituto.ventas.length > 0 ? Math.round(instituto.total / instituto.ventas.length).toLocaleString("es-AR") : 0}</span>
+      </div>
+      <div class="calc-detail-stat">
+          <span>Pérdidas:</span>
+          <span>${instituto.perdidas} ($${instituto.totalPerdidas.toLocaleString("es-AR")})</span>
+      </div>
+      <div class="calc-detail-stat">
+          <span>Extras:</span>
+          <span>${instituto.extras?.length || 0} ($${instituto.extras?.reduce((acc, e) => acc + (e.precio || 0), 0).toLocaleString("es-AR")})</span>
+      </div>
+    `
     grid.appendChild(card)
   })
 }
@@ -1064,7 +1062,10 @@ function calcMostrarDetallesComparativa(datos) {
 
 // Abre el modal de comparación de meses
 function abrirCompararMesesFacturacion() {
-  // Si ya existe, solo mostrarlo
+  if (!isFirebaseEnabled || !database) {
+    alert("Firebase no está disponible. Espera unos segundos e intenta de nuevo.");
+    return;
+  }
   let modal = document.getElementById("modalCompararMesesFacturacion");
   if (!modal) {
     modal = document.createElement("div");
@@ -1091,10 +1092,12 @@ function abrirCompararMesesFacturacion() {
       </div>
     `;
     document.body.appendChild(modal);
-    document.body.classList.add("overflow-hidden"); // Bloquea el scroll
+    document.body.classList.add("overflow-hidden");
+    // --- LLAMA A LA FUNCIÓN AQUÍ ---
     cargarOpcionesMesesFacturacion();
   } else {
     modal.style.display = "flex";
+    cargarOpcionesMesesFacturacion();
   }
 }
 
