@@ -1948,7 +1948,6 @@ function calcActualizarTabla() {
   const ventasTransferencia = (calcRegistroVentas.ventas || []).filter(v => v.metodoPago === "transferencia").length;
   const ventasTotales = (calcRegistroVentas.ventas || []).length;
 
-
   document.getElementById("calcTotalEfectivo").innerText = `$${efectivo.toLocaleString("es-AR")}`;
   document.getElementById("calcTotalTransferencia").innerText = `$${transferencia.toLocaleString("es-AR")}`;
   document.getElementById("calcTotalGeneral").innerText = `$${total.toLocaleString("es-AR")}`;
@@ -1957,12 +1956,35 @@ function calcActualizarTabla() {
   document.getElementById("calcTotalVentas").innerText = `${ventasTotales} ventas`;
 
   document.getElementById("calcTotalEfectivoMobile").innerText = `$${efectivo.toLocaleString("es-AR")}`;
-  
-   document.getElementById("calcTotalTransferenciaMobile").innerText = `$${transferencia.toLocaleString("es-AR")}`;
+  document.getElementById("calcTotalTransferenciaMobile").innerText = `$${transferencia.toLocaleString("es-AR")}`;
   document.getElementById("calcTotalGeneralMobile").innerText = `$${total.toLocaleString("es-AR")}`;
   document.getElementById("calcCountEfectivoMobile").innerText = ventasEfectivo;
   document.getElementById("calcCountTransferenciaMobile").innerText = ventasTransferencia;
   document.getElementById("calcTotalVentasMobile").innerText = `${ventasTotales} ventas`;
+
+  // --- CORRECCIÓN ---
+  const extras = calcRegistroVentas.extras || [];
+  const mobile = document.querySelector(".calc-table-mobile");
+  if (mobile && !document.getElementById("calcTotalExtrasMobile")) {
+    const card = document.createElement("div");
+    card.className = "calc-mobile-card";
+    card.innerHTML = `
+      <div class="calc-mobile-card-header">
+        <span>Extras</span>
+        <span class="calc-mobile-card-total" id="calcTotalExtrasMobile">$0</span>
+      </div>
+      <div class="calc-mobile-card-actions">
+        <button onclick="calcMostrarDetalles('extras')" class="calc-btn calc-btn-outline" style="padding: 8px 16px; font-size: 0.9rem;">
+          Ver detalles (<span id="calcCountExtrasMobile">0</span>)
+        </button>
+      </div>
+    `;
+    mobile.insertBefore(card, mobile.lastElementChild);
+  }
+  const totalExtras = extras.reduce((acc, e) => acc + (e.precio || 0), 0);
+  document.getElementById("calcTotalExtrasMobile").innerText = `$${totalExtras.toLocaleString("es-AR")}`;
+  document.getElementById("calcCountExtrasMobile").innerText = extras.length;
+  // ...existing code...
 }
 
 function calcMostrarDetalles(tipo) {
