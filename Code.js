@@ -242,7 +242,7 @@ function syncToFirebase() {
           ventas: calcRegistroVentas.ventas || [],
           perdidas: calcRegistroVentas.perdidas || [],
           totalPerdidas: calcRegistroVentas.totalPerdidas || 0,
-          extras: calcRegistroVentas.extras || [], // <-- Agregado
+          extras: calcRegistroVentas.extras || [],
           lastUpdated: Date.now(),
           deviceId: deviceId,
           resetTimestamp: calcRegistroVentas.resetTimestamp || 0,
@@ -1757,77 +1757,35 @@ function calcExportarPDF() {
       headStyles: { fillColor: [245, 158, 11], textColor: 255, fontStyle: 'bold' },
       bodyStyles: { fillColor: [255, 251, 235] }
     });
+    y = doc.lastAutoTable.finalY + 10;
+  }
+
+  // Añadir tabla de extras si hay datos
+  const extras = calcRegistroVentas.extras || [];
+  if (extras.length > 0) {
+    doc.setFontSize(13);
+    doc.text('Extras registrados:', 14, y);
+    y += 8;
+    const tablaExtras = extras.map(e => [
+      e.fecha,
+      e.hora,
+      e.motivo,
+      e.cantidad,
+      e.tipo === "color" ? "Color" : "Blanco y Negro",
+      `$${e.precio || 0}`
+    ]);
+    doc.autoTable({
+      head: [['Fecha', 'Hora', 'Motivo', 'Cantidad', 'Tipo', 'Precio']],
+      body: tablaExtras,
+      startY: y,
+      theme: 'grid',
+      styles: { fontSize: 11 },
+      headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold' },
+      bodyStyles: { fillColor: [245, 245, 245] }
+    });
   }
 
   doc.save(`RegistroVentas_${nombreCopiado}_${mes}_${año}_${turno}.pdf`);
-}
-
-function calcExportarEstadisticasPDF() {
-  const ahora = new Date()
-  const mes = ahora.toLocaleString("es-ES", { month: "long" })
-  const año = ahora.getFullYear()
-  const nombreArchivo = `Estadisticas_copiados_${mes}_${año}.pdf`
-
-  const doc = new window.jspdf.jsPDF("p", "mm", "a4")
-  doc.setFontSize(18)
-  doc.text(`Estadísticas de Copiados UNAJ`, 14, 22)
-  doc.setFontSize(12)
-  doc.text(`Mes: ${mes.charAt(0).toUpperCase() + mes.slice(1)}   Año: ${año}`, 14, 32)
-
-  const totalGeneral = document.getElementById("calcTotalGeneralComp")?.textContent || "$0"
-  const institutoLider = document.getElementById("calcInstitutoLider")?.textContent || "-"
-  const ventasTotales = document.getElementById("calcVentasTotales")?.textContent || "0"
-
-  doc.text(`Total General: ${totalGeneral}`, 14, 42)
-  doc.text(`Instituto Líder: ${institutoLider}`, 14, 50)
-  doc.text(`Ventas Totales: ${ventasTotales}`, 14, 58)
-
-  const grid = document.getElementById("calcDetallesGrid")
-  if (grid) {
-    let tabla = [["Instituto", "Total de Ingresos", "Ventas en Efectivo", "Ventas por Transferencia", "Número de Ventas", "Promedio por Venta"]]
-    const cards = grid.querySelectorAll(".calc-detail-card")
-    cards.forEach(card => {
-      const nombre = card.querySelector("h4")?.textContent?.trim() || ""
-      const stats = card.querySelectorAll(".calc-detail-stat span:last-child")
-      tabla.push([
-        nombre,
-        stats[0]?.textContent?.trim() || "",
-        stats[1]?.textContent?.trim() || "",
-        stats[2]?.textContent?.trim() || "",
-        stats[3]?.textContent?.trim() || "",
-        stats[4]?.textContent?.trim() || ""
-      ])
-    })
-    doc.autoTable({
-      head: [tabla[0]],
-      body: tabla.slice(1),
-      startY: 65,
-      styles: { fontSize:  11 },
-      headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' },
-      bodyStyles: { fillColor: [245, 245, 245] }
-    })
-  }
-
-  let yOffset = doc.lastAutoTable?.finalY ? doc.lastAutoTable.finalY + 10 : 90
-  const chartIngresos = document.getElementById("calcChartIngresos")
-  const chartMetodos = document.getElementById("calcChartMetodos")
-
-  if (chartIngresos) {
-    const imgIngresos = chartIngresos.toDataURL("image/png", 1.0)
-    doc.setFontSize(13)
-    doc.text("Ingresos por Instituto", 14, yOffset)
-    doc.addImage(imgIngresos, "PNG", 14, yOffset + 3, 180, 60)
-    yOffset += 68
-  }
-  if (chartMetodos) {
-    const imgMetodos = chartMetodos.toDataURL("image/png", 1.0)
-    doc.setFontSize(13)
-    doc.text("Métodos de Pago", 14, yOffset)
-    doc.addImage(imgMetodos, "PNG", 14, yOffset + 3, 180, 60)
-    yOffset += 68
-  }
-
-  doc.save(nombreArchivo)
 }
 
 async function exportarTodosLosRegistrosPDFZip() {
@@ -1848,12 +1806,12 @@ async function exportarTodosLosRegistrosPDFZip() {
     if (isFirebaseEnabled && database) {
       const ref = window.firebaseRef(database, `fotocopiados/${tipo}`);
       const snap = await window.firebaseGet(ref);
-      data = snap.exists() ? snap.val() : { efectivo: 0, transferencia: 0, ventas: [], perdidas: [], totalPerdidas: 0 };
+      data = snap.exists() ? snap.val() : { efectivo: 0, transferencia: 0, ventas: [], perdidas: [], totalPerdidas: 0, extras: [] };
     } else {
-      // Cargar todos los campos, incluyendo perdidas y totalPerdidas
       data = JSON.parse(localStorage.getItem(`calcRegistroVentas_${tipo}`) || "{}");
       if (!data.perdidas) data.perdidas = [];
       if (!data.totalPerdidas) data.totalPerdidas = 0;
+      if (!data.extras) data.extras = [];
     }
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
@@ -1935,21 +1893,25 @@ async function exportarTodosLosRegistrosPDFZip() {
         headStyles: { fillColor: [245, 158, 11], textColor: 255, fontStyle: 'bold' },
         bodyStyles: { fillColor: [255, 251, 235] }
       });
+      y = doc.lastAutoTable.finalY + 10;
     }
 
-    // Extras
+    // Añadir tabla de extras si hay datos
     const extras = data.extras || [];
     if (extras.length > 0) {
-      y = doc.lastAutoTable.finalY + 10;
       doc.setFontSize(13);
       doc.text('Extras registrados:', 14, y);
       y += 8;
       const tablaExtras = extras.map(e => [
-        e.descripcion,
-        `$${e.precio}`
+        e.fecha,
+        e.hora,
+        e.motivo,
+        e.cantidad,
+        e.tipo === "color" ? "Color" : "Blanco y Negro",
+        `$${e.precio || 0}`
       ]);
       doc.autoTable({
-        head: [['Descripción', 'Precio']],
+        head: [['Fecha', 'Hora', 'Motivo', 'Cantidad', 'Tipo', 'Precio']],
         body: tablaExtras,
         startY: y,
         theme: 'grid',
@@ -2362,7 +2324,6 @@ function agregarExtraRegistro(cantidad, motivo, tipo) {
   showSyncNotification("Extra registrado y sincronizado.");
 }
 
-// ...existing code...
 
 function eliminarExtraPorIndice(idx) {
   if (!confirm("¿Seguro que deseas eliminar este extra?")) return;
@@ -2372,7 +2333,6 @@ function eliminarExtraPorIndice(idx) {
   calcMostrarDetalles('extras');
 }
 
-// ...existing code...
 
 const oldCalcActualizarTabla = calcActualizarTabla;
 calcActualizarTabla = function() {
@@ -2513,7 +2473,6 @@ calcMostrarDetalles = function(tipo) {
   oldCalcMostrarDetalles(tipo);
 };
 
-// Inicializa extras al cargar datos
 const oldCalcCargarDatos = calcCargarDatos;
 calcCargarDatos = function() {
   oldCalcCargarDatos();
@@ -2522,7 +2481,6 @@ calcCargarDatos = function() {
   if (!calcRegistroVentas.extras) calcRegistroVentas.extras = [];
 };
 
-// Inicializa extras al cargar desde Firebase
 const oldLoadFromFirebase = loadFromFirebase;
 loadFromFirebase = function() {
   return new Promise((resolve) => {
@@ -2535,7 +2493,6 @@ loadFromFirebase = function() {
   });
 };
 
-// Sincroniza extras con Firebase
 const oldSyncToFirebase = syncToFirebase;
 syncToFirebase = function() {
   if (!isFirebaseEnabled || !database || !currentFotocopiado) {
@@ -2551,7 +2508,7 @@ syncToFirebase = function() {
           ventas: calcRegistroVentas.ventas || [],
           perdidas: calcRegistroVentas.perdidas || [],
           totalPerdidas: calcRegistroVentas.totalPerdidas || 0,
-          extras: calcRegistroVentas.extras || [], // <-- Agregado
+          extras: calcRegistroVentas.extras || [],
           lastUpdated: Date.now(),
           deviceId: deviceId,
           resetTimestamp: calcRegistroVentas.resetTimestamp || 0,
