@@ -100,7 +100,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Estadísticas desde login
   const btnEstadisticasLogin = document.getElementById("btnEstadisticasLogin");
   if (btnEstadisticasLogin) {
     btnEstadisticasLogin.onclick = function() {
@@ -112,7 +111,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }, 100);
     };
   }
-  // Modal acciones
   const btnCancelarEstadisticas = document.getElementById("btnCancelarEstadisticas");
   if (btnCancelarEstadisticas) {
     btnCancelarEstadisticas.onclick = function() {
@@ -131,7 +129,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     };
   }
-  // Enter para el input
   const inputPasswordEstadisticas = document.getElementById("inputPasswordEstadisticas");
   if (inputPasswordEstadisticas) {
     inputPasswordEstadisticas.addEventListener("keydown", function(e) {
@@ -153,7 +150,6 @@ function initializeFirebase() {
       updateSyncStatus("🟢", "Conectado a Firebase")
       console.log("[v0] Firebase v9+ inicializado correctamente")
 
-      // Verificar conexión usando la nueva API
       const connectedRef = window.firebaseRef(database, ".info/connected")
       window.firebaseOnValue(connectedRef, (snap) => {
         if (snap.val() === true) {
@@ -577,7 +573,6 @@ function calcCancelarVenta() {
 
     document.getElementById("calcPagoContainer").style.display = "none"
 
-    // Reset variables
     calcArchivos = []
     calcContadorArchivos = 0
     calcTotal = 0
@@ -701,7 +696,6 @@ async function calcRestablecerVentas() {
 
   if (isFirebaseEnabled && database && currentFotocopiado) {
     try {
-      // Guardar backup normal
       const ventasRef = window.firebaseRef(database, `fotocopiados/${currentFotocopiado}`);
       const backupRef = window.firebaseRef(database, `backups/${currentFotocopiado}/${Date.now()}`);
       const snapshot = await window.firebaseGet(ventasRef);
@@ -709,7 +703,6 @@ async function calcRestablecerVentas() {
         await window.firebaseSet(backupRef, snapshot.val());
       }
 
-      // Guardar resumen histórico
       const ahora = new Date();
       const añoMes = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, "0")}`;
       const turno = currentTurno || "TM";
@@ -795,7 +788,7 @@ function calcVolverDesdeComparativa() {
     comparativaScreen.classList.remove("animated-fadeOutDown", "animating");
     if (cameFromLogin) {
       document.getElementById("loginScreen").style.display = "flex";
-      cameFromLogin = false; // Resetea para futuros usos
+      cameFromLogin = false;
     } else {
       calculatorScreen.style.display = "block";
       calculatorScreen.classList.add("animated-fadeInUp");
@@ -836,7 +829,7 @@ async function calcCargarDatosComparativa() {
         total: (data?.efectivo || 0) + (data?.transferencia || 0),
         perdidas: (data?.perdidas || []).length,
         totalPerdidas: data?.totalPerdidas || 0,
-        extras: data?.extras || [] // <-- Agregado correctamente
+        extras: data?.extras || []
       }
     }
 
@@ -869,7 +862,6 @@ function calcMostrarDatosComparativa(datos) {
   calcCrearGraficoIngresos(datos)
   calcCrearGraficoMetodos(datos)
 
-  // Mostrar detalles por fotocopiado con pérdidas y extras
   const grid = document.getElementById("calcDetallesGrid")
   grid.innerHTML = ""
   Object.entries(datos).forEach(([key, instituto]) => {
@@ -1058,9 +1050,7 @@ function calcMostrarDetallesComparativa(datos) {
   })
 }
 
-// --- COMPARATIVA DE FACTURACIÓN POR MESES ---
 
-// Abre el modal de comparación de meses
 function abrirCompararMesesFacturacion() {
   if (!isFirebaseEnabled || !database) {
     alert("Firebase no está disponible. Espera unos segundos e intenta de nuevo.");
@@ -1093,7 +1083,6 @@ function abrirCompararMesesFacturacion() {
     `;
     document.body.appendChild(modal);
     document.body.classList.add("overflow-hidden");
-    // --- LLAMA A LA FUNCIÓN AQUÍ ---
     cargarOpcionesMesesFacturacion();
   } else {
     modal.style.display = "flex";
@@ -1101,14 +1090,12 @@ function abrirCompararMesesFacturacion() {
   }
 }
 
-// Cierra el modal
 function cerrarModalCompararMesesFacturacion() {
   const modal = document.getElementById("modalCompararMesesFacturacion");
   if (modal) modal.style.display = "none";
-  document.body.classList.remove("overflow-hidden"); // Habilita el scroll
+  document.body.classList.remove("overflow-hidden");
 }
 
-// Carga los meses disponibles desde Firebase (de los históricos)
 async function cargarOpcionesMesesFacturacion() {
   const cont = document.getElementById("contenedorSelectorMeses");
   cont.innerHTML = "Cargando meses...";
@@ -1146,24 +1133,20 @@ async function cargarOpcionesMesesFacturacion() {
     <div style="font-size:0.92rem;color:var(--text-secondary);margin-top:6px;">(Ctrl/Cmd + clic para seleccionar varios)</div>
   `;
 
-  // Ejecutar la comparación automáticamente
   setTimeout(compararFacturacionMeses, 100);
 
-  // Si el usuario cambia la selección, actualizar automáticamente
   const selector = document.getElementById("selectorMesesFacturacion");
   if (selector) {
     selector.addEventListener("change", compararFacturacionMeses);
   }
 }
 
-// Formatea "2025-03" a "Marzo 2025"
 function formatearMes(mesStr) {
   const [anio, mes] = mesStr.split("-");
   const meses = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
   return `${meses[parseInt(mes,10)-1]} ${anio}`;
 }
 
-// Lógica principal: compara facturación de los meses seleccionados
 let chartFacturacionMeses = null;
 async function compararFacturacionMeses() {
   const select = document.getElementById("selectorMesesFacturacion");
@@ -1183,7 +1166,6 @@ async function compararFacturacionMeses() {
     return;
   }
 
-  // Sumar facturación de todos los copiados por mes
   const institutos = ["salud", "sociales", "ingenieria"];
   const datosPorMes = {};
   for (const mes of seleccionados) {
@@ -1204,7 +1186,6 @@ async function compararFacturacionMeses() {
     datosPorMes[mes] = total;
   }
 
-  // Mostrar tabla
   let mayorMes = null, mayorValor = -1;
   let tabla = `<table style="width:100%;margin-top:10px;"><thead><tr><th>Mes</th><th>Total Facturado</th></tr></thead><tbody>`;
   seleccionados.forEach(mes => {
@@ -1219,7 +1200,6 @@ async function compararFacturacionMeses() {
   tabla += `<div style="margin-top:10px;font-weight:600;">Mes con mayor facturación: <span class="mes-mayor">${formatearMes(mayorMes)} ($${mayorValor.toLocaleString("es-AR")})</span></div>`;
   resultadoDiv.innerHTML = tabla;
 
-  // Mostrar gráfico
   const labels = seleccionados.map(formatearMes);
   const valores = seleccionados.map(mes => datosPorMes[mes] || 0);
   const ctx = canvas.getContext("2d");
@@ -1251,8 +1231,6 @@ async function compararFacturacionMeses() {
     }
   });
 }
-
-// --- FIN COMPARATIVA DE FACTURACIÓN POR MESES ---
 
 function mostrarTurnoModal() {
   const modal = document.getElementById("turnoModal");
@@ -1315,7 +1293,7 @@ function listenToFirebaseChanges() {
           calcRegistroVentas.ventas = data.ventas || [];
           calcRegistroVentas.perdidas = data.perdidas || [];
           calcRegistroVentas.totalPerdidas = data.totalPerdidas || 0;
-          calcRegistroVentas.extras = data.extras || []; // <-- Agregado
+          calcRegistroVentas.extras = data.extras || [];
           calcRegistroVentas.resetTimestamp = data.resetTimestamp || 0;
           calcRegistroVentas.lastUpdated = data.lastUpdated || 0;
           calcGuardarDatosLocal();
@@ -1690,7 +1668,6 @@ function calcExportarPDF() {
   doc.text(`Mes: ${mes.charAt(0).toUpperCase() + mes.slice(1)} ${año}`, 14, 26);
   doc.text(`Turno: ${turno}`, 14, 34);
 
-  // Tabla de ventas
   const ventasEfectivo = ventas.filter(v => v.metodoPago === 'efectivo').map(v => `$${v.total}`);
   const ventasTransferencia = ventas.filter(v => v.metodoPago === 'transferencia').map(v => `$${v.total}`);
   const maxFilas = Math.max(ventasEfectivo.length, ventasTransferencia.length);
@@ -1734,7 +1711,6 @@ function calcExportarPDF() {
     bodyStyles: { fillColor: [245, 245, 245] }
   });
 
-  // Añadir tabla de pérdidas si hay datos
   const perdidas = calcRegistroVentas.perdidas || [];
   if (perdidas.length > 0) {
     y = doc.lastAutoTable.finalY + 10;
@@ -1763,7 +1739,6 @@ function calcExportarPDF() {
     y = doc.lastAutoTable.finalY + 10;
   }
 
-  // Añadir tabla de extras si hay datos
   const extras = calcRegistroVentas.extras || [];
   if (extras.length > 0) {
     doc.setFontSize(13);
@@ -1824,7 +1799,6 @@ async function exportarTodosLosRegistrosPDFZip() {
     doc.text(`Mes: ${mes.charAt(0).toUpperCase() + mes.slice(1)} ${año}`, 14, 26);
     doc.text(`Turno: ${turno === "TM" ? "Mañana" : "Tarde"}`, 14, 34);
 
-    // Ventas
     const ventas = data.ventas || [];
     const totalEfectivo = ventas.filter(v => v.metodoPago === 'efectivo').reduce((acc, v) => acc + v.total, 0);
     const totalTransferencia = ventas.filter(v => v.metodoPago === 'transferencia').reduce((acc, v) => acc + v.total, 0);
@@ -1870,7 +1844,6 @@ async function exportarTodosLosRegistrosPDFZip() {
       bodyStyles: { fillColor: [245, 245, 245] }
     });
 
-    // Añadir tabla de pérdidas si hay datos
     const perdidas = data.perdidas || [];
     if (perdidas.length > 0) {
       y = doc.lastAutoTable.finalY + 10;
@@ -1899,7 +1872,6 @@ async function exportarTodosLosRegistrosPDFZip() {
       y = doc.lastAutoTable.finalY + 10;
     }
 
-    // Añadir tabla de extras si hay datos
     const extras = data.extras || [];
     if (extras.length > 0) {
       doc.setFontSize(13);
@@ -1965,7 +1937,6 @@ function calcActualizarTabla() {
   document.getElementById("calcCountTransferenciaMobile").innerText = ventasTransferencia;
   document.getElementById("calcTotalVentasMobile").innerText = `${ventasTotales} ventas`;
 
-  // --- CORRECCIÓN ---
   const extras = calcRegistroVentas.extras || [];
   const mobile = document.querySelector(".calc-table-mobile");
   if (mobile && !document.getElementById("calcTotalExtrasMobile")) {
@@ -1987,7 +1958,6 @@ function calcActualizarTabla() {
   const totalExtras = extras.reduce((acc, e) => acc + (e.precio || 0), 0);
   document.getElementById("calcTotalExtrasMobile").innerText = `$${totalExtras.toLocaleString("es-AR")}`;
   document.getElementById("calcCountExtrasMobile").innerText = extras.length;
-  // ...existing code...
 }
 
 function calcMostrarDetalles(tipo) {
@@ -2268,8 +2238,6 @@ function agregarPerdidaRegistro(cantidad, motivo, tipo, nombre) {
   showSyncNotification("Pérdida registrada y sincronizada.");
 }
 
-// ...existing code...
-
 function mostrarModalExtras() {
   let modal = document.getElementById("modalExtras");
   if (!modal) {
@@ -2362,7 +2330,6 @@ function eliminarExtraPorIndice(idx) {
 const oldCalcActualizarTabla = calcActualizarTabla;
 calcActualizarTabla = function() {
   oldCalcActualizarTabla();
-  // Pérdidas
   const totalPerdidas = calcRegistroVentas.totalPerdidas || 0;
   let perdidasRow = document.getElementById("calcTotalPerdidasRow");
   if (!perdidasRow) {
@@ -2405,7 +2372,6 @@ calcActualizarTabla = function() {
   document.getElementById("calcCountPerdidas").innerText = count;
   document.getElementById("calcCountPerdidasMobile").innerText = count;
 
-  // Extras
   const extras = calcRegistroVentas.extras || [];
   let extrasRow = document.getElementById("calcTotalExtrasRow");
   if (!extrasRow) {
@@ -2430,7 +2396,6 @@ calcActualizarTabla = function() {
   document.getElementById("calcCountExtras").innerText = extras.length;
 };
 
-// Unifica la redefinición de calcMostrarDetalles
 const oldCalcMostrarDetalles = calcMostrarDetalles;
 calcMostrarDetalles = function(tipo) {
   if (tipo === "perdidas") {
