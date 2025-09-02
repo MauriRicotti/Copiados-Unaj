@@ -2197,7 +2197,7 @@ function mostrarModalPerdidas() {
           <input type="text" id="perdidasNombre" maxlength="60" class="calc-input" style="margin-top:6px;" placeholder="Nombre y apellido">
         </div>
         <div style="margin-bottom:14px;">
-          <label style="font-weight:600;">Cantidad de hojas:</label>
+          <label style="font-weight:600;">Cantidad de carillas:</label>
           <input type="number" id="perdidasCantidad" min="1" value="1" class="calc-input" style="margin-top:6px;">
         </div>
         <div style="margin-bottom:14px;">
@@ -2281,7 +2281,7 @@ function mostrarModalExtras() {
       <div style="background:var(--bg-card);padding:32px 24px;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.18);max-width:95vw;width:340px;text-align:center;">
         <h2 style="margin-bottom:18px;font-size:1.2rem;color:var(--text-heading);">Registrar extra</h2>
         <div style="margin-bottom:14px;">
-          <label style="font-weight:600;">Cantidad de hojas:</label>
+          <label style="font-weight:600;">Cantidad de carillas:</label>
           <input type="number" id="extrasCantidad" min="1" value="1" class="calc-input" style="margin-top:6px;">
         </div>
         <div style="margin-bottom:14px;">
@@ -2444,7 +2444,7 @@ calcMostrarDetalles = function(tipo) {
           <ul>
             <li><b>#${idx + 1}</b> - <b>Fecha:</b> ${p.fecha} <b>Hora:</b> ${p.hora}</li>
             <li><b>Nombre y apellido:</b> ${p.nombre ? p.nombre : "-"}</li>
-            <li><b>Cantidad de hojas:</b> ${p.cantidad}</li>
+            <li><b>Cantidad de carillas:</b> ${p.cantidad}</li>
             <li><b>Motivo:</b> ${p.motivo}</li>
             <li><b>Tipo:</b> ${p.tipo === "color" ? "Color" : "Blanco y Negro"}</li>
             <li><b>Precio unitario:</b> $${p.precioUnitario}</li>
@@ -2476,7 +2476,7 @@ calcMostrarDetalles = function(tipo) {
           <ul>
             <li><b>#${idx + 1}</b> - <b>Fecha:</b> ${e.fecha} <b>Hora:</b> ${e.hora}</li>
             <li><b>Motivo:</b> ${e.motivo}</li>
-            <li><b>Cantidad de hojas:</b> ${e.cantidad}</li>
+            <li><b>Cantidad de carillas:</b> ${e.cantidad}</li>
             <li><b>Tipo:</b> ${e.tipo === "color" ? "Color" : "Blanco y Negro"}</li>
             <li><b>Precio:</b> $${(e.precio || 0).toLocaleString("es-AR")}</li>
           </ul>
