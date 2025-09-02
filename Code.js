@@ -2539,3 +2539,13 @@ function mostrarEstadisticasDesdeLogin() {
   document.getElementById("calcComparativaScreen").style.display = "block";
   calcMostrarComparativa();
 }
+
+
+function eliminarPerdidaPorIndice(idx) {
+  if (!confirm("¿Seguro que deseas eliminar esta pérdida?")) return;
+  calcRegistroVentas.perdidas.splice(idx, 1);
+  calcRegistroVentas.totalPerdidas = (calcRegistroVentas.perdidas || []).reduce((acc, p) => acc + (p.total || 0), 0);
+  calcGuardarDatos();
+  calcActualizarTabla();
+  calcMostrarDetalles('perdidas');
+}
