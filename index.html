@@ -399,6 +399,7 @@
                         <button onclick="calcVolverDesdeComparativa()" class="calc-btn calc-btn-outline header-btn" title="Volver">
                             Volver
                         </button>
+                        <button class="calc-btn calc-btn-outline header-btn" onclick="abrirModalHistorico()">Ver historial</button>
                     </div>
                 </div>
             </header>
@@ -522,21 +523,32 @@
         </div>
     </div>
 
-    <div id="modalCompararHistoricos" style="display:none;position:fixed;z-index:3000;top:0;left:0;width:100vw;height:100vh;background:rgba(30,41,59,0.45);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
-      <div class="modal-historicos-content">
-        <h2>Comparar historial</h2>
-        <label>Rango:</label>
-        <select id="selectRangoHistorico" class="calc-select">
-          <option value="7">Últimos 7 días</option>
-          <option value="30">Últimos 30 días</option>
-          <option value="90">Últimos 90 días</option>
-          <option value="mes">Mes actual</option>
-        </select>
-        <div class="modal-historicos-botones">
-          <button class="calc-btn calc-btn-primary" onclick="cargarComparativaHistoricos()">Comparar</button>
-          <button class="calc-btn calc-btn-secondary" onclick="cerrarModalCompararHistoricos()">Cancelar</button>
+    <!-- Modal para seleccionar fecha y turno -->
+    <div id="modalHistorico" style="display:none;position:fixed;z-index:4000;top:0;left:0;width:100vw;height:100vh;background:rgba(30,41,59,0.45);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
+      <div class="modal-historico-horizontal">
+        <div class="modal-historico-col selector">
+          <h2>Consultar estadísticas históricas</h2>
+          <label>Fotocopiado:</label>
+          <select id="historicoFotocopiado" class="calc-select">
+            <option value="salud">Salud</option>
+            <option value="sociales">Sociales</option>
+            <option value="ingenieria">Ingeniería</option>
+          </select>
+          <label>Fecha:</label>
+          <input type="date" id="historicoFecha" class="calc-input">
+          <label>Turno:</label>
+          <select id="historicoTurno" class="calc-select">
+            <option value="TM">Mañana</option>
+            <option value="TT">Tarde</option>
+          </select>
+          <div style="margin-top:18px;">
+            <button class="calc-btn calc-btn-primary" onclick="consultarHistorico()">Consultar</button>
+            <button class="calc-btn calc-btn-secondary" onclick="cerrarModalHistorico()">Cerrar</button>
+          </div>
         </div>
-        <div id="resultadoCompararHistoricos" style="margin-top:10px;"></div>
+        <div class="modal-historico-col resultados">
+          <div id="resultadoHistorico" style="margin-top:0;"></div>
+        </div>
       </div>
     </div>
 
