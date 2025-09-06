@@ -2644,3 +2644,44 @@ async function consultarHistorico() {
     resultadoDiv.innerHTML = "<span style='color:#ef4444;'>Error consultando historial.</span>";
   }
 }
+
+//  function limpiarBaseDeDatos() {
+//   const password = prompt("Ingresa la contraseña de administrador para limpiar la base de datos:");
+//   if (password !== "admin123") {
+//     alert("Contraseña incorrecta.");
+//     return;
+//   }
+//   if (!isFirebaseEnabled || !database) {
+//     alert("Firebase no disponible.");
+//     return;
+//   }
+//   if (!confirm("¿Seguro que deseas borrar todas las ventas y registros históricos? Esta acción no se puede deshacer.")) return;
+
+//   const institutos = ["salud", "sociales", "ingenieria"];
+//   Promise.all(institutos.map(async tipo => {
+//     // Borra ventas, perdidas y extras
+//     const fotocopiadoRef = window.firebaseRef(database, `fotocopiados/${tipo}`);
+//     await window.firebaseSet(fotocopiadoRef, {
+//       efectivo: 0,
+//       transferencia: 0,
+//       ventas: [],
+//       perdidas: [],
+//       totalPerdidas: 0,
+//       extras: [],
+//       resetTimestamp: Date.now(),
+//       lastUpdated: Date.now(),
+//       deviceId: deviceId
+//     });
+//     // Borra históricos
+//     const historicosRef = window.firebaseRef(database, `historicos/${tipo}`);
+//     await window.firebaseSet(historicosRef, {});
+//     // Borra backups
+//     const backupsRef = window.firebaseRef(database, `backups/${tipo}`);
+//     await window.firebaseSet(backupsRef, {});
+//   })).then(() => {
+//     alert("Base de datos limpiada correctamente.");
+//     actualizarYRefrescarTabla();
+//   }).catch(() => {
+//     alert("Error al limpiar la base de datos.");
+//   });
+// }
