@@ -2549,8 +2549,6 @@ function abrirModalHistorico() {
 function cerrarModalHistorico() {
   document.getElementById("modalHistorico").style.display = "none";
 }
-
-// ...existing code...
 async function consultarHistorico() {
   const tipo = document.getElementById("historicoFotocopiado").value;
   const fecha = document.getElementById("historicoFecha").value;
@@ -2567,15 +2565,14 @@ async function consultarHistorico() {
     return;
   }
 
-  // Formatos posibles de fecha
   const [anio, mes, dia] = fecha.split("-");
   const mesStr = `${anio}-${mes}`;
-  const fecha1 = `${dia}/${mes}/${anio}`; // 02/09/2025
-  const fecha2 = `${parseInt(dia)}/${parseInt(mes)}/${anio}`; // 2/9/2025
-  const fecha3 = `${dia}/${mes}/${anio.slice(-2)}`; // 02/09/25
-  const fecha4 = `${parseInt(dia)}/${parseInt(mes)}/${anio.slice(-2)}`; // 2/9/25
+  const fecha1 = `${dia}/${mes}/${anio}`;
+  const fecha2 = `${parseInt(dia)}/${parseInt(mes)}/${anio}`;
+  const fecha3 = `${dia}/${mes}/${anio.slice(-2)}`;
+  const fecha4 = `${parseInt(dia)}/${parseInt(mes)}/${anio.slice(-2)}`;
 
-  let encontrado = null;
+  let encontrados = [];
 
   try {
     const historicosRef = window.firebaseRef(database, `historicos/${tipo}/${mesStr}/${turno}`);
@@ -2590,47 +2587,32 @@ async function consultarHistorico() {
           f === fecha3 ||
           f === fecha4
         ) {
-          encontrado = registros[key];
-          break;
+          encontrados.push(registros[key]);
         }
       }
     }
-    if (encontrado) {
-      // Pérdidas
-      const perdidas = encontrado.perdidas || [];
+    if (encontrados.length > 0) {
+      let totalEfectivo = 0, totalTransferencia = 0;
+      let ventas = [], perdidas = [], extras = [];
+      encontrados.forEach(r => {
+        totalEfectivo += r.efectivo || 0;
+        totalTransferencia += r.transferencia || 0;
+        ventas = ventas.concat(r.ventas || []);
+        perdidas = perdidas.concat(r.perdidas || []);
+        extras = extras.concat(r.extras || []);
+      });
       const totalPerdidas = perdidas.reduce((acc, p) => acc + (p.total || 0), 0);
-      const perdidasHtml = perdidas.length > 0
-        ? `<ul style="margin-top:8px;">
-            ${perdidas.map(p => `<li>
-              <b>${p.cantidad}</b> carillas (${p.tipo === "color" ? "Color" : "BN"}) - $${(p.total || 0).toLocaleString("es-AR")}
-              ${p.motivo ? `- Motivo: ${p.motivo}` : ""}
-            </li>`).join("")}
-          </ul>
-          <div style="margin-top:4px;"><b>Total pérdidas:</b> $${totalPerdidas.toLocaleString("es-AR")}</div>`
-        : "<i>No hay pérdidas registradas.</i>";
-
-      // Extras
-      const extras = encontrado.extras || [];
       const totalExtras = extras.reduce((acc, e) => acc + (e.precio || 0), 0);
-      const extrasHtml = extras.length > 0
-        ? `<ul style="margin-top:8px;">
-            ${extras.map(e => `<li>
-              <b>${e.cantidad}</b> carillas (${e.tipo === "color" ? "Color" : "BN"}) - $${(e.precio || 0).toLocaleString("es-AR")}
-              ${e.motivo ? `- Motivo: ${e.motivo}` : ""}
-            </li>`).join("")}
-          </ul>
-          <div style="margin-top:4px;"><b>Total extras:</b> $${totalExtras.toLocaleString("es-AR")}</div>`
-        : "<i>No hay extras registrados.</i>";
 
       resultadoDiv.innerHTML = `
         <div class="historico-resumen">
           <h3>Resumen del día</h3>
-          <div><span class="historico-label">Fecha:</span> <span class="historico-valor">${encontrado.fecha}</span></div>
+          <div><span class="historico-label">Fecha:</span> <span class="historico-valor">${fecha1}</span></div>
           <div><span class="historico-label">Turno:</span> <span class="historico-valor">${turno === "TM" ? "Mañana" : "Tarde"}</span></div>
-          <div><span class="historico-label">Efectivo:</span> <span class="historico-valor">$${(encontrado.efectivo || 0).toLocaleString("es-AR")}</span></div>
-          <div><span class="historico-label">Transferencia:</span> <span class="historico-valor">$${(encontrado.transferencia || 0).toLocaleString("es-AR")}</span></div>
-          <div><span class="historico-label">Total:</span> <span class="historico-valor">$${((encontrado.efectivo || 0) + (encontrado.transferencia || 0)).toLocaleString("es-AR")}</span></div>
-          <div><span class="historico-label">Ventas:</span> <span class="historico-valor">${(encontrado.ventas || []).length}</span></div>
+          <div><span class="historico-label">Efectivo:</span> <span class="historico-valor">$${totalEfectivo.toLocaleString("es-AR")}</span></div>
+          <div><span class="historico-label">Transferencia:</span> <span class="historico-valor">$${totalTransferencia.toLocaleString("es-AR")}</span></div>
+          <div><span class="historico-label">Total:</span> <span class="historico-valor">$${(totalEfectivo + totalTransferencia).toLocaleString("es-AR")}</span></div>
+          <div><span class="historico-label">Ventas:</span> <span class="historico-valor">${ventas.length}</span></div>
           <hr>
           <div><b>Pérdidas:</b> ${perdidas.length}</div>
           ${perdidas.length > 0 ? `
