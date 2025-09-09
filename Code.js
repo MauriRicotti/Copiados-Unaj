@@ -776,7 +776,11 @@ async function calcMostrarComparativa() {
     themeTextComp.textContent = currentTheme === "dark" ? "☀️ Claro" : "🌙 Oscuro"
   }
 
-  await calcCargarDatosComparativa()
+  await calcCargarDatosComparativa();
+
+  if (typeof mostrarReportesPanelControl === "function") {
+    mostrarReportesPanelControl();
+  }
 }
 
 function calcVolverDesdeComparativa() {
@@ -2685,3 +2689,204 @@ async function consultarHistorico() {
 //     alert("Error al limpiar la base de datos.");
 //   });
 // }
+
+// ...existing code...
+
+// Mostrar modal al hacer click en el botón
+document.getElementById("btnReportesSugerencias").onclick = function() {
+  document.getElementById("modalReportesSugerencias").style.display = "flex";
+  document.getElementById("reportNombre").value = "";
+  document.getElementById("reportDescripcion").value = "";
+  document.getElementById("msgReporte").textContent = "";
+};
+
+// Cancelar modal
+document.getElementById("btnCancelarReporte").onclick = function() {
+  document.getElementById("modalReportesSugerencias").style.display = "none";
+};
+
+// ...existing code...
+
+document.getElementById("btnAgregarReporte").onclick = async function() {
+  const tipo = document.getElementById("reportTipo").value;
+  const nombre = document.getElementById("reportNombre").value.trim();
+  const descripcion = document.getElementById("reportDescripcion").value.trim();
+  const msg = document.getElementById("msgReporte");
+  if (!nombre || !descripcion) {
+    msg.textContent = "Completa todos los campos obligatorios.";
+    return;
+  }
+  msg.textContent = "";
+  const ahora = new Date();
+  const reporte = {
+    id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    tipo,
+    nombre,
+    descripcion,
+    fecha: ahora.toLocaleDateString("es-ES"),
+    hora: ahora.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }),
+    estado: "revision", // Por defecto
+    timestamp: Date.now(),
+  };
+  // Guardar en Firebase
+  if (isFirebaseEnabled && database) {
+    const mes = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, "0")}`;
+    const ref = window.firebaseRef(database, `reportes/${mes}/${reporte.id}`);
+    await window.firebaseSet(ref, reporte);
+    document.getElementById("modalReportesSugerencias").style.display = "none";
+    showSyncNotification("Reporte/Sugerencia enviado correctamente.");
+    if (typeof mostrarReportesPanelControl === "function") {
+      mostrarReportesPanelControl();
+    }
+  } else {
+    msg.textContent = "No se pudo enviar. Intenta más tarde.";
+  }
+};
+
+
+// Cambiar estado de reporte
+async function actualizarEstadoReporte(id, estado) {
+  const mes = document.getElementById("filtroMesReporte").value;
+  const ref = window.firebaseRef(database, `reportes/${mes}/${id}`);
+  const snap = await window.firebaseGet(ref);
+  if (snap.exists()) {
+    const reporte = snap.val();
+    reporte.estado = estado;
+    await window.firebaseSet(ref, reporte);
+    mostrarReportesPanelControl();
+  }
+}
+
+// Eliminar reporte
+async function eliminarReporte(id) {
+  if (!confirm("¿Seguro que deseas eliminar este reporte/sugerencia?")) return;
+  const mes = document.getElementById("filtroMesReporte").value;
+  const ref = window.firebaseRef(database, `reportes/${mes}/${id}`);
+  await window.firebaseSet(ref, null);
+  mostrarReportesPanelControl();
+}
+
+// Llama a mostrarReportesPanelControl() al cargar el panel de control, esperando Firebase
+document.addEventListener("DOMContentLoaded", () => {
+  function intentarMostrarReportes() {
+    if (document.getElementById("calcComparativaScreen") && window.firebaseInitialized) {
+      mostrarReportesPanelControl();
+    } else {
+      setTimeout(intentarMostrarReportes, 300);
+    }
+  }
+  intentarMostrarReportes();
+});
+
+// Mostrar reportes en el panel de control (tarjeta al final)
+// ...existing code...
+
+// ...existing code...
+
+// Mostrar reportes en el panel de control (tarjeta al final)
+// ...existing code...
+
+// ...existing code...
+
+// ...existing code...
+
+async function mostrarReportesPanelControl() {
+  // 1. Cargar meses disponibles primero
+  let meses = [];
+  if (isFirebaseEnabled && database) {
+    const refMeses = window.firebaseRef(database, "reportes");
+    const snapMeses = await window.firebaseGet(refMeses);
+    if (snapMeses.exists()) {
+      meses = Object.keys(snapMeses.val()).sort().reverse();
+    }
+  }
+  // Si no hay meses, usar el actual
+  const ahora = new Date();
+  const mesActual = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, "0")}`;
+  if (!meses.includes(mesActual)) {
+    meses.unshift(mesActual);
+  }
+
+  // 2. Obtener el mes seleccionado en el filtro (si existe)
+  let mesSeleccionado = mesActual;
+  const filtroMes = document.getElementById("filtroMesReporte");
+  if (filtroMes && filtroMes.value && meses.includes(filtroMes.value)) {
+    mesSeleccionado = filtroMes.value;
+  } else {
+    mesSeleccionado = meses[0];
+  }
+
+  // 3. Cargar reportes del mes seleccionado
+  let reportes = [];
+  if (isFirebaseEnabled && database) {
+    const ref = window.firebaseRef(database, `reportes/${mesSeleccionado}`);
+    const snap = await window.firebaseGet(ref);
+    if (snap.exists()) {
+      reportes = Object.values(snap.val());
+    }
+  }
+  reportes.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+  // 4. Renderizar tarjeta y select de meses con todos los meses disponibles
+  let container = document.getElementById("reportesPanelControl");
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "reportesPanelControl";
+    container.className = "calc-card";
+    document.getElementById("calcComparativaScreen").appendChild(container);
+  }
+  container.innerHTML = `
+    <div class="calc-card-header">
+      <div class="calc-card-title">Reportes y Sugerencias</div>
+      <div style="margin-top:10px;">
+        <select id="filtroEstadoReporte" class="calc-select" style="width:auto;display:inline-block;">
+          <option value="todos">Todos</option>
+          <option value="revision">En revisión</option>
+          <option value="solucionado">Solucionado</option>
+          <option value="descartado">Descartado</option>
+        </select>
+        <select id="filtroMesReporte" class="calc-select" style="width:auto;display:inline-block;">
+          ${meses.map(m => `<option value="${m}"${m === mesSeleccionado ? " selected" : ""}>${formatearMes(m)}</option>`).join("")}
+        </select>
+      </div>
+    </div>
+    <div class="calc-card-content" id="reportesListaPanel"></div>
+  `;
+
+  // 5. Mostrar reportes filtrados
+  function renderReportes() {
+    const estado = document.getElementById("filtroEstadoReporte").value;
+    let filtrados = reportes;
+    if (estado !== "todos") filtrados = reportes.filter(r => r.estado === estado);
+    const lista = document.getElementById("reportesListaPanel");
+    if (filtrados.length === 0) {
+      lista.innerHTML = `<div style="padding:24px;text-align:center;color:var(--text-secondary);">No hay reportes/sugerencias.</div>`;
+    } else {
+      lista.innerHTML = filtrados.map(r => `
+        <div style="border:1px solid var(--border-color);border-radius:8px;padding:12px;margin-bottom:10px;">
+          <b>${r.tipo === "reporte" ? "Reporte" : "Sugerencia"}</b> - <span style="color:var(--text-secondary);">${r.estado}</span><br>
+          <b>${r.nombre}</b> <span style="font-size:0.9rem;color:var(--text-secondary);">(${r.fecha} ${r.hora})</span><br>
+          <div style="margin:8px 0;">${r.descripcion}</div>
+          <div style="display:flex;gap:8px;">
+            <select onchange="actualizarEstadoReporte('${r.id}',this.value)" style="padding:4px 8px;">
+              <option value="revision"${r.estado==="revision"?" selected":""}>En revisión</option>
+              <option value="solucionado"${r.estado==="solucionado"?" selected":""}>Solucionado</option>
+              <option value="descartado"${r.estado==="descartado"?" selected":""}>Descartado</option>
+            </select>
+            <button class="calc-btn calc-btn-danger" onclick="eliminarReporte('${r.id}')">Eliminar</button>
+          </div>
+        </div>
+      `).join("");
+    }
+  }
+  renderReportes();
+
+  // 6. Listeners para filtros
+  document.getElementById("filtroEstadoReporte").onchange = renderReportes;
+  document.getElementById("filtroMesReporte").onchange = async function() {
+    mostrarReportesPanelControl(); // Recarga la card con el nuevo mes seleccionado
+  };
+  document.getElementById("filtroEstadoReporte").value = "revision";
+}
+
+// ...existing code...

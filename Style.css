@@ -5,6 +5,10 @@
   margin-top: 18px;
 }
 
+textarea {
+  resize: none;
+}
+
 @media (max-width: 600px) {
   .calc-cambio-group {
     flex-direction: column;
@@ -1894,3 +1898,94 @@ body.overflow-hidden {
     margin-top: 0;
   }
 }
+
+#reportesPanelControl {
+  margin: 24px auto 40px auto; /* Más margen abajo */
+  background: var(--bg-card-header);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: 0 4px 18px var(--shadow);
+  padding: 0;
+  max-width: 1200px;
+  width: 100%;
+  display: block;
+}
+
+#reportesPanelControl {
+  margin: 24px 0 48px 0;
+  background: var(--bg-card);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 4px var(--shadow);
+  width: 100%;
+  max-width: 100%;
+  display: block;
+  overflow: hidden;
+}
+
+#reportesPanelControl .calc-card-header {
+  background: var(--bg-card-header);
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+#reportesPanelControl .calc-card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--text-heading);
+}
+
+#reportesPanelControl .calc-card-content {
+  padding: 24px;
+  background: transparent;
+}
+
+#reportesListaPanel > div {
+  background: var(--bg-card-header);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  margin-bottom: 14px;
+  padding: 14px 18px;
+  box-shadow: 0 2px 8px var(--shadow);
+  transition: box-shadow 0.2s;
+}
+
+#reportesListaPanel > div:hover {
+  box-shadow: 0 6px 24px var(--shadow);
+  border-color: #3b82f6;
+}
+
+@media (max-width: 1200px) {
+  #reportesPanelControl {
+    max-width: 98vw;
+  }
+  #reportesPanelControl .calc-card-header,
+  #reportesPanelControl .calc-card-content {
+    padding: 12px 8px;
+  }
+  #reportesListaPanel > div {
+    padding: 10px 8px;
+  }
+}
+
+/* Ajuste para la card de Reportes y Sugerencias en el panel de control */
+#reportesPanelControl {
+  max-width: 100%;
+  width: 100%;
+  margin: 24px 0 48px 0;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 4px var(--shadow);
+  background: var(--bg-card);
+  display: block;
+  overflow: hidden;
+}
+
+@media (min-width: 900px) {
+  #reportesPanelControl {
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+

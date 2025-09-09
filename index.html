@@ -552,6 +552,34 @@
       </div>
     </div>
 
+    <div id="modalReportesSugerencias" style="display:none;position:fixed;z-index:5000;top:0;left:0;width:100vw;height:100vh;background:rgba(30,41,59,0.45);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
+      <div style="background:var(--bg-card);padding:32px 24px;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.18);max-width:95vw;width:340px;text-align:center;">
+        <h2 style="margin-bottom:18px;font-size:1.2rem;color:var(--text-heading);">Enviar reporte o sugerencia</h2>
+        <label style="font-weight:600;">Tipo:</label>
+        <select id="reportTipo" class="calc-select" style="margin-bottom:14px;">
+          <option value="reporte">Reporte</option>
+          <option value="sugerencia">Sugerencia</option>
+        </select>
+        <label style="font-weight:600;">Nombre y Apellido:</label>
+        <input type="text" id="reportNombre" maxlength="60" class="calc-input" style="margin-bottom:14px;" placeholder="Nombre y apellido">
+        <label style="font-weight:600;">Descripción:</label>
+        <textarea id="reportDescripcion" class="calc-input" style="margin-bottom:18px;height:80px;" maxlength="300" placeholder="Escribe aquí tu reporte o sugerencia"></textarea>
+        <div style="display:flex;gap:10px;">
+          <button class="calc-btn calc-btn-primary" id="btnAgregarReporte">Agregar</button>
+          <button class="calc-btn calc-btn-secondary" id="btnCancelarReporte">Cancelar</button>
+        </div>
+        <div id="msgReporte" style="color:#ef4444;margin-top:12px;font-size:0.98rem;"></div>
+      </div>
+    </div>
+
+    <div id="reportesSugerenciasFixed" style="position:fixed;top:18px;left:18px;z-index:9999;">
+      <button id="btnReportesSugerencias" class="calc-btn calc-btn-outline" title="Reportes y Sugerencias" style="padding:10px 14px;">
+        <svg xmlns="http://www.w3.org/2000/svg" style="width:24px;height:24px;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.77 9.77 0 01-4-.8l-4 1 1-4A8.96 8.96 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+        </svg>
+      </button>
+    </div>
+
     <footer class="watermark-footer">
         <p>Web y software creados y diseñados por <a href="https://mauricioricotti.free.nf/?i=1" target="_blank" rel="noopener noreferrer">Mauricio Ricotti</a></p>
     </footer>
