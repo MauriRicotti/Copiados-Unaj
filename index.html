@@ -65,6 +65,11 @@
                 <h1>Sistema de Fotocopiados UNAJ</h1>
                 <p>Selecciona tu fotocopiado e ingresa la contraseña</p>
             </div>
+            <div style="position:absolute;top:24px;right:24px;z-index:10;">
+              <button class="calc-btn calc-btn-primary" onclick="abrirModalRegistroImpresoras()">
+                Registrar impresoras
+              </button>
+            </div>
             <div class="fotocopiados-grid">
                 <div class="fotocopiado-card" onclick="selectFotocopiado('salud')">
                     <div class="fotocopiado-icon">
@@ -592,5 +597,147 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+    <!-- Modal Registro de Impresoras -->
+    <div id="modalRegistroImpresoras" style="display:none;position:fixed;z-index:5000;top:0;left:0;width:100vw;height:100vh;background:rgba(30,41,59,0.45);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
+      <div class="modal-registro-impresoras-content">
+        <div class="registro-form-col">
+          <h2 style="margin-bottom:18px;">Registro de impresoras</h2>
+          <label>Copiado:</label>
+          <select id="registroCopiado" class="calc-select" style="margin-bottom:10px;">
+            <option value="salud">Salud</option>
+            <option value="sociales">Sociales</option>
+            <option value="ingenieria">Ingeniería</option>
+            <option value="becas1">Becas 1</option>
+            <option value="becas2">Becas 2</option>
+          </select>
+          <label>Turno:</label>
+          <select id="registroTurno" class="calc-select" style="margin-bottom:10px;">
+            <option value="TM">Mañana</option>
+            <option value="TT">Tarde</option>
+          </select>
+          <label>Fecha:</label>
+          <input type="date" id="registroFechaImpresoras" class="calc-input" style="margin-bottom:10px;">
+          <label>Impresoras:</label>
+          <div id="registroImpresorasLista" style="max-height:200px;overflow:auto;margin-bottom:10px;">
+            <!-- Aquí se generan los checkboxes de impresoras -->
+          </div>
+          <div style="margin-top:18px;display:flex;gap:10px;">
+            <button class="calc-btn calc-btn-primary" onclick="guardarRegistroImpresoras()">Guardar</button>
+            <button class="calc-btn calc-btn-secondary" onclick="cerrarModalRegistroImpresoras()">Cancelar</button>
+          </div>
+          <div id="msgRegistroImpresoras" style="color:#ef4444;margin-top:12px;font-size:0.98rem;"></div>
+        </div>
+        <div class="registro-impresoras-col" id="registroFotosImpresoras">
+          <!-- Aquí se generan los inputs de fotos por impresora seleccionada -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel de consulta de registros de impresoras -->
+    <div id="panelRegistroImpresoras" class="calc-card" style="margin-top:32px; display:none;">
+      <div class="calc-card-header calc-flex-between">
+        <div class="calc-card-title">Registro de uso de impresoras</div>
+        <div style="display: flex; gap: 12px;">
+          <button class="calc-btn calc-btn-primary registro-completo-btn" onclick="abrirModalRegistroCompletoImpresoras()">
+      Descargar registro completo
+    </button>
+    <button class="calc-btn calc-btn-primary registro-completo-btn" onclick="abrirModalVerRegistroMesImpresoras()">
+      Ver registro del mes
+    </button>
+    <button class="calc-btn calc-btn-primary buscar-impresoras-btn" onclick="mostrarRegistrosImpresoras()">
+      Buscar
+    </button>
+    <button class="calc-btn calc-btn-outline" onclick="abrirModalEstadisticasImpresoras()">
+      Estadísticas
+    </button>
+        </div>
+      </div>
+      <div class="calc-card-content">
+        <div class="impresoras-filtros-bar">
+      <label for="filtroFechaImpresoras">Fecha:</label>
+      <input type="date" id="filtroFechaImpresoras" class="calc-input filtro-input">
+      <label for="filtroCopiadoImpresoras">Copiado:</label>
+      <select id="filtroCopiadoImpresoras" class="calc-select filtro-input">
+        <option value="salud">Salud</option>
+        <option value="sociales">Sociales</option>
+        <option value="ingenieria">Ingeniería</option>
+        <option value="becas1">Becas 1</option>
+        <option value="becas2">Becas 2</option>
+      </select>
+      <label for="filtroTurnoImpresoras">Turno:</label>
+      <select id="filtroTurnoImpresoras" class="calc-select filtro-input">
+        <option value="TM">Mañana</option>
+        <option value="TT">Tarde</option>
+      </select>
+    </div>
+    <div id="listaRegistrosImpresoras" class="impresoras-grid" style="margin-top:18px;"></div>
+      </div>
+    </div>
+
+    <div id="modalRegistroCompletoImpresoras" style="display:none;position:fixed;z-index:6000;top:0;left:0;width:100vw;height:100vh;background:rgba(30,41,59,0.45);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
+      <div style="background:var(--bg-card);padding:32px 24px;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.18);max-width:95vw;width:340px;text-align:center;">
+        <h2 style="margin-bottom:18px;">Ver registro completo de impresoras</h2>
+        <label>Selecciona el mes:</label>
+        <select id="selectMesRegistroImpresoras" class="calc-select" style="margin-bottom:18px;">
+          <!-- Opciones generadas por JS -->
+        </select>
+        <div style="display:flex;gap:10px;">
+          <button class="calc-btn calc-btn-primary" onclick="exportarExcelRegistroCompletoImpresoras()">Ver</button>
+          <button class="calc-btn calc-btn-secondary" onclick="cerrarModalRegistroCompletoImpresoras()">Cancelar</button>
+        </div>
+        <div id="msgRegistroCompletoImpresoras" style="color:#ef4444;margin-top:12px;font-size:0.98rem;"></div>
+      </div>
+    </div>
+
+    <div id="modalVerRegistroMesImpresoras" style="display:none;position:fixed;z-index:6000;top:0;left:0;width:100vw;height:100vh;background:rgba(30,41,59,0.45);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
+  <div>
+    <div class="modal-col-selector">
+      <h2>Ver registro del mes</h2>
+      <label>Selecciona el mes:</label>
+      <select id="selectMesVerRegistroImpresoras" class="calc-select"></select>
+      <label>Filtrar por copiado:</label>
+      <select id="filtroCopiadoRegistroMes" class="calc-select">
+        <option value="">Todos</option>
+        <option value="salud">Salud</option>
+        <option value="sociales">Sociales</option>
+        <option value="ingenieria">Ingeniería</option>
+        <option value="becas1">Becas 1</option>
+        <option value="becas2">Becas 2</option>
+      </select>
+      <label>Filtrar por turno:</label>
+      <select id="filtroTurnoRegistroMes" class="calc-select">
+        <option value="">Todos</option>
+        <option value="TM">Mañana</option>
+        <option value="TT">Tarde</option>
+      </select>
+      <div style="display:flex;gap:10px;">
+        <button class="calc-btn calc-btn-secondary" onclick="cerrarModalVerRegistroMesImpresoras()">Cerrar</button>
+      </div>
+      <div id="msgVerRegistroMesImpresoras" style="color:#ef4444;margin-top:12px;font-size:0.98rem;"></div>
+    </div>
+    <div class="modal-col-table">
+      <div id="tablaVerRegistroMesImpresoras"></div>
+    </div>
+  </div>
+</div>
+  </div> <!-- cierre de #calcComparativaScreen -->
+
+  <div id="modalEstadisticasImpresoras" style="display:none;position:fixed;z-index:7000;top:0;left:0;width:100vw;height:100vh;background:rgba(30,41,59,0.45);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
+  <div style="background:var(--bg-card);padding:32px 24px;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.18);max-width:900px;width:98vw;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+      <h2 style="font-size:1.3rem;">Estadísticas de uso de impresoras</h2>
+      <div>
+        <label for="selectorMesEstadisticasImpresoras" style="font-weight:600;margin-right:8px;">Mes:</label>
+        <select id="selectorMesEstadisticasImpresoras" class="calc-select" style="min-width:140px;"></select>
+      </div>
+    </div>
+    <canvas id="graficoEstadisticasImpresoras" style="width:100%;height:320px;max-width:100vw;"></canvas>
+    <div style="margin-top:18px;">
+      <button class="calc-btn calc-btn-outline" onclick="cerrarModalEstadisticasImpresoras()">Cerrar</button>
+      <button class="calc-btn calc-btn-primary" id="btnExportarGraficoImpresorasPDFModal" style="margin-left:10px;">Exportar PDF</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
