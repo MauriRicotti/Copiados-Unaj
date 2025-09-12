@@ -2476,13 +2476,3 @@ body.overflow-hidden {
 }
 /* ...existing code... */
 /* ...existing code... */
-body.no-scroll {
-  overflow: hidden !important;
-  height: 100vh !important;
-}
-
-.login-screen {
-  height: 100vh !important;
-  overflow: hidden !important;
-}
-/* ...existing code... */
