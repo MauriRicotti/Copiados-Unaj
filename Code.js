@@ -3,6 +3,7 @@ const firebaseConfig = {
   authDomain: "fotocopiado-unaj.firebaseapp.com",
   databaseURL: "https://fotocopiado-unaj-default-rtdb.firebaseio.com/",
   projectId: "fotocopiado-unaj",
+  //.*storageBucket: "fotocopiado-unaj.firebasestorage.app",
   storageBucket: "fotocopiado-unaj.appspot.com",
   messagingSenderId: "198572714385",
   appId: "1:198572714385:web:2ec73dfa4386daa47a5230",
@@ -769,9 +770,11 @@ async function calcMostrarComparativa() {
       comparativaScreen.classList.remove("animated-fadeInUp");
     }, 500);
 
+    // Mostrar la card de impresoras solo en el panel de control
     const cardImpresoras = document.getElementById("panelRegistroImpresoras");
     if (cardImpresoras) {
       cardImpresoras.style.display = "block";
+      // Establecer la fecha predeterminada en el filtro de impresoras
       const filtroFecha = document.getElementById("filtroFechaImpresoras");
       const filtroCopiado = document.getElementById("filtroCopiadoImpresoras");
       const filtroTurno = document.getElementById("filtroTurnoImpresoras");
@@ -779,6 +782,7 @@ async function calcMostrarComparativa() {
       if (filtroFecha) filtroFecha.value = hoy.toISOString().slice(0, 10);
       if (filtroCopiado) filtroCopiado.value = "salud";
       if (filtroTurno) filtroTurno.value = "TM";
+      // Mostrar automáticamente los registros del día actual, copiado salud, turno mañana
       if (filtroFecha && filtroCopiado && filtroTurno) {
         mostrarRegistrosImpresoras(filtroFecha.value, filtroCopiado.value, filtroTurno.value);
       }
@@ -806,6 +810,7 @@ function calcVolverDesdeComparativa() {
   setTimeout(() => {
     comparativaScreen.style.display = "none";
     comparativaScreen.classList.remove("animated-fadeOutDown", "animating");
+    // Oculta la card de impresoras siempre que salgas del panel de control
     if (cardImpresoras) cardImpresoras.style.display = "none";
     if (cameFromLogin) {
       document.getElementById("loginScreen").style.display = "flex";
@@ -2666,47 +2671,6 @@ async function consultarHistorico() {
   }
 }
 
-//  function limpiarBaseDeDatos() {
-//   const password = prompt("Ingresa la contraseña de administrador para limpiar la base de datos:");
-//   if (password !== "admin123") {
-//     alert("Contraseña incorrecta.");
-//     return;
-//   }
-//   if (!isFirebaseEnabled || !database) {
-//     alert("Firebase no disponible.");
-//     return;
-//   }
-//   if (!confirm("¿Seguro que deseas borrar todas las ventas y registros históricos? Esta acción no se puede deshacer.")) return;
-
-//   const institutos = ["salud", "sociales", "ingenieria"];
-//   Promise.all(institutos.map(async tipo => {
-//     // Borra ventas, perdidas y extras
-//     const fotocopiadoRef = window.firebaseRef(database, `fotocopiados/${tipo}`);
-//     await window.firebaseSet(fotocopiadoRef, {
-//       efectivo: 0,
-//       transferencia: 0,
-//       ventas: [],
-//       perdidas: [],
-//       totalPerdidas: 0,
-//       extras: [],
-//       resetTimestamp: Date.now(),
-//       lastUpdated: Date.now(),
-//       deviceId: deviceId
-//     });
-//     // Borra históricos
-//     const historicosRef = window.firebaseRef(database, `historicos/${tipo}`);
-//     await window.firebaseSet(historicosRef, {});
-//     // Borra backups
-//     const backupsRef = window.firebaseRef(database, `backups/${tipo}`);
-//     await window.firebaseSet(backupsRef, {});
-//   })).then(() => {
-//     alert("Base de datos limpiada correctamente.");
-//     actualizarYRefrescarTabla();
-//   }).catch(() => {
-//     alert("Error al limpiar la base de datos.");
-//   });
-// }
-
 document.getElementById("btnReportesSugerencias").onclick = function() {
   document.getElementById("modalReportesSugerencias").style.display = "flex";
   document.getElementById("reportNombre").value = "";
@@ -2717,7 +2681,6 @@ document.getElementById("btnReportesSugerencias").onclick = function() {
 document.getElementById("btnCancelarReporte").onclick = function() {
   document.getElementById("modalReportesSugerencias").style.display = "none";
 };
-
 
 document.getElementById("btnAgregarReporte").onclick = async function() {
   const tipo = document.getElementById("reportTipo").value;
@@ -2879,7 +2842,25 @@ async function mostrarReportesPanelControl() {
 }
 
 const IMPRESORAS_TODAS = [
-  "MAR", "LUME", "DOHKO", "MAURO", "MESSI", "MONI", "HEC", "B1", "B2", "B3"
+  "MAR",
+  "LUME",
+  "DOHKO",
+  "MAURO B/N",
+  "MAURO COLOR",
+  "MESSI",
+  "MONI",
+  "VALEN",
+  "CRUCECITA B/N",
+  "CRUCECITA COLOR",
+  "NAHUEL B/N",
+  "NAHUEL COLOR",
+  "LUPE B/N",
+  "LUPE COLOR",
+  "FELIX",
+  "MARI HEC",
+  "DANY HEC",
+  "POCHA B/N",
+  "POCHA COLOR"
 ];
 
 let storage = null;
@@ -2946,12 +2927,39 @@ document.getElementById("btnCancelarRegistroImpresoras").onclick = function() {
 
 function renderImpresorasCheckbox() {
   const cont = document.getElementById("registroImpresorasLista");
-  cont.innerHTML = IMPRESORAS_TODAS.map(nombre => `
-    <label style="display:block;margin-bottom:6px;">
-      <input type="checkbox" class="impresora-checkbox" value="${nombre}" onchange="renderImpresorasArchivos()">
-      ${nombre}
-    </label>
-  `).join("");
+  cont.innerHTML = `<div id="impresorasCheckboxes"></div>`;
+
+  const grupos = {
+    "Blanco y Negro": [],
+    "Color": [],
+    "HEC": [],
+    "Otros": []
+  };
+  IMPRESORAS_TODAS.forEach(nombre => {
+    if (nombre.includes("COLOR")) grupos["Color"].push(nombre);
+    else if (nombre.includes("B/N")) grupos["Blanco y Negro"].push(nombre);
+    else if (nombre.includes("HEC")) grupos["HEC"].push(nombre);
+    else grupos["Otros"].push(nombre);
+  });
+
+  function renderLista() {
+    const seleccionadas = Array.from(document.querySelectorAll(".impresora-checkbox:checked")).map(cb => cb.value);
+
+    let html = "";
+    Object.entries(grupos).forEach(([grupo, lista]) => {
+      if (lista.length === 0) return;
+      html += `<div style="margin-bottom:6px;font-weight:600;color:var(--text-heading);font-size:1rem;">${grupo}</div>`;
+      html += lista.map(nombre => `
+        <label style="display:flex;align-items:center;margin-bottom:4px;gap:6px;">
+          <input type="checkbox" class="impresora-checkbox" value="${nombre}" ${seleccionadas.includes(nombre) ? "checked" : ""} onchange="renderImpresorasArchivos()">
+          <span>${nombre}</span>
+        </label>
+      `).join("");
+    });
+    document.getElementById("impresorasCheckboxes").innerHTML = html;
+  }
+
+  renderLista();
 }
 
 window.renderImpresorasArchivos = function() {
@@ -3075,7 +3083,7 @@ document.getElementById("btnCerrarRegistroMesImpresoras").onclick = function() {
 
 async function cargarTablaRegistroMes() {
   const mes = document.getElementById("mesRegistroImpresoras").value;
-  const fechaFiltro = document.getElementById("fechaRegistroImpresoras").value; 
+  const fechaFiltro = document.getElementById("fechaRegistroImpresoras").value;
   const copiado = document.getElementById("copiadoRegistroImpresoras").value;
   const turno = document.getElementById("turnoRegistroImpresoras").value;
   const tbody = document.querySelector("#tablaRegistroMesImpresoras tbody");
@@ -3161,6 +3169,7 @@ async function getImageDataUrl(url) {
     reader.readAsDataURL(blob);
   });
 }
+
 
 document.getElementById("btnReporteContadoresImpresoras").onclick = function() {
   document.getElementById("modalReporteContadoresImpresoras").style.display = "flex";

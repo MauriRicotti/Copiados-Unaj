@@ -60,13 +60,13 @@
     </div>
 
     <div id="loginScreen" class="login-screen">
-        <button id="btnRegistrarImpresoras"
-            class="calc-btn calc-btn-primary"
-            style="position: absolute; top: 24px; right: 24px; z-index: 10; padding: 10px 22px; font-size: 1rem;">
-            Registrar impresoras
-        </button>
         <div class="login-container" style="position:relative;">
-            <div class="login-header">
+            <div class="login-header" style="position:relative;">
+                <button id="btnRegistrarImpresoras"
+                    class="calc-btn calc-btn-primary btn-registrar-impresoras"
+                    style="position: absolute; top: 0; right: 0; z-index: 10; padding: 10px 22px; font-size: 1rem;">
+                    Registrar impresoras
+                </button>
                 <h1>Sistema de Fotocopiados UNAJ</h1>
                 <p>Selecciona tu fotocopiado e ingresa la contraseña</p>
             </div>
@@ -670,10 +670,6 @@
     <footer class="watermark-footer">
         <p>Web y software creados y diseñados por <a href="https://mauricioricotti.free.nf/?i=1" target="_blank" rel="noopener noreferrer">Mauricio Ricotti</a></p>
     </footer>
-
-    <!-- <button class="calc-btn calc-btn-danger header-btn" onclick="limpiarBaseDeDatos()" title="Limpiar base de datos">
-        Limpiar base de datos
-    </button>   -->
 
     <script src="/Code.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
