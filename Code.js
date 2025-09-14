@@ -2881,6 +2881,25 @@ if (typeof window.firebaseApp !== "undefined") {
   });
 }
 
+function mostrarModalErrorImpresoras(mensaje) {
+  let modal = document.getElementById("modalErrorImpresoras");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "modalErrorImpresoras";
+    modal.innerHTML = `
+      <div class="modal-error-content">
+        <h3>No se puede guardar el registro</h3>
+        <div id="modalErrorImpresorasMensaje">${mensaje}</div>
+        <button class="calc-btn calc-btn-primary" onclick="document.getElementById('modalErrorImpresoras').style.display='none'">Aceptar</button>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  } else {
+    document.getElementById("modalErrorImpresorasMensaje").innerHTML = mensaje;
+    modal.style.display = "flex";
+  }
+}
+
 document.getElementById("btnGuardarRegistroImpresoras").onclick = async function() {
   const copiado = document.getElementById("registroCopiado").value;
   const turno = document.getElementById("registroTurno").value;
@@ -2888,23 +2907,37 @@ document.getElementById("btnGuardarRegistroImpresoras").onclick = async function
   const seleccionadas = Array.from(document.querySelectorAll(".impresora-checkbox:checked")).map(cb => cb.value);
 
   if (!window.firebaseInitialized || !window.firebaseDatabase) {
-    alert("Firebase no disponible.");
+    mostrarModalErrorImpresoras("Firebase no disponible.");
     return;
   }
 
-  const impresorasData = [];
-    for (const nombre of seleccionadas) {
+  let impresorasData = [];
+  let negativas = [];
+  for (const nombre of seleccionadas) {
     const apertura = Number(document.getElementById(`apertura_${nombre}`).value);
     const cierre = Number(document.getElementById(`cierre_${nombre}`).value);
+    const diferencia = cierre - apertura;
     impresorasData.push({
       nombre,
       apertura,
       cierre,
-      diferencia: cierre - apertura,
+      diferencia,
       copiado,
       turno,
       fecha
     });
+    if (diferencia < 0) {
+      negativas.push(nombre);
+    }
+  }
+
+  if (negativas.length > 0) {
+    mostrarModalErrorImpresoras(
+      `Las siguientes impresoras tienen diferencia negativa:<br><br>
+      <b>${negativas.join("<br>")}</b><br><br>
+      Verifica los valores de apertura y cierre.`
+    );
+    return;
   }
 
   const ref = window.firebaseRef(window.firebaseDatabase, `registro_impresoras/${fecha}/${copiado}/${turno}`);
@@ -2913,6 +2946,7 @@ document.getElementById("btnGuardarRegistroImpresoras").onclick = async function
   document.getElementById("modalRegistroImpresoras").style.display = "none";
   alert("Registro guardado correctamente.");
 };
+
 
 document.getElementById("btnRegistrarImpresoras").onclick = function() {
   document.getElementById("modalRegistroImpresoras").style.display = "flex";
@@ -3390,3 +3424,4 @@ document.getElementById("btnLimpiarRegistroMesImpresoras").onclick = async funct
     cargarTablaRegistroMes();
   }
 };
+
