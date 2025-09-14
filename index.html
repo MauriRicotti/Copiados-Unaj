@@ -60,7 +60,6 @@
     </div>
 
     <div id="loginScreen" class="login-screen">
-        <!-- Botón pequeño en la esquina superior derecha SOLO en login -->
         <button id="btnRegistrarImpresoras"
             class="calc-btn calc-btn-primary"
             style="position: absolute; top: 24px; right: 24px; z-index: 10; padding: 10px 22px; font-size: 1rem;">
@@ -451,18 +450,15 @@
                     </div>
                 </div>
             </div>
-            <!-- Card de detalles por fotocopiado -->
             <div class="calc-card">
                 <div class="calc-card-header">
                     <div class="calc-card-title">Detalles por Fotocopiado</div>
                 </div>
                 <div class="calc-card-content">
                     <div id="calcDetallesGrid" class="calc-details-grid">
-                        <!-- Aquí se llenan los detalles por JS -->
                     </div>
                 </div>
             </div>
-            <!-- Card de Registro de uso de impresoras: DEBE IR AQUÍ -->
             <div id="panelRegistroImpresoras" class="calc-card" style="margin-top:32px; display:none;">
               <div class="calc-card-header">
                 <div class="calc-card-title">Registro de uso de impresoras</div>
@@ -492,11 +488,9 @@
               </div>
               <div class="calc-card-content" id="listaRegistroImpresoras"></div>
             </div>
-            <!-- La card de reportes y sugerencias se agrega dinámicamente por JS al final -->
         </div>
     </div>
 
-    <!-- Modal para seleccionar fecha y turno -->
     <div id="modalHistorico" style="display:none;position:fixed;z-index:4000;top:0;left:0;width:100vw;height:100vh;background:rgba(30,41,59,0.45);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
       <div class="modal-historico-horizontal">
         <div class="modal-historico-col selector">

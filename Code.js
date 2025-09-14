@@ -3,7 +3,6 @@ const firebaseConfig = {
   authDomain: "fotocopiado-unaj.firebaseapp.com",
   databaseURL: "https://fotocopiado-unaj-default-rtdb.firebaseio.com/",
   projectId: "fotocopiado-unaj",
-  // storageBucket: "fotocopiado-unaj.firebasestorage.app",
   storageBucket: "fotocopiado-unaj.appspot.com",
   messagingSenderId: "198572714385",
   appId: "1:198572714385:web:2ec73dfa4386daa47a5230",
@@ -770,11 +769,9 @@ async function calcMostrarComparativa() {
       comparativaScreen.classList.remove("animated-fadeInUp");
     }, 500);
 
-    // Mostrar la card de impresoras solo en el panel de control
     const cardImpresoras = document.getElementById("panelRegistroImpresoras");
     if (cardImpresoras) {
       cardImpresoras.style.display = "block";
-      // Establecer la fecha predeterminada en el filtro de impresoras
       const filtroFecha = document.getElementById("filtroFechaImpresoras");
       const filtroCopiado = document.getElementById("filtroCopiadoImpresoras");
       const filtroTurno = document.getElementById("filtroTurnoImpresoras");
@@ -782,7 +779,6 @@ async function calcMostrarComparativa() {
       if (filtroFecha) filtroFecha.value = hoy.toISOString().slice(0, 10);
       if (filtroCopiado) filtroCopiado.value = "salud";
       if (filtroTurno) filtroTurno.value = "TM";
-      // Mostrar automáticamente los registros del día actual, copiado salud, turno mañana
       if (filtroFecha && filtroCopiado && filtroTurno) {
         mostrarRegistrosImpresoras(filtroFecha.value, filtroCopiado.value, filtroTurno.value);
       }
@@ -810,7 +806,6 @@ function calcVolverDesdeComparativa() {
   setTimeout(() => {
     comparativaScreen.style.display = "none";
     comparativaScreen.classList.remove("animated-fadeOutDown", "animating");
-    // Oculta la card de impresoras siempre que salgas del panel de control
     if (cardImpresoras) cardImpresoras.style.display = "none";
     if (cameFromLogin) {
       document.getElementById("loginScreen").style.display = "flex";
@@ -2712,9 +2707,6 @@ async function consultarHistorico() {
 //   });
 // }
 
-// ...existing code...
-
-// Mostrar modal al hacer click en el botón
 document.getElementById("btnReportesSugerencias").onclick = function() {
   document.getElementById("modalReportesSugerencias").style.display = "flex";
   document.getElementById("reportNombre").value = "";
@@ -2722,12 +2714,10 @@ document.getElementById("btnReportesSugerencias").onclick = function() {
   document.getElementById("msgReporte").textContent = "";
 };
 
-// Cancelar modal
 document.getElementById("btnCancelarReporte").onclick = function() {
   document.getElementById("modalReportesSugerencias").style.display = "none";
 };
 
-// ...existing code...
 
 document.getElementById("btnAgregarReporte").onclick = async function() {
   const tipo = document.getElementById("reportTipo").value;
@@ -2747,10 +2737,9 @@ document.getElementById("btnAgregarReporte").onclick = async function() {
     descripcion,
     fecha: ahora.toLocaleDateString("es-ES"),
     hora: ahora.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }),
-    estado: "revision", // Por defecto
+    estado: "revision",
     timestamp: Date.now(),
   };
-  // Guardar en Firebase
   if (isFirebaseEnabled && database) {
     const mes = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, "0")}`;
     const ref = window.firebaseRef(database, `reportes/${mes}/${reporte.id}`);
@@ -2766,7 +2755,6 @@ document.getElementById("btnAgregarReporte").onclick = async function() {
 };
 
 
-// Cambiar estado de reporte
 async function actualizarEstadoReporte(id, estado) {
   const mes = document.getElementById("filtroMesReporte").value;
   const ref = window.firebaseRef(database, `reportes/${mes}/${id}`);
@@ -2779,7 +2767,6 @@ async function actualizarEstadoReporte(id, estado) {
   }
 }
 
-// Eliminar reporte
 async function eliminarReporte(id) {
   if (!confirm("¿Seguro que deseas eliminar este reporte/sugerencia?")) return;
   const mes = document.getElementById("filtroMesReporte").value;
@@ -2788,7 +2775,6 @@ async function eliminarReporte(id) {
   mostrarReportesPanelControl();
 }
 
-// Llama a mostrarReportesPanelControl() al cargar el panel de control, esperando Firebase
 document.addEventListener("DOMContentLoaded", () => {
   function intentarMostrarReportes() {
     if (document.getElementById("calcComparativaScreen") && window.firebaseInitialized) {
@@ -2800,20 +2786,7 @@ document.addEventListener("DOMContentLoaded", () => {
   intentarMostrarReportes();
 });
 
-// Mostrar reportes en el panel de control (tarjeta al final)
-// ...existing code...
-
-// ...existing code...
-
-// Mostrar reportes en el panel de control (tarjeta al final)
-// ...existing code...
-
-// ...existing code...
-
-// ...existing code...
-
 async function mostrarReportesPanelControl() {
-  // 1. Cargar meses disponibles primero
   let meses = [];
   if (isFirebaseEnabled && database) {
     const refMeses = window.firebaseRef(database, "reportes");
@@ -2822,14 +2795,12 @@ async function mostrarReportesPanelControl() {
       meses = Object.keys(snapMeses.val()).sort().reverse();
     }
   }
-  // Si no hay meses, usar el actual
   const ahora = new Date();
   const mesActual = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, "0")}`;
   if (!meses.includes(mesActual)) {
     meses.unshift(mesActual);
   }
 
-  // 2. Obtener el mes seleccionado en el filtro (si existe)
   let mesSeleccionado = mesActual;
   const filtroMes = document.getElementById("filtroMesReporte");
   if (filtroMes && filtroMes.value && meses.includes(filtroMes.value)) {
@@ -2838,7 +2809,6 @@ async function mostrarReportesPanelControl() {
     mesSeleccionado = meses[0];
   }
 
-  // 3. Cargar reportes del mes seleccionado
   let reportes = [];
   if (isFirebaseEnabled && database) {
     const ref = window.firebaseRef(database, `reportes/${mesSeleccionado}`);
@@ -2849,7 +2819,6 @@ async function mostrarReportesPanelControl() {
   }
   reportes.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 
-  // 4. Renderizar tarjeta y select de meses con todos los meses disponibles
   let container = document.getElementById("reportesPanelControl");
   if (!container) {
     container = document.createElement("div");
@@ -2875,7 +2844,6 @@ async function mostrarReportesPanelControl() {
     <div class="calc-card-content" id="reportesListaPanel"></div>
   `;
 
-  // 5. Mostrar reportes filtrados
   function renderReportes() {
     const estado = document.getElementById("filtroEstadoReporte").value;
     let filtrados = reportes;
@@ -2903,24 +2871,17 @@ async function mostrarReportesPanelControl() {
   }
   renderReportes();
 
-  // 6. Listeners para filtros
   document.getElementById("filtroEstadoReporte").onchange = renderReportes;
   document.getElementById("filtroMesReporte").onchange = async function() {
-    mostrarReportesPanelControl(); // Recarga la card con el nuevo mes seleccionado
+    mostrarReportesPanelControl();
   };
   document.getElementById("filtroEstadoReporte").value = "revision";
 }
 
-// ...existing code...
-
-// --- REGISTRO Y CONSULTA DE IMPRESORAS ---
-
-// Lista de impresoras disponibles (ajusta según tus equipos)
 const IMPRESORAS_TODAS = [
   "MAR", "LUME", "DOHKO", "MAURO", "MESSI", "MONI", "HEC", "B1", "B2", "B3"
 ];
 
-// --- Firebase Storage ---
 let storage = null;
 let storageRef = null;
 let uploadBytes = null;
@@ -2939,32 +2900,21 @@ if (typeof window.firebaseApp !== "undefined") {
   });
 }
 
-// Guardar registro de impresoras
 document.getElementById("btnGuardarRegistroImpresoras").onclick = async function() {
   const copiado = document.getElementById("registroCopiado").value;
   const turno = document.getElementById("registroTurno").value;
   const fecha = document.getElementById("registroFecha").value;
   const seleccionadas = Array.from(document.querySelectorAll(".impresora-checkbox:checked")).map(cb => cb.value);
 
-  //if (!copiado || !turno || !fecha || seleccionadas.length === 0) {
-    //alert("Completa todos los campos y selecciona al menos una impresora.");
-    //return;
-  //}
-
   if (!window.firebaseInitialized || !window.firebaseDatabase) {
     alert("Firebase no disponible.");
     return;
   }
 
-  // Armar datos
   const impresorasData = [];
     for (const nombre of seleccionadas) {
     const apertura = Number(document.getElementById(`apertura_${nombre}`).value);
     const cierre = Number(document.getElementById(`cierre_${nombre}`).value);
-    //if (isNaN(apertura) || isNaN(cierre)) {
-      //alert(`Verifica los valores de apertura/cierre para ${nombre}.`);
-      //return;
-    //}
     impresorasData.push({
       nombre,
       apertura,
@@ -2983,7 +2933,6 @@ document.getElementById("btnGuardarRegistroImpresoras").onclick = async function
   alert("Registro guardado correctamente.");
 };
 
-// --- Abrir modal de registro ---
 document.getElementById("btnRegistrarImpresoras").onclick = function() {
   document.getElementById("modalRegistroImpresoras").style.display = "flex";
   document.getElementById("registroFecha").value = new Date().toISOString().slice(0,10);
@@ -2991,12 +2940,10 @@ document.getElementById("btnRegistrarImpresoras").onclick = function() {
   renderImpresorasArchivos();
 };
 
-// Cerrar modal
 document.getElementById("btnCancelarRegistroImpresoras").onclick = function() {
   document.getElementById("modalRegistroImpresoras").style.display = "none";
 };
 
-// Renderiza los checkboxes de impresoras
 function renderImpresorasCheckbox() {
   const cont = document.getElementById("registroImpresorasLista");
   cont.innerHTML = IMPRESORAS_TODAS.map(nombre => `
@@ -3007,7 +2954,6 @@ function renderImpresorasCheckbox() {
   `).join("");
 }
 
-// Renderiza inputs numéricos para cada impresora seleccionada
 window.renderImpresorasArchivos = function() {
   const seleccionadas = Array.from(document.querySelectorAll(".impresora-checkbox:checked")).map(cb => cb.value);
   const cont = document.getElementById("registroImpresorasArchivos");
@@ -3025,7 +2971,6 @@ window.renderImpresorasArchivos = function() {
   `).join("");
 };
 
-// Calcula la diferencia automáticamente
 function calcularDiferenciaContador(nombre) {
   const apertura = Number(document.getElementById(`apertura_${nombre}`).value) || 0;
   const cierre = Number(document.getElementById(`cierre_${nombre}`).value) || 0;
@@ -3128,10 +3073,9 @@ document.getElementById("btnCerrarRegistroMesImpresoras").onclick = function() {
   document.getElementById("modalVerRegistroMesImpresoras").style.display = "none";
 };
 
-// ...existing code...
 async function cargarTablaRegistroMes() {
   const mes = document.getElementById("mesRegistroImpresoras").value;
-  const fechaFiltro = document.getElementById("fechaRegistroImpresoras").value; // <-- esto es YYYY-MM-DD
+  const fechaFiltro = document.getElementById("fechaRegistroImpresoras").value; 
   const copiado = document.getElementById("copiadoRegistroImpresoras").value;
   const turno = document.getElementById("turnoRegistroImpresoras").value;
   const tbody = document.querySelector("#tablaRegistroMesImpresoras tbody");
@@ -3144,7 +3088,7 @@ async function cargarTablaRegistroMes() {
     const data = snap.val();
     Object.keys(data).forEach(fecha => {
       if (!fecha.startsWith(mes)) return;
-      if (fechaFiltro && fecha !== fechaFiltro) return; // <-- filtra por fecha exacta
+      if (fechaFiltro && fecha !== fechaFiltro) return;
       Object.keys(data[fecha]).forEach(cop => {
         if (copiado !== "todos" && cop !== copiado) return;
         Object.keys(data[fecha][cop]).forEach(turn => {
@@ -3185,7 +3129,6 @@ async function cargarTablaRegistroMes() {
     </tr>
   `).join("");
 }
-// ...existing code...
 
 async function descargarPDFImpresora(maquina, fecha, copiado, turno, tipo, urlImagen) {
   const { jsPDF } = window.jspdf;
@@ -3219,12 +3162,8 @@ async function getImageDataUrl(url) {
   });
 }
 
-// ...existing code...
-
-// 1. Mostrar modal
 document.getElementById("btnReporteContadoresImpresoras").onclick = function() {
   document.getElementById("modalReporteContadoresImpresoras").style.display = "flex";
-  // Setear fechas por defecto (últimos 7 días)
   const hoy = new Date();
   const hace7 = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000);
   document.getElementById("reporteContadoresDesde").value = hace7.toISOString().slice(0,10);
@@ -3233,12 +3172,10 @@ document.getElementById("btnReporteContadoresImpresoras").onclick = function() {
   document.getElementById("btnExportarReporteContadoresPDF").style.display = "none";
 };
 
-// 2. Cerrar modal
 document.getElementById("btnCerrarReporteContadores").onclick = function() {
   document.getElementById("modalReporteContadoresImpresoras").style.display = "none";
 };
 
-// 3. Generar reporte
 document.getElementById("btnGenerarReporteContadores").onclick = async function() {
   const desde = document.getElementById("reporteContadoresDesde").value;
   const hasta = document.getElementById("reporteContadoresHasta").value;
@@ -3250,34 +3187,27 @@ document.getElementById("btnGenerarReporteContadores").onclick = async function(
   const datos = await obtenerDatosContadoresImpresoras(desde, hasta);
   renderizarTablaContadores(datos, desde, hasta);
   document.getElementById("btnExportarReporteContadoresPDF").style.display = "inline-block";
-  // Guardar datos para exportar
   window._datosContadoresParaPDF = { datos, desde, hasta };
 };
 
-// 4. Exportar PDF
 document.getElementById("btnExportarReporteContadoresPDF").onclick = function() {
   if (window._datosContadoresParaPDF) {
     exportarContadoresPDF(window._datosContadoresParaPDF.datos, window._datosContadoresParaPDF.desde, window._datosContadoresParaPDF.hasta);
   }
 };
 
-// --- Función para obtener los datos de Firebase ---
 async function obtenerDatosContadoresImpresoras(desde, hasta) {
-  // Convierte fechas a objetos Date
   const d1 = new Date(desde);
   const d2 = new Date(hasta);
-  // Recorrer días del rango
   let fechas = [];
   for (let d = new Date(d1); d <= d2; d.setDate(d.getDate() + 1)) {
     fechas.push(d.toISOString().slice(0,10));
   }
-  // Estructura: { copiado: { impresora: { marca, nombre, apertura, cierre, diferencia, color, bn } } }
   const copiados = ["ingenieria", "sociales", "salud", "becas_salud", "becas_ingenieria", "hec"];
   let resultado = {};
   for (const copiado of copiados) {
     resultado[copiado] = {};
   }
-  // Recorrer fechas y traer datos
   for (const fecha of fechas) {
     const ref = window.firebaseRef(window.firebaseDatabase, `registro_impresoras/${fecha}`);
     const snap = await window.firebaseGet(ref);
@@ -3300,7 +3230,6 @@ async function obtenerDatosContadoresImpresoras(desde, hasta) {
                 detalles: []
               };
             } else {
-              // Acumular diferencias y actualizar cierre si es mayor
               resultado[copiado][key].diferencia += (imp.cierre ?? 0) - (imp.apertura ?? 0);
               if (imp.cierre > resultado[copiado][key].cierre) resultado[copiado][key].cierre = imp.cierre;
               if (imp.apertura < resultado[copiado][key].apertura) resultado[copiado][key].apertura = imp.apertura;
@@ -3316,7 +3245,6 @@ async function obtenerDatosContadoresImpresoras(desde, hasta) {
   return resultado;
 }
 
-// --- Renderizar tabla ---
 function renderizarTablaContadores(datos, desde, hasta) {
   let html = `<div class="reporte-contadores-periodo"><b>Periodo:</b> ${formatearFecha(desde)} al ${formatearFecha(hasta)}</div>`;
   let totalGeneral = 0;
@@ -3369,7 +3297,6 @@ function renderizarTablaContadores(datos, desde, hasta) {
   document.getElementById("tablaReporteContadoresImpresoras").innerHTML = html;
 }
 
-// --- Exportar a PDF ---
 function exportarContadoresPDF(datos, desde, hasta) {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation: "landscape" });
@@ -3422,7 +3349,6 @@ function exportarContadoresPDF(datos, desde, hasta) {
   doc.save(`Reporte_Contadores_Impresoras_${desde}_a_${hasta}.pdf`);
 }
 
-// --- Utilidad para formatear fecha ---
 function formatearFecha(fecha) {
   if (!fecha) return "";
   const [y,m,d] = fecha.split("-");
@@ -3455,4 +3381,3 @@ document.getElementById("btnLimpiarRegistroMesImpresoras").onclick = async funct
     cargarTablaRegistroMes();
   }
 };
-// ...existing code...
