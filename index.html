@@ -61,12 +61,14 @@
 
     <div id="loginScreen" class="login-screen">
         <div class="login-container" style="position:relative;">
+            <button class="menu-hamburguesa-btn" id="btnMenuHamburguesa" style="position:absolute;top:18px;left:18px;z-index:20;">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="4" y1="7" x2="20" y2="7"/>
+                    <line x1="4" y1="12" x2="20" y2="12"/>
+                    <line x1="4" y1="17" x2="20" y2="17"/>
+                </svg>
+            </button>
             <div class="login-header" style="position:relative;">
-                <button id="btnRegistrarImpresoras"
-                    class="calc-btn calc-btn-primary btn-registrar-impresoras"
-                    style="position: absolute; top: 0; right: 0; z-index: 10; padding: 10px 22px; font-size: 1rem;">
-                    Registrar impresoras
-                </button>
                 <h1>Sistema de Fotocopiados UNAJ</h1>
                 <p>Selecciona tu fotocopiado e ingresa la contraseña</p>
             </div>
@@ -539,14 +541,6 @@
       </div>
     </div>
 
-    <div id="reportesSugerenciasFixed" style="position:fixed;top:18px;left:18px;z-index:9999;">
-      <button id="btnReportesSugerencias" class="calc-btn calc-btn-outline" title="Reportes y Sugerencias" style="padding:10px 14px;">
-        <svg xmlns="http://www.w3.org/2000/svg" style="width:24px;height:24px;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.77 9.77 0 01-4-.8l-4 1 1-4A8.96 8.96 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-        </svg>
-      </button>
-    </div>
-
     <div id="modalRegistroImpresoras" style="display:none;position:fixed;z-index:6000;top:0;left:0;width:100vw;height:100vh;background:rgba(30,41,59,0.45);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
       <div class="modal-registro-impresoras-content">
         <div class="registro-form-col">
@@ -667,6 +661,45 @@
       </div>
     </div>
 
+    <div id="menuLateralOverlay" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9999;background:rgba(30,41,59,0.22);backdrop-filter:blur(3px);"></div>
+    <div class="menu-lateral-panel" id="menuLateralPanel">
+        <div class="menu-lateral-content">
+            <button class="menu-lateral-cerrar" id="btnCerrarMenuLateral" title="Cerrar menú">&times;</button>
+            <h2 style="margin-bottom:18px;">Menú</h2>
+            <ul style="list-style:none;padding:0;margin:0;">
+                <li>
+                    <button id="btnRegistrarImpresoras" class="calc-btn calc-btn-primary" style="width:100%;margin-bottom:12px;">
+                        Registrar impresoras
+                    </button>
+                </li>
+                <li>
+                    <button id="btnReportesSugerencias" class="calc-btn calc-btn-outline" style="width:100%;margin-bottom:12px;">
+                        Reportes y Sugerencias
+                    </button>
+                </li>
+                <li>
+                    <button id="btnCambiarTemaLateral" class="calc-btn calc-btn-outline" style="width:100%;margin-bottom:12px;">
+                        Cambiar tema
+                    </button>
+                </li>
+            </ul>
+            <!-- Sección de información rápida -->
+            <div style="margin-top:32px;padding:18px 12px 8px 12px;border-top:1px solid var(--border-color);font-size:0.98rem;color:var(--text-secondary);">
+                <div style="font-weight:600;color:var(--text-heading);margin-bottom:6px;">Sistema de Fotocopiados UNAJ</div>
+                <div>Versión: <span style="font-weight:500;">v1.0.0</span></div>
+                <div>Autor: <a href="https://mauricioricotti.free.nf/?i=1" target="_blank" style="color:#3b82f6;text-decoration:none;">Mauricio Ricotti</a></div>
+                <div style="margin-top:8px;">
+                    <a href="https://wa.me/541141948773?text=Hola%20Mauricio%2C%20te%20contacto%20desde%20el%20Sistema%20de%20Fotocopiados%20UNAJ" style="color:#059669;text-decoration:none;" target="_blank">
+                        Contactar
+                    </a>
+                </div>
+                <div style="margin-top:10px;font-size:0.97rem;color:var(--text-secondary);">
+                    <span>Sistema creado por un estudiante de Ingeniería en Informática en la Universidad Nacional Arturo Jauretche.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <footer class="watermark-footer">
         <p>Web y software creados y diseñados por <a href="https://mauricioricotti.free.nf/?i=1" target="_blank" rel="noopener noreferrer">Mauricio Ricotti</a></p>
     </footer>
@@ -675,5 +708,46 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<!-- Modal contraseña admin -->
+<div id="modalPasswordAdminImpresoras" style="display:none;position:fixed;z-index:10001;top:0;left:0;width:100vw;height:100vh;background:rgba(30,41,59,0.45);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
+    <div style="background:var(--bg-card);padding:32px 24px;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.18);max-width:95vw;width:340px;text-align:center;">
+        <h2 style="margin-bottom:18px;font-size:1.2rem;color:var(--text-heading);">Contraseña de administrador</h2>
+        <input type="password" id="inputPasswordAdminImpresoras" class="calc-input" placeholder="Contraseña" style="margin-bottom:18px;">
+        <div style="display:flex;gap:10px;">
+            <button class="calc-btn calc-btn-primary" id="btnConfirmarPasswordAdminImpresoras">Ingresar</button>
+            <button class="calc-btn calc-btn-secondary" id="btnCancelarPasswordAdminImpresoras">Cancelar</button>
+        </div>
+        <div id="msgPasswordAdminImpresoras" style="color:#ef4444;margin-top:12px;font-size:0.98rem;"></div>
+    </div>
+</div>
+
+<!-- Modal ajustes impresoras -->
+<div id="modalAjustesImpresoras" style="display:none;position:fixed;z-index:10002;top:0;left:0;width:100vw;height:100vh;background:rgba(30,41,59,0.45);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
+    <div style="background:var(--bg-card);padding:32px 24px;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.18);max-width:95vw;width:380px;text-align:center;">
+        <h2 style="margin-bottom:18px;font-size:1.2rem;color:var(--text-heading);">Ajustes de impresoras</h2>
+        <div style="margin-bottom:14px;">
+            <label style="font-weight:600;">Nombre de la impresora:</label>
+            <input type="text" id="ajustesNombreImpresora" maxlength="60" class="calc-input" style="margin-top:6px;" placeholder="Nombre">
+        </div>
+        <div style="margin-bottom:14px;">
+            <label style="font-weight:600;">Marca:</label>
+            <input type="text" id="ajustesMarcaImpresora" maxlength="40" class="calc-input" style="margin-top:6px;" placeholder="Marca">
+        </div>
+        <div style="margin-bottom:14px;">
+            <label style="font-weight:600;">Tipo:</label>
+            <div style="display:flex;gap:12px;justify-content:center;">
+                <label><input type="checkbox" id="ajustesTipoByN"> Blanco y Negro</label>
+                <label><input type="checkbox" id="ajustesTipoColor"> Color</label>
+            </div>
+        </div>
+        <div style="margin-bottom:18px;">
+            <button class="calc-btn calc-btn-success" id="btnAgregarImpresora">Agregar impresora</button>
+            <button class="calc-btn calc-btn-danger" id="btnEliminarImpresora">Eliminar impresora</button>
+        </div>
+        <div id="listaImpresorasExistentes" style="margin-bottom:12px;text-align:left;"></div>
+        <button class="calc-btn calc-btn-secondary" id="btnCerrarAjustesImpresoras">Cerrar</button>
+    </div>
+</div>
 </body>
 </html>

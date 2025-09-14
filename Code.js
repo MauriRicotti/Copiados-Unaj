@@ -3425,3 +3425,150 @@ document.getElementById("btnLimpiarRegistroMesImpresoras").onclick = async funct
   }
 };
 
+// ...existing code...
+document.addEventListener("DOMContentLoaded", () => {
+  const btnMenu = document.getElementById("btnMenuHamburguesa");
+  const panel = document.getElementById("menuLateralPanel");
+  const btnCerrar = document.getElementById("btnCerrarMenuLateral");
+
+  if (btnMenu && panel && btnCerrar) {
+    btnMenu.onclick = function() {
+      panel.classList.add("abierto");
+      document.body.classList.add("overflow-hidden");
+    };
+    btnCerrar.onclick = function() {
+      panel.classList.remove("abierto");
+      document.body.classList.remove("overflow-hidden");
+    };
+    panel.onclick = function(e) {
+      if (e.target === panel) {
+        panel.classList.remove("abierto");
+        document.body.classList.remove("overflow-hidden");
+      }
+    };
+  }
+});
+
+// ...existing code...
+document.addEventListener("DOMContentLoaded", () => {
+  const btnMenu = document.getElementById("btnMenuHamburguesa");
+  const panel = document.getElementById("menuLateralPanel");
+  const btnCerrar = document.getElementById("btnCerrarMenuLateral");
+  const overlay = document.getElementById("menuLateralOverlay");
+  const btnCambiarTema = document.getElementById("btnCambiarTemaLateral");
+
+  function abrirMenuLateral() {
+    panel.classList.add("abierto");
+    document.body.classList.add("overflow-hidden");
+    if (btnMenu) btnMenu.classList.add("oculto");
+    if (overlay) overlay.style.display = "block";
+  }
+  
+  function cerrarMenuLateral() {
+    panel.classList.remove("abierto");
+    document.body.classList.remove("overflow-hidden");
+    if (overlay) overlay.style.display = "none";
+    if (btnMenu) {
+      setTimeout(() => {
+        btnMenu.classList.remove("oculto");
+        btnMenu.classList.add("fade-in");
+        setTimeout(() => {
+          btnMenu.classList.remove("fade-in");
+        }, 500);
+      }, 300);
+    }
+  }
+
+  if (btnMenu && panel && btnCerrar && overlay) {
+    btnMenu.onclick = abrirMenuLateral;
+    btnCerrar.onclick = cerrarMenuLateral;
+    overlay.onclick = cerrarMenuLateral;
+    panel.addEventListener("click", function(e) {
+      if (e.target === panel) cerrarMenuLateral();
+    });
+    document.addEventListener("keydown", function(e) {
+      if (panel.classList.contains("abierto") && e.key === "Escape") cerrarMenuLateral();
+    });
+    // Cierra al seleccionar cualquier botón del menú lateral
+    panel.querySelectorAll("button, a").forEach(el => {
+      el.onclick = function(e) {
+        cerrarMenuLateral();
+        if (el.id === "btnRegistrarImpresoras") {
+          document.getElementById("modalRegistroImpresoras").style.display = "flex";
+          document.getElementById("registroFecha").value = new Date().toISOString().slice(0,10);
+          renderImpresorasCheckbox();
+          renderImpresorasArchivos();
+        }
+        if (el.id === "btnReportesSugerencias") {
+          document.getElementById("modalReportesSugerencias").style.display = "flex";
+          document.getElementById("reportNombre").value = "";
+          document.getElementById("reportDescripcion").value = "";
+          document.getElementById("msgReporte").textContent = "";
+        }
+        if (el.id === "btnCambiarTemaLateral") {
+          calcToggleTheme();
+        }
+      };
+    });
+  }
+});
+
+
+function mostrarModalAnimado(modalId) {
+  const modal = document.getElementById(modalId);
+  if (!modal) return;
+  modal.style.display = "flex";
+  modal.classList.remove("animated-fadeOutDown", "animating");
+  modal.classList.add("animated-fadeInUp", "animating");
+  setTimeout(() => {
+    modal.classList.remove("animated-fadeInUp", "animating");
+  }, 500);
+}
+
+// ...existing code...
+
+function mostrarModalAnimado(modalId) {
+  const modal = document.getElementById(modalId);
+  if (!modal) return;
+  modal.style.display = "flex";
+  modal.classList.remove("animated-fadeOut", "animating");
+  modal.classList.add("animated-fadeIn", "animating");
+  setTimeout(() => {
+    modal.classList.remove("animated-fadeIn", "animating");
+  }, 400);
+}
+
+function ocultarModalAnimado(modalId) {
+  const modal = document.getElementById(modalId);
+  if (!modal || modal.style.display === "none") return;
+  modal.classList.remove("animated-fadeIn", "animating");
+  modal.classList.add("animated-fadeOut", "animating");
+  setTimeout(() => {
+    modal.style.display = "none";
+    modal.classList.remove("animated-fadeOut", "animating");
+  }, 300);
+}
+
+// MODAL REGISTRAR IMPRESORAS
+document.getElementById("btnRegistrarImpresoras").onclick = function() {
+  mostrarModalAnimado("modalRegistroImpresoras");
+  document.getElementById("registroFecha").value = new Date().toISOString().slice(0,10);
+  renderImpresorasCheckbox();
+  renderImpresorasArchivos();
+};
+document.getElementById("btnCancelarRegistroImpresoras").onclick = function() {
+  ocultarModalAnimado("modalRegistroImpresoras");
+};
+
+// MODAL REPORTES Y SUGERENCIAS
+document.getElementById("btnReportesSugerencias").onclick = function() {
+  mostrarModalAnimado("modalReportesSugerencias");
+  document.getElementById("reportNombre").value = "";
+  document.getElementById("reportDescripcion").value = "";
+  document.getElementById("msgReporte").textContent = "";
+};
+document.getElementById("btnCancelarReporte").onclick = function() {
+  ocultarModalAnimado("modalReportesSugerencias");
+};
+
+// ...existing code...

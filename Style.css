@@ -2814,41 +2814,195 @@ body.overflow-hidden {
 .menu-lateral-panel {
   position: fixed;
   top: 0; left: 0;
-  width: 0;
+  width: 320px;
+  max-width: 90vw;
   height: 100vh;
   background: var(--bg-card);
-  box-shadow: 2px 0 16px rgba(0,0,0,0.12);
+  box-shadow: 2px 0 24px rgba(30,41,59,0.18);
   z-index: 10000;
-  overflow-x: hidden;
-  transition: width 0.3s cubic-bezier(.4,0,.2,1);
-  border-right: 1.5px solid var(--border-color);
-}
-.menu-lateral-panel.abierto {
-  width: 320px;
-}
-.menu-lateral-content {
-  padding: 32px 24px;
-  height: 100%;
+  overflow-y: auto;
+  border-right: 2px solid var(--border-color);
+  transform: translateX(-100%);
+  transition: transform 0.3s cubic-bezier(.4,0,.2,1), box-shadow 0.3s;
   display: flex;
   flex-direction: column;
+  padding: 0;
 }
+
+.menu-lateral-panel.abierto {
+  transform: translateX(0);
+  box-shadow: 2px 0 32px rgba(30,41,59,0.22);
+}
+
+.menu-lateral-content {
+  padding: 28px 22px 18px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  height: 100%;
+}
+
 .menu-lateral-cerrar {
   background: transparent;
   border: none;
   font-size: 2rem;
   color: var(--text-secondary);
   position: absolute;
-  top: 18px; right: 18px;
+  top: 18px;
+  right: 18px;
   cursor: pointer;
+  transition: color 0.2s;
+  z-index: 2;
 }
-@media (max-width: 600px) {
-  .menu-lateral-panel.abierto {
-    width: 90vw;
-    min-width: 0;
-  }
-  .menu-lateral-content {
-    padding: 18px 10px;
-  }
+.menu-lateral-cerrar:hover {
+  color: #ef4444;
 }
 
-/* ...existing code... */
+.menu-lateral-content h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-heading);
+  margin-bottom: 24px;
+  margin-top: 0;
+}
+
+.menu-lateral-content ul {
+  margin-bottom: 18px;
+}
+
+.menu-lateral-content li {
+  margin-bottom: 10px;
+}
+
+.menu-lateral-content .calc-btn,
+.menu-lateral-content a {
+  width: 100%;
+  margin-bottom: 10px;
+  font-size: 1.08rem;
+  border-radius: 8px;
+}
+
+.menu-lateral-content .calc-btn-outline {
+  background: var(--bg-card-header);
+  color: var(--text-primary);
+  border: 2px solid var(--border-color);
+}
+
+.menu-lateral-content .calc-btn-outline:hover {
+  background: var(--hover-bg);
+  border-color: #3b82f6;
+}
+
+.menu-lateral-content .calc-btn-primary {
+  background: #3b82f6;
+  color: white;
+}
+
+.menu-lateral-content .calc-btn-primary:hover {
+  background: #2563eb;
+}
+
+.menu-lateral-content .info-rapida {
+  margin-top: 24px;
+  padding: 16px 0 0 0;
+  border-top: 1px solid var(--border-color);
+  font-size: 0.98rem;
+  color: var(--text-secondary);
+}
+
+.menu-lateral-content .info-rapida div {
+  margin-bottom: 6px;
+}
+
+.menu-lateral-content .info-rapida a {
+  color: #059669;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.menu-lateral-content .info-rapida a:hover {
+  text-decoration: underline;
+  color: #10b981;
+}
+
+.menu-lateral-content .info-rapida .autor-link {
+  color: #3b82f6;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.menu-lateral-content .info-rapida .autor-link:hover {
+  text-decoration: underline;
+  color: #2563eb;
+}
+
+.menu-lateral-panel::-webkit-scrollbar {
+  width: 8px;
+  background: var(--bg-card-header);
+}
+.menu-lateral-panel::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 8px;
+}
+
+.menu-hamburguesa-btn {
+  position: fixed !important;
+  top: 18px !important;
+  left: 18px !important;
+  z-index: 10001 !important;
+}
+
+.menu-hamburguesa-btn.oculto {
+  display: none !important;
+}
+
+.menu-hamburguesa-btn {
+  transition: opacity 0.3s cubic-bezier(.4,0,.2,1), visibility 0.3s;
+  opacity: 1;
+  visibility: visible;
+}
+
+.menu-hamburguesa-btn.oculto {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.menu-hamburguesa-btn {
+  transition: opacity 0.3s cubic-bezier(.4,0,.2,1), visibility 0.3s;
+  opacity: 1;
+  visibility: visible;
+}
+
+.menu-hamburguesa-btn.fade-in {
+  animation: fadeInBtn 0.5s cubic-bezier(.4,0,.2,1);
+  opacity: 1;
+  visibility: visible;
+}
+
+.menu-hamburguesa-btn.oculto {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+@keyframes fadeInBtn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.menu-hamburguesa-btn svg {
+  color: #1e293b;
+  transition: color 0.3s;
+}
+
+[data-theme="dark"] .menu-hamburguesa-btn svg {
+  color: #f1f5f9;
+}
+
+.animated-fadeIn {
+  animation: fadeIn 0.4s cubic-bezier(.4,0,.2,1);
+}
+.animated-fadeOut {
+  animation: fadeOut 0.3s cubic-bezier(.4,0,.2,1);
+}
