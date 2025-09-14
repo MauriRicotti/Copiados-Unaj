@@ -2052,7 +2052,7 @@ body.overflow-hidden {
 #panelRegistroImpresoras {
   max-width: 1200px;
   width: 100%;
-  margin: 24px auto 48px auto;
+  margin: 24px auto -24px auto;
   border-radius: 12px;
   border: 1px solid var(--border-color);
   box-shadow: 0 2px 4px var(--shadow);
@@ -2474,5 +2474,128 @@ body.overflow-hidden {
     padding-left: 0;
   }
 }
-/* ...existing code... */
-/* ...existing code... */
+#modalReporteContadoresImpresoras .reporte-contadores-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-bottom: 18px;
+  background: var(--bg-card-header);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+  font-size: 1.08rem;
+}
+
+#modalReporteContadoresImpresoras .reporte-contadores-table th,
+#modalReporteContadoresImpresoras .reporte-contadores-table td {
+  padding: 14px 18px;
+  text-align: center;
+  border-bottom: 1px solid var(--border-color);
+  background: transparent;
+  transition: background 0.18s;
+}
+
+#modalReporteContadoresImpresoras .reporte-contadores-table th {
+  background: #3b82f6;
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.08rem;
+}
+
+[data-theme="dark"] #modalReporteContadoresImpresoras .reporte-contadores-table th {
+  background: #1e40af;
+  color: #fff;
+}
+
+#modalReporteContadoresImpresoras .reporte-contadores-table tr:nth-child(even) td {
+  background: #f3f4f6;
+}
+
+[data-theme="dark"] #modalReporteContadoresImpresoras .reporte-contadores-table tr:nth-child(even) td {
+  background: #334155;
+}
+
+#modalReporteContadoresImpresoras .reporte-contadores-table tr:hover td {
+  background: #dbeafe;
+}
+
+[data-theme="dark"] #modalReporteContadoresImpresoras .reporte-contadores-table tr:hover td {
+  background: #1e293b;
+}
+
+#modalReporteContadoresImpresoras .reporte-contadores-total-row td {
+  background: #d1fae5 !important;
+  color: #059669 !important;
+  font-weight: 700;
+  font-size: 1.08rem;
+  border-top: 2px solid #10b981;
+}
+
+[data-theme="dark"] #modalReporteContadoresImpresoras .reporte-contadores-total-row td {
+  background: #134e4a !important;
+  color: #34d399 !important;
+}
+
+#modalReporteContadoresImpresoras .reporte-contadores-copiado-title {
+  margin-top: 28px;
+  margin-bottom: 8px;
+  font-size: 1.18rem;
+  font-weight: 700;
+  color: #2563eb;
+  letter-spacing: 0.5px;
+  text-align: left;
+}
+
+[data-theme="dark"] #modalReporteContadoresImpresoras .reporte-contadores-copiado-title {
+  color: #60a5fa;
+}
+
+#modalReporteContadoresImpresoras .reporte-contadores-total-general {
+  font-weight: 800;
+  font-size: 1.18rem;
+  margin-top: 18px;
+  color: #059669;
+  text-align: right;
+}
+
+[data-theme="dark"] #modalReporteContadoresImpresoras .reporte-contadores-total-general {
+  color: #34d399;
+}
+
+#modalReporteContadoresImpresoras .reporte-contadores-periodo {
+  margin-bottom: 18px;
+  font-size: 1.08rem;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 900px) {
+  #modalReporteContadoresImpresoras .reporte-contadores-table,
+  #modalReporteContadoresImpresoras .reporte-contadores-table th,
+  #modalReporteContadoresImpresoras .reporte-contadores-table td {
+    font-size: 0.98rem;
+    padding: 10px 6px;
+  }
+  #modalReporteContadoresImpresoras .reporte-contadores-copiado-title {
+    font-size: 1.05rem;
+    margin-top: 18px;
+  }
+  #modalReporteContadoresImpresoras .reporte-contadores-total-general {
+    font-size: 1.05rem;
+  }
+  #modalReporteContadoresImpresoras .reporte-contadores-periodo {
+    font-size: 0.98rem;
+  }
+  #modalReporteContadoresImpresoras .reporte-contadores-table {
+    display: block;
+    overflow-x: auto;
+    width: 100%;
+  }
+}
+
+@media (max-width: 1200px) {
+  #reportesPanelControl {
+    max-width: 98vw;
+    margin-left: 1vw;
+    margin-right: 1vw;
+  }
+}

@@ -3,7 +3,8 @@ const firebaseConfig = {
   authDomain: "fotocopiado-unaj.firebaseapp.com",
   databaseURL: "https://fotocopiado-unaj-default-rtdb.firebaseio.com/",
   projectId: "fotocopiado-unaj",
-  storageBucket: "fotocopiado-unaj.firebasestorage.app",
+  // storageBucket: "fotocopiado-unaj.firebasestorage.app",
+  storageBucket: "fotocopiado-unaj.appspot.com",
   messagingSenderId: "198572714385",
   appId: "1:198572714385:web:2ec73dfa4386daa47a5230",
   measurementId: "G-SNQ58PSQJ2",
@@ -757,7 +758,6 @@ async function calcRestablecerVentas() {
 }
 
 async function calcMostrarComparativa() {
-  document.body.classList.remove("no-scroll");
   const calculatorScreen = document.getElementById("calculatorScreen");
   const comparativaScreen = document.getElementById("calcComparativaScreen");
   calculatorScreen.classList.add("animated-fadeOutDown", "animating");
@@ -769,6 +769,24 @@ async function calcMostrarComparativa() {
     setTimeout(() => {
       comparativaScreen.classList.remove("animated-fadeInUp");
     }, 500);
+
+    // Mostrar la card de impresoras solo en el panel de control
+    const cardImpresoras = document.getElementById("panelRegistroImpresoras");
+    if (cardImpresoras) {
+      cardImpresoras.style.display = "block";
+      // Establecer la fecha predeterminada en el filtro de impresoras
+      const filtroFecha = document.getElementById("filtroFechaImpresoras");
+      const filtroCopiado = document.getElementById("filtroCopiadoImpresoras");
+      const filtroTurno = document.getElementById("filtroTurnoImpresoras");
+      const hoy = new Date();
+      if (filtroFecha) filtroFecha.value = hoy.toISOString().slice(0, 10);
+      if (filtroCopiado) filtroCopiado.value = "salud";
+      if (filtroTurno) filtroTurno.value = "TM";
+      // Mostrar automáticamente los registros del día actual, copiado salud, turno mañana
+      if (filtroFecha && filtroCopiado && filtroTurno) {
+        mostrarRegistrosImpresoras(filtroFecha.value, filtroCopiado.value, filtroTurno.value);
+      }
+    }
   }, 400);
 
   const themeTextComp = document.getElementById("themeTextComp")
@@ -787,10 +805,13 @@ async function calcMostrarComparativa() {
 function calcVolverDesdeComparativa() {
   const calculatorScreen = document.getElementById("calculatorScreen");
   const comparativaScreen = document.getElementById("calcComparativaScreen");
+  const cardImpresoras = document.getElementById("panelRegistroImpresoras");
   comparativaScreen.classList.add("animated-fadeOutDown", "animating");
   setTimeout(() => {
     comparativaScreen.style.display = "none";
     comparativaScreen.classList.remove("animated-fadeOutDown", "animating");
+    // Oculta la card de impresoras siempre que salgas del panel de control
+    if (cardImpresoras) cardImpresoras.style.display = "none";
     if (cameFromLogin) {
       document.getElementById("loginScreen").style.display = "flex";
       cameFromLogin = false;
@@ -1381,7 +1402,6 @@ function checkExistingSession() {
   showLoginScreen()
 }
 
-// ...existing code...
 function showLoginScreen() {
   const loginScreen = document.getElementById("loginScreen");
   const calculatorScreen = document.getElementById("calculatorScreen");
@@ -1394,14 +1414,6 @@ function showLoginScreen() {
   }, 500);
 
   document.getElementById("turnoSelectorFixed").style.display = "none";
-  ocultarPanelRegistroImpresoras();
-
-  // Evita el scroll en la pantalla de perfiles
-  document.body.classList.add("no-scroll");
-
-  // Oculta la card de estadísticas de impresoras
-  const cardEstadisticas = document.getElementById("cardEstadisticasImpresoras");
-  if (cardEstadisticas) cardEstadisticas.style.display = "none";
 }
 
 function showCalculatorScreen() {
@@ -1419,7 +1431,6 @@ function showCalculatorScreen() {
   }, 400);
 
   document.getElementById("turnoSelectorFixed").style.display = "flex";
-  document.body.classList.remove("no-scroll"); // Permite el scroll en el panel de control
 
   if (window.innerWidth <= 900) {
     const header = document.querySelector('.calc-header-text');
@@ -1429,22 +1440,22 @@ function showCalculatorScreen() {
     }
   }
 
-  const fotocopiado = calcInstitutos[currentFotocopiado];
-  document.getElementById("fotocopiadoTitle").textContent = fotocopiado.name;
-  document.getElementById("fotocopiadoSubtitle").textContent = fotocopiado.fullName;
+  const fotocopiado = calcInstitutos[currentFotocopiado]
+  document.getElementById("fotocopiadoTitle").textContent = fotocopiado.name
+  document.getElementById("fotocopiadoSubtitle").textContent = fotocopiado.fullName
 
-  showSyncNotification("Cargando datos más recientes del servidor...");
+  showSyncNotification("Cargando datos más recientes del servidor...")
 
   loadFromFirebase().then(() => {
     if (calcArchivos.length === 0) {
-      calcAgregarArchivo();
+      calcAgregarArchivo()
     }
-    calcActualizarTabla();
-    listenToFirebaseChanges();
+    calcActualizarTabla()
+    listenToFirebaseChanges()
     setTimeout(() => {
-      showSyncNotification("Datos actualizados correctamente");
-    }, 1000);
-  });
+      showSyncNotification("Datos actualizados correctamente")
+    }, 1000)
+  })
 }
 
 function selectFotocopiado(tipo) {
@@ -2902,989 +2913,546 @@ async function mostrarReportesPanelControl() {
 
 // ...existing code...
 
-// ...existing code...
+// --- REGISTRO Y CONSULTA DE IMPRESORAS ---
 
-
-function abrirModalRegistroImpresoras() {
-  document.getElementById("modalRegistroImpresoras").style.display = "flex";
-  const lista = document.getElementById("registroImpresorasLista");
-  lista.innerHTML = impresorasDisponibles.map(nombre =>
-    `<label style="display:flex;align-items:center;margin-bottom:6px;">
-      <input type="checkbox" value="${nombre}" onchange="actualizarInputsFotosImpresoras()">
-      <span style="margin-left:8px;">${nombre}</span>
-    </label>`
-  ).join("");
-  document.getElementById("registroFotosImpresoras").innerHTML = "";
-}
-
-function cerrarModalRegistroImpresoras() {
-  document.getElementById("modalRegistroImpresoras").style.display = "none";
-}
-
-function actualizarInputsFotosImpresoras() {
-  const seleccionadas = Array.from(document.querySelectorAll('#registroImpresorasLista input[type="checkbox"]:checked'))
-    .map(cb => cb.value);
-  const cont = document.getElementById("registroFotosImpresoras");
-  cont.innerHTML = seleccionadas.map(nombre => `
-    <div style="margin-bottom:14px;border-bottom:1px solid #eee;padding-bottom:10px;">
-      <b>${nombre}</b><br>
-      <label>Contador apertura:</label>
-      <input type="file" accept="image/*" multiple name="apertura_${nombre}"><br>
-      <label>Contador cierre:</label>
-      <input type="file" accept="image/*" multiple name="cierre_${nombre}">
-    </div>
-  `).join("");
-}
-
-// ...existing code...
-
-async function generarPDFRegistroImpresoras() {
-  const copiado = document.getElementById("registroCopiado").value;
-  const turno = document.getElementById("registroTurno").value;
-  const fecha = new Date().toLocaleDateString("es-AR");
-  const seleccionadas = Array.from(document.querySelectorAll('#registroImpresorasLista input[type="checkbox"]:checked')).map(cb => cb.value);
-
-  if (!copiado || !turno || seleccionadas.length === 0) {
-    document.getElementById("msgRegistroImpresoras").textContent = "Completa todos los campos y selecciona al menos una impresora.";
-    return;
-  }
-
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-  let y = 18;
-  doc.setFontSize(16);
-  doc.text(`Registro de Impresoras - ${copiado.toUpperCase()}`, 14, y);
-  y += 8;
-  doc.setFontSize(12);
-  doc.text(`Fecha: ${fecha}   Turno: ${turno === "TM" ? "Mañana" : "Tarde"}`, 14, y);
-  y += 10;
-
-  for (const nombre of seleccionadas) {
-    doc.setFontSize(13);
-    doc.text(`Impresora: ${nombre}`, 14, y);
-    y += 6;
-
-    // Apertura
-    const aperturaInput = document.querySelector(`input[name="apertura_${nombre}"]`);
-    if (aperturaInput && aperturaInput.files.length > 0) {
-      doc.setFontSize(11);
-      doc.text("Contador apertura:", 16, y);
-      y += 4;
-      for (const file of aperturaInput.files) {
-        const imgData = await fileToDataURL(file);
-        doc.addImage(imgData, "JPEG", 18, y, 60, 40);
-        y += 44;
-      }
-    }
-
-    // Cierre
-    const cierreInput = document.querySelector(`input[name="cierre_${nombre}"]`);
-    if (cierreInput && cierreInput.files.length > 0) {
-      doc.setFontSize(11);
-      doc.text("Contador cierre:", 16, y);
-      y += 4;
-      for (const file of cierreInput.files) {
-        const imgData = await fileToDataURL(file);
-        doc.addImage(imgData, "JPEG", 18, y, 60, 40);
-        y += 44;
-      }
-    }
-    y += 8;
-    if (y > 250) { doc.addPage(); y = 18; }
-  }
-
-  doc.save(`Contadores_${copiado}_${fecha.replace(/\//g, "-")}_${turno}.pdf`);
-  cerrarModalRegistroImpresoras();
-}
-
-function fileToDataURL(file) {
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onload = e => resolve(e.target.result);
-    reader.readAsDataURL(file);
-  });
-}
-
-const impresorasDisponibles = [
-  "MAR", "LUME", "DOHKO", "MAURO", "MESSI", "MONI", "VALEN",
-  "CRUCECITA", "NAHUEL", "LUPE", "FELIX", "MARI HEC", "DANY HEC"
+// Lista de impresoras disponibles (ajusta según tus equipos)
+const IMPRESORAS_TODAS = [
+  "MAR", "LUME", "DOHKO", "MAURO", "MESSI", "MONI", "HEC", "B1", "B2", "B3"
 ];
 
-function abrirModalRegistroImpresoras() {
-  document.getElementById("modalRegistroImpresoras").style.display = "flex";
-  const lista = document.getElementById("registroImpresorasLista");
-  lista.innerHTML = impresorasDisponibles.map(nombre =>
-    `<label style="display:flex;align-items:center;margin-bottom:6px;">
-      <input type="checkbox" value="${nombre}" onchange="actualizarInputsFotosImpresoras()">
-      <span style="margin-left:8px;">${nombre}</span>
-    </label>`
-  ).join("");
-  document.getElementById("registroFotosImpresoras").innerHTML = "";
-}
+// --- Firebase Storage ---
+let storage = null;
+let storageRef = null;
+let uploadBytes = null;
+let getDownloadURL = null;
 
-function cerrarModalRegistroImpresoras() {
-  document.getElementById("modalRegistroImpresoras").style.display = "none";
-}
-
-function actualizarInputsFotosImpresoras() {
-  const seleccionadas = Array.from(document.querySelectorAll('#registroImpresorasLista input[type="checkbox"]:checked'))
-    .map(cb => cb.value);
-  const cont = document.getElementById("registroFotosImpresoras");
-  cont.innerHTML = seleccionadas.map(nombre => `
-    <div style="margin-bottom:14px;border-bottom:1px solid #eee;padding-bottom:10px;">
-      <b>${nombre}</b><br>
-      <label>Contador apertura:</label>
-      <input type="file" accept="image/*" multiple name="apertura_${nombre}"><br>
-      <label>Contador cierre:</label>
-      <input type="file" accept="image/*" multiple name="cierre_${nombre}">
-    </div>
-  `).join("");
-}
-
-function fileToDataURL(file) {
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onload = e => resolve(e.target.result);
-    reader.readAsDataURL(file);
+if (typeof window.firebaseApp !== "undefined") {
+  import('https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js').then(mod => {
+    storage = mod.getStorage(window.firebaseApp);
+    storageRef = mod.ref;
+    uploadBytes = mod.uploadBytes;
+    getDownloadURL = mod.getDownloadURL;
+    window.firebaseStorage = storage;
+    window.firebaseStorageRef = storageRef;
+    window.firebaseUploadBytes = uploadBytes;
+    window.firebaseGetDownloadURL = getDownloadURL;
   });
 }
 
-// Guardar registro en LocalStorage
-
-// ...existing code...
-// ...existing code...
-async function guardarRegistroImpresoras() {
+// Guardar registro de impresoras
+document.getElementById("btnGuardarRegistroImpresoras").onclick = async function() {
   const copiado = document.getElementById("registroCopiado").value;
   const turno = document.getElementById("registroTurno").value;
-  const fecha = document.getElementById("registroFechaImpresoras").value || new Date().toISOString().slice(0, 10); // yyyy-mm-dd
-  const seleccionadas = Array.from(document.querySelectorAll('#registroImpresorasLista input[type="checkbox"]:checked')).map(cb => cb.value);
+  const fecha = document.getElementById("registroFecha").value;
+  const seleccionadas = Array.from(document.querySelectorAll(".impresora-checkbox:checked")).map(cb => cb.value);
 
-  if (!copiado || !turno || !fecha || seleccionadas.length === 0) {
-    document.getElementById("msgRegistroImpresoras").textContent = "Completa todos los campos y selecciona al menos una impresora.";
+  //if (!copiado || !turno || !fecha || seleccionadas.length === 0) {
+    //alert("Completa todos los campos y selecciona al menos una impresora.");
+    //return;
+  //}
+
+  if (!window.firebaseInitialized || !window.firebaseDatabase) {
+    alert("Firebase no disponible.");
     return;
   }
 
-  let registros = JSON.parse(localStorage.getItem("registrosImpresoras") || "{}");
-  if (!registros[fecha]) registros[fecha] = {};
-  if (!registros[fecha][copiado]) registros[fecha][copiado] = {};
-  if (!registros[fecha][copiado][turno]) registros[fecha][copiado][turno] = {};
-
-  for (const nombre of seleccionadas) {
-    const aperturaInput = document.querySelector(`input[name="apertura_${nombre}"]`);
-    const cierreInput = document.querySelector(`input[name="cierre_${nombre}"]`);
-    const aperturaImgs = aperturaInput && aperturaInput.files.length > 0
-      ? await Promise.all(Array.from(aperturaInput.files).map(fileToDataURL))
-      : [];
-    const cierreImgs = cierreInput && cierreInput.files.length > 0
-      ? await Promise.all(Array.from(cierreInput.files).map(fileToDataURL))
-      : [];
-    registros[fecha][copiado][turno][nombre] = {
-      apertura: aperturaImgs,
-      cierre: cierreImgs
-    };
+  // Armar datos
+  const impresorasData = [];
+    for (const nombre of seleccionadas) {
+    const apertura = Number(document.getElementById(`apertura_${nombre}`).value);
+    const cierre = Number(document.getElementById(`cierre_${nombre}`).value);
+    //if (isNaN(apertura) || isNaN(cierre)) {
+      //alert(`Verifica los valores de apertura/cierre para ${nombre}.`);
+      //return;
+    //}
+    impresorasData.push({
+      nombre,
+      apertura,
+      cierre,
+      diferencia: cierre - apertura,
+      copiado,
+      turno,
+      fecha
+    });
   }
 
-  localStorage.setItem("registrosImpresoras", JSON.stringify(registros));
-  cerrarModalRegistroImpresoras();
-  alert("Registro guardado correctamente.");
-}
-// ...existing code...
+  const ref = window.firebaseRef(window.firebaseDatabase, `registro_impresoras/${fecha}/${copiado}/${turno}`);
+  await window.firebaseSet(ref, impresorasData);
 
-// ...existing code...
-function mostrarRegistrosImpresoras() {
+  document.getElementById("modalRegistroImpresoras").style.display = "none";
+  alert("Registro guardado correctamente.");
+};
+
+// --- Abrir modal de registro ---
+document.getElementById("btnRegistrarImpresoras").onclick = function() {
+  document.getElementById("modalRegistroImpresoras").style.display = "flex";
+  document.getElementById("registroFecha").value = new Date().toISOString().slice(0,10);
+  renderImpresorasCheckbox();
+  renderImpresorasArchivos();
+};
+
+// Cerrar modal
+document.getElementById("btnCancelarRegistroImpresoras").onclick = function() {
+  document.getElementById("modalRegistroImpresoras").style.display = "none";
+};
+
+// Renderiza los checkboxes de impresoras
+function renderImpresorasCheckbox() {
+  const cont = document.getElementById("registroImpresorasLista");
+  cont.innerHTML = IMPRESORAS_TODAS.map(nombre => `
+    <label style="display:block;margin-bottom:6px;">
+      <input type="checkbox" class="impresora-checkbox" value="${nombre}" onchange="renderImpresorasArchivos()">
+      ${nombre}
+    </label>
+  `).join("");
+}
+
+// Renderiza inputs numéricos para cada impresora seleccionada
+window.renderImpresorasArchivos = function() {
+  const seleccionadas = Array.from(document.querySelectorAll(".impresora-checkbox:checked")).map(cb => cb.value);
+  const cont = document.getElementById("registroImpresorasArchivos");
+  if (seleccionadas.length === 0) {
+    cont.innerHTML = `<div style="color:var(--text-secondary);margin-top:18px;">Selecciona al menos una impresora.</div>`;
+    return;
+  }
+  cont.innerHTML = seleccionadas.map(nombre => `
+    <div style="margin-bottom:18px;padding:12px 8px;border:1px solid var(--border-color);border-radius:8px;">
+      <b>${nombre}</b><br>
+      Contador apertura: <input type="number" min="0" id="apertura_${nombre}" class="calc-input" style="margin-bottom:6px;width:120px;" oninput="calcularDiferenciaContador('${nombre}')"><br>
+      Contador cierre: <input type="number" min="0" id="cierre_${nombre}" class="calc-input" style="width:120px;" oninput="calcularDiferenciaContador('${nombre}')"><br>
+      Diferencia: <span id="diferencia_${nombre}" style="font-weight:600;color:#059669;">-</span>
+    </div>
+  `).join("");
+};
+
+// Calcula la diferencia automáticamente
+function calcularDiferenciaContador(nombre) {
+  const apertura = Number(document.getElementById(`apertura_${nombre}`).value) || 0;
+  const cierre = Number(document.getElementById(`cierre_${nombre}`).value) || 0;
+  const diferencia = (apertura > 0 || cierre > 0) ? (cierre - apertura) : "";
+  document.getElementById(`diferencia_${nombre}`).textContent = diferencia !== "" ? diferencia : "-";
+}
+
+
+
+document.getElementById("btnBuscarImpresoras").onclick = async function() {
   const fecha = document.getElementById("filtroFechaImpresoras").value;
   const copiado = document.getElementById("filtroCopiadoImpresoras").value;
   const turno = document.getElementById("filtroTurnoImpresoras").value;
-  const cont = document.getElementById("listaRegistrosImpresoras");
-  cont.innerHTML = "";
+  mostrarRegistrosImpresoras(fecha, copiado, turno);
+};
 
-  const registros = JSON.parse(localStorage.getItem("registrosImpresoras") || "{}");
-  const data = registros[fecha]?.[copiado]?.[turno] || {};
-  const impresoras = Object.keys(data);
-
-  if (!fecha || !copiado || !turno) {
-    cont.innerHTML = "<div style='color:#ef4444;'>Completa todos los campos.</div>";
+async function mostrarRegistrosImpresoras(fecha, copiado, turno) {
+  const cont = document.getElementById("listaRegistroImpresoras");
+  cont.innerHTML = "Cargando...";
+  if (!window.firebaseInitialized || !window.firebaseDatabase) {
+    cont.innerHTML = "Firebase no disponible.";
     return;
   }
-
-  if (impresoras.length === 0) {
-    cont.innerHTML = "<div style='color:#ef4444;'>No hay registros para esa fecha y copiado.</div>";
+  let registros = [];
+  if (fecha) {
+    const ref = window.firebaseRef(window.firebaseDatabase, `registro_impresoras/${fecha}`);
+    const snap = await window.firebaseGet(ref);
+    if (snap.exists()) {
+      const data = snap.val();
+      for (const cop in data) {
+        if (copiado !== "todos" && cop !== copiado) continue;
+        for (const tur in data[cop]) {
+          if (turno !== "todos" && tur !== turno) continue;
+          registros = registros.concat((data[cop][tur] || []).map(r => ({
+            ...r, copiado: cop, turno: tur, fecha
+          })));
+        }
+      }
+    }
+  } else {
+    const ref = window.firebaseRef(window.firebaseDatabase, `registro_impresoras`);
+    const snap = await window.firebaseGet(ref);
+    if (snap.exists()) {
+      const data = snap.val();
+      Object.keys(data).reverse().slice(0,10).forEach(f => {
+        for (const cop in data[f]) {
+          if (copiado !== "todos" && cop !== copiado) continue;
+          for (const tur in data[f][cop]) {
+            if (turno !== "todos" && tur !== turno) continue;
+            registros = registros.concat((data[f][cop][tur] || []).map(r => ({
+              ...r, copiado: cop, turno: tur, fecha: f
+            })));
+          }
+        }
+      });
+    }
+  }
+  if (registros.length === 0) {
+    cont.innerHTML = `<div style="color:var(--text-secondary);padding:18px;">No hay registros para los filtros seleccionados.</div>`;
     return;
   }
-
-  cont.innerHTML = impresoras.map(nombre => `
-    <div class="impresora-card">
-      <div class="impresora-nombre">${nombre}</div>
-      <div class="impresora-btns">
-        <button class="calc-btn calc-btn-outline" onclick="verPDFImpresora('${fecha}','${copiado}','${turno}','${nombre}')">Ver PDF</button>
+    cont.innerHTML = `<div class="impresoras-grid">
+    ${registros.map(r => `
+      <div class="impresora-card">
+        <div class="impresora-nombre">${r.nombre}</div>
+        <div><b>Copiado:</b> ${r.copiado}</div>
+        <div><b>Fecha:</b> ${r.fecha}</div>
+        <div><b>Turno:</b> ${r.turno === "TM" ? "Mañana" : "Tarde"}</div>
+        <div style="margin-top:8px;">
+          <b>Apertura:</b> ${r.apertura}
+          <br>
+          <b>Cierre:</b> ${r.cierre}
+          <br>
+          <b>Diferencia:</b> <span style="color:${r.diferencia < 0 ? '#dc2626' : '#059669'};font-weight:600;">${r.diferencia}</span>
+        </div>
       </div>
-    </div>
+    `).join("")}
+  </div>`;
+}
+
+document.getElementById("btnVerRegistroMesImpresoras").onclick = async function() {
+  document.getElementById("modalVerRegistroMesImpresoras").style.display = "flex";
+  const selMes = document.getElementById("mesRegistroImpresoras");
+  selMes.innerHTML = "";
+  if (!window.firebaseInitialized || !window.firebaseDatabase) return;
+  const ref = window.firebaseRef(window.firebaseDatabase, `registro_impresoras`);
+  const snap = await window.firebaseGet(ref);
+  if (snap.exists()) {
+    const meses = Object.keys(snap.val()).map(f => f.slice(0,7)).filter((v,i,a) => a.indexOf(v)===i);
+    selMes.innerHTML = meses.map(m => `<option value="${m}">${m}</option>`).join("");
+    if (meses.length > 0) selMes.value = meses[0];
+    cargarTablaRegistroMes();
+  }
+};
+document.getElementById("mesRegistroImpresoras").onchange = cargarTablaRegistroMes;
+document.getElementById("copiadoRegistroImpresoras").onchange = cargarTablaRegistroMes;
+document.getElementById("turnoRegistroImpresoras").onchange = cargarTablaRegistroMes;
+document.getElementById("fechaRegistroImpresoras").onchange = cargarTablaRegistroMes;
+document.getElementById("btnCerrarRegistroMesImpresoras").onclick = function() {
+  document.getElementById("modalVerRegistroMesImpresoras").style.display = "none";
+};
+
+// ...existing code...
+async function cargarTablaRegistroMes() {
+  const mes = document.getElementById("mesRegistroImpresoras").value;
+  const fechaFiltro = document.getElementById("fechaRegistroImpresoras").value; // <-- esto es YYYY-MM-DD
+  const copiado = document.getElementById("copiadoRegistroImpresoras").value;
+  const turno = document.getElementById("turnoRegistroImpresoras").value;
+  const tbody = document.querySelector("#tablaRegistroMesImpresoras tbody");
+  tbody.innerHTML = "<tr><td colspan='7'>Cargando...</td></tr>";
+  if (!window.firebaseInitialized || !window.firebaseDatabase) return;
+  const ref = window.firebaseRef(window.firebaseDatabase, `registro_impresoras`);
+  const snap = await window.firebaseGet(ref);
+  let filas = [];
+  if (snap.exists()) {
+    const data = snap.val();
+    Object.keys(data).forEach(fecha => {
+      if (!fecha.startsWith(mes)) return;
+      if (fechaFiltro && fecha !== fechaFiltro) return; // <-- filtra por fecha exacta
+      Object.keys(data[fecha]).forEach(cop => {
+        if (copiado !== "todos" && cop !== copiado) return;
+        Object.keys(data[fecha][cop]).forEach(turn => {
+          if (turno !== "todos" && turn !== turno) return;
+          const impresoras = data[fecha][cop][turn];
+          if (Array.isArray(impresoras)) {
+            impresoras.forEach(imp => {
+              filas.push({
+                fecha,
+                maquina: imp.nombre,
+                copiado: cop,
+                turno: turn,
+                apertura: imp.apertura ?? "-",
+                cierre: imp.cierre ?? "-",
+                diferencia: (typeof imp.apertura === "number" && typeof imp.cierre === "number")
+                  ? (imp.cierre - imp.apertura)
+                  : "-"
+              });
+            });
+          }
+        });
+      });
+    });
+  }
+  if (filas.length === 0) {
+    tbody.innerHTML = "<tr><td colspan='7'>No hay registros para este mes.</td></tr>";
+    return;
+  }
+  tbody.innerHTML = filas.map(r => `
+    <tr>
+      <td>${r.fecha}</td>
+      <td>${r.maquina}</td>
+      <td>${r.copiado}</td>
+      <td>${r.turno === "TM" ? "Mañana" : r.turno === "TT" ? "Tarde" : r.turno}</td>
+      <td>${r.apertura}</td>
+      <td>${r.cierre}</td>
+      <td style="font-weight:600;color:${r.diferencia < 0 ? '#dc2626' : '#059669'};">${r.diferencia}</td>
+    </tr>
   `).join("");
 }
 // ...existing code...
-// ...existing code...
 
-// Generar PDF de la impresora seleccionada
-async function verPDFImpresora(fecha, copiado, turno, nombre) {
-  const registros = JSON.parse(localStorage.getItem("registrosImpresoras") || "{}");
-  const data = registros[fecha]?.[copiado]?.[turno]?.[nombre];
-  if (!data) {
-    alert("No se encontraron imágenes para esta impresora.");
-    return;
-  }
-
+async function descargarPDFImpresora(maquina, fecha, copiado, turno, tipo, urlImagen) {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
-  let y = 18;
   doc.setFontSize(16);
-  doc.text(`Registro de Impresora - ${nombre}`, 14, y);
-  y += 8;
+  doc.text(`Registro de ${tipo === "apertura" ? "Apertura" : "Cierre"} - ${maquina}`, 14, 18);
   doc.setFontSize(12);
-  doc.text(`Fecha: ${fecha}   Copiado: ${copiado.toUpperCase()}   Turno: ${turno === "TM" ? "Mañana" : "Tarde"}`, 14, y);
-  y += 10;
+  doc.text(`Fecha: ${fecha}`, 14, 28);
+  doc.text(`Copiado: ${copiado}`, 14, 36);
+  doc.text(`Turno: ${turno === "TM" ? "Mañana" : "Tarde"}`, 14, 44);
 
-  // Apertura
-  if (data.apertura && data.apertura.length > 0) {
-    doc.setFontSize(13);
-    doc.text("Contador apertura:", 14, y);
-    y += 6;
-    for (const imgData of data.apertura) {
-      doc.addImage(imgData, "JPEG", 18, y, 60, 40);
-      y += 44;
-      if (y > 250) { doc.addPage(); y = 18; }
-    }
+  try {
+    const imgData = await getImageDataUrl(urlImagen);
+    doc.addImage(imgData, 'JPEG', 15, 55, 180, 120);
+  } catch (e) {
+    doc.text("No se pudo cargar la imagen.", 14, 60);
   }
 
-  // Cierre
-  if (data.cierre && data.cierre.length > 0) {
-    doc.setFontSize(13);
-    doc.text("Contador cierre:", 14, y);
-    y += 6;
-    for (const imgData of data.cierre) {
-      doc.addImage(imgData, "JPEG", 18, y, 60, 40);
-      y += 44;
-      if (y > 250) { doc.addPage(); y = 18; }
-    }
-  }
-
-  doc.save(`Contador_${nombre}_${fecha}_${copiado}_${turno}.pdf`);
+  doc.save(`Contador_${tipo}_${maquina}_${fecha}_${turno}.pdf`);
 }
 
-// ...existing code...
-
-function mostrarPanelRegistroImpresoras() {
-  const panel = document.getElementById("panelRegistroImpresoras");
-  if (panel) panel.style.display = "block";
-}
-function ocultarPanelRegistroImpresoras() {
-  const panel = document.getElementById("panelRegistroImpresoras");
-  if (panel) panel.style.display = "none";
-}
-
-// Mostrar/ocultar la card según la pantalla
-const oldCalcMostrarComparativa = calcMostrarComparativa;
-calcMostrarComparativa = async function() {
-  await oldCalcMostrarComparativa();
-  mostrarPanelRegistroImpresoras();
-};
-const oldCalcVolverDesdeComparativa = calcVolverDesdeComparativa;
-calcVolverDesdeComparativa = function() {
-  ocultarPanelRegistroImpresoras();
-  oldCalcVolverDesdeComparativa();
-};
-
-// Al cargar la página, oculta la card
-document.addEventListener("DOMContentLoaded", () => {
-  ocultarPanelRegistroImpresoras();
-});
-// ...existing code...
-
-function abrirModalRegistroImpresoras() {
-  document.getElementById("modalRegistroImpresoras").style.display = "flex";
-  const lista = document.getElementById("registroImpresorasLista");
-  lista.innerHTML = impresorasDisponibles.map(nombre =>
-    `<label style="display:flex;align-items:center;margin-bottom:6px;">
-      <input type="checkbox" value="${nombre}" onchange="actualizarInputsFotosImpresoras()">
-      <span style="margin-left:8px;">${nombre}</span>
-    </label>`
-  ).join("");
-  document.getElementById("registroFotosImpresoras").innerHTML = "";
-  // Setea la fecha de hoy por defecto
-  const hoy = new Date().toISOString().slice(0, 10);
-  document.getElementById("registroFechaImpresoras").value = hoy;
-}
-
-function abrirModalRegistroCompletoImpresoras() {
-  const modal = document.getElementById("modalRegistroCompletoImpresoras");
-  modal.style.display = "flex";
-  const select = document.getElementById("selectMesRegistroImpresoras");
-  select.innerHTML = "";
-  const registros = JSON.parse(localStorage.getItem("registrosImpresoras") || "{}");
-  const mesesSet = new Set();
-  Object.keys(registros).forEach(fecha => {
-    const [anio, mes] = fecha.split("-");
-    if (anio && mes) mesesSet.add(`${anio}-${mes}`);
-  });
-  const meses = Array.from(mesesSet).sort().reverse();
-  if (meses.length === 0) {
-    select.innerHTML = `<option value="">No hay meses disponibles</option>`;
-  } else {
-    select.innerHTML = meses.map(m => `<option value="${m}">${formatearMes(m)}</option>`).join("");
-    // Mostrar gráfico del mes seleccionado por defecto
-    mostrarGraficoUsoImpresoras(meses[0]);
-    select.value = meses[0];
-  }
-  select.onchange = function() {
-    mostrarGraficoUsoImpresoras(this.value);
-  };
-  document.getElementById("msgRegistroCompletoImpresoras").textContent = "";
-}
-// ...existing code...
-
-// ...existing code...
-function mostrarPanelRegistroImpresoras() {
-  const panel = document.getElementById("panelRegistroImpresoras");
-  if (panel) {
-    panel.style.display = "block";
-    // Mostrar gráfico del mes actual
-    const hoy = new Date();
-    const mesActual = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}`;
-    mostrarGraficoUsoImpresoras(mesActual);
-  }
-}
-// ...existing code...
-
-function cerrarModalRegistroCompletoImpresoras() {
-  document.getElementById("modalRegistroCompletoImpresoras").style.display = "none";
-}
-
-function formatearMes(mesStr) {
-  const [anio, mes] = mesStr.split("-");
-  const meses = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-  return `${meses[parseInt(mes,10)-1]} ${anio}`;
-}
-
-function exportarExcelRegistroCompletoImpresoras() {
-  const mes = document.getElementById("selectMesRegistroImpresoras").value;
-  const msg = document.getElementById("msgRegistroCompletoImpresoras");
-  if (!mes) {
-    msg.textContent = "Selecciona un mes.";
-    return;
-  }
-  const registros = JSON.parse(localStorage.getItem("registrosImpresoras") || "{}");
-  // Filtrar fechas del mes seleccionado
-  const filas = [];
-  Object.keys(registros).forEach(fecha => {
-    if (fecha.startsWith(mes)) {
-      Object.entries(registros[fecha]).forEach(([copiado, turnos]) => {
-        Object.entries(turnos).forEach(([turno, impresoras]) => {
-          Object.entries(impresoras).forEach(([nombre, data]) => {
-            filas.push([
-              fecha, // Fecha
-              nombre, // Máquina
-              copiado, // Copiado
-              turno, // Turno
-              (data.apertura?.length || 0) + " fotos apertura",
-              (data.cierre?.length || 0) + " fotos cierre"
-            ]);
-          });
-        });
-      });
-    }
-  });
-  if (filas.length === 0) {
-    msg.textContent = "No hay registros para ese mes.";
-    return;
-  }
-  // Encabezados como en la imagen
-  const datos = [
-    ["FECHA", "MAQUINA", "COPIADO", "TURNO", "APERTURA", "CIERRE"],
-    ...filas
-  ];
-  const ws = XLSX.utils.aoa_to_sheet(datos);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Registro Impresoras");
-  const nombreArchivo = `Registro_Impresoras_${mes}.xlsx`;
-  XLSX.writeFile(wb, nombreArchivo);
-  cerrarModalRegistroCompletoImpresoras();
-}
-// ...existing code...
-
-// ...existing code...
-let chartUsoImpresoras = null;
-
-function mostrarGraficoUsoImpresoras(mes = null) {
-  // Si no se pasa mes, usar el actual
-  if (!mes) {
-    const hoy = new Date();
-    mes = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}`;
-  }
-  const registros = JSON.parse(localStorage.getItem("registrosImpresoras") || "{}");
-  const conteo = {};
-  Object.keys(registros).forEach(fecha => {
-    if (fecha.startsWith(mes)) {
-      const dia = registros[fecha];
-      Object.values(dia).forEach(copiado => {
-        Object.values(copiado).forEach(turno => {
-          Object.keys(turno).forEach(nombre => {
-            conteo[nombre] = (conteo[nombre] || 0) + 1;
-          });
-        });
-      });
-    }
-  });
-  const impresoras = Object.keys(conteo);
-  const cantidades = impresoras.map(i => conteo[i]);
-
-  const ctx = document.getElementById("graficoUsoImpresoras").getContext("2d");
-  if (chartUsoImpresoras) chartUsoImpresoras.destroy();
-  chartUsoImpresoras = new window.Chart(ctx, {
-    type: "bar",
-    data: {
-      labels: impresoras,
-      datasets: [{
-        label: "Cantidad de usos en el mes",
-        data: cantidades,
-        backgroundColor: "rgba(59,130,246,0.7)",
-        borderColor: "rgba(59,130,246,1)",
-        borderWidth: 2,
-        borderRadius: 8,
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { display: false }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: { stepSize: 1 }
-        }
-      }
-    }
-  });
-}
-// ...existing code...
-
-// ...existing code...
-// let chartEstadisticasImpresoras = null;
-
-// ...existing code...
-function mostrarCardEstadisticasImpresoras() {
-  const card = document.getElementById("cardEstadisticasImpresoras");
-  card.style.display = "block";
-  cargarOpcionesMesEstadisticasImpresoras();
-
-  // Asignar el evento al botón después de mostrar la card
-  setTimeout(() => {
-    const btnExportar = document.getElementById("btnExportarGraficoImpresorasPDF");
-    if (btnExportar) {
-      btnExportar.onclick = function() {
-        const canvas = document.getElementById("graficoEstadisticasImpresoras");
-        const mes = document.getElementById("selectorMesEstadisticasImpresoras").value;
-        const nombreMes = formatearMes(mes);
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({
-          orientation: "landscape",
-          unit: "px",
-          format: [900, 400]
-        });
-        doc.setFontSize(18);
-        doc.text(`Estadísticas de uso de impresoras - ${nombreMes}`, 40, 40);
-        const imgData = canvas.toDataURL("image/png", 1.0);
-        doc.addImage(imgData, "PNG", 40, 60, 800, 280);
-        doc.save(`Estadisticas_Impresoras_${nombreMes}.pdf`);
-      };
-    }
-  }, 100); // Espera a que el DOM esté listo
-}
-// ...existing code...
-
-function cargarOpcionesMesEstadisticasImpresoras() {
-  const select = document.getElementById("selectorMesEstadisticasImpresoras");
-  select.innerHTML = "";
-  const registros = JSON.parse(localStorage.getItem("registrosImpresoras") || "{}");
-  const mesesSet = new Set();
-  Object.keys(registros).forEach(fecha => {
-    const [anio, mes] = fecha.split("-");
-    if (anio && mes) mesesSet.add(`${anio}-${mes}`);
-  });
-  const meses = Array.from(mesesSet).sort().reverse();
-  const hoy = new Date();
-  const mesActual = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}`;
-  if (meses.length === 0) {
-    select.innerHTML = `<option value="">No hay meses disponibles</option>`;
-  } else {
-    select.innerHTML = meses.map(m => `<option value="${m}">${formatearMes(m)}</option>`).join("");
-    select.value = meses.includes(mesActual) ? mesActual : meses[0];
-  }
-  select.onchange = function() {
-    mostrarGraficoEstadisticasImpresoras(this.value);
-  };
-  mostrarGraficoEstadisticasImpresoras(select.value);
-}
-
-function mostrarGraficoEstadisticasImpresoras(mes) {
-  const registros = JSON.parse(localStorage.getItem("registrosImpresoras") || "{}");
-  const conteo = {};
-  Object.keys(registros).forEach(fecha => {
-    if (fecha.startsWith(mes)) {
-      const dia = registros[fecha];
-      Object.values(dia).forEach(copiado => {
-        Object.values(copiado).forEach(turno => {
-          Object.keys(turno).forEach(nombre => {
-            conteo[nombre] = (conteo[nombre] || 0) + 1;
-          });
-        });
-      });
-    }
-  });
-  const impresoras = Object.keys(conteo);
-  const cantidades = impresoras.map(i => conteo[i]);
-  const ctx = document.getElementById("graficoEstadisticasImpresoras").getContext("2d");
-  if (chartEstadisticasImpresoras) chartEstadisticasImpresoras.destroy();
-  chartEstadisticasImpresoras = new window.Chart(ctx, {
-    type: "bar",
-    data: {
-      labels: impresoras,
-      datasets: [{
-        label: "Cantidad de usos en el mes",
-        data: cantidades,
-        backgroundColor: "rgba(59,130,246,0.7)",
-        borderColor: "rgba(59,130,246,1)",
-        borderWidth: 2,
-        borderRadius: 8,
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { display: false }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: { stepSize: 1 }
-        }
-      }
-    }
-  });
-}
-
-// Mostrar ambas cards al abrir el panel de control
-function mostrarPanelRegistroImpresoras() {
-  const panel = document.getElementById("panelRegistroImpresoras");
-  if (panel) panel.style.display = "block";
-  mostrarCardEstadisticasImpresoras();
-}
-// ...existing code...
-
-// ...existing code...
-document.getElementById("btnExportarGraficoImpresorasPDF").onclick = function() {
-  const canvas = document.getElementById("graficoEstadisticasImpresoras");
-  const mes = document.getElementById("selectorMesEstadisticasImpresoras").value;
-  const nombreMes = formatearMes(mes);
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({
-    orientation: "landscape",
-    unit: "px",
-    format: [900, 400]
-  });
-  doc.setFontSize(18);
-  doc.text(`Estadísticas de uso de impresoras - ${nombreMes}`, 40, 40);
-  const imgData = canvas.toDataURL("image/png", 1.0);
-  doc.addImage(imgData, "PNG", 40, 60, 800, 280);
-  doc.save(`Estadisticas_Impresoras_${nombreMes}.pdf`);
-};
-// ...existing code...
-
-// ...existing code...
-document.addEventListener("DOMContentLoaded", () => {
-  const btnExportar = document.getElementById("btnExportarGraficoImpresorasPDF");
-  if (btnExportar) {
-    btnExportar.onclick = function() {
-      const canvas = document.getElementById("graficoEstadisticasImpresoras");
-      if (!canvas) {
-        alert("No se encontró el gráfico para exportar.");
-        return;
-      }
-      const mes = document.getElementById("selectorMesEstadisticasImpresoras").value;
-      const nombreMes = formatearMes(mes);
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({
-        orientation: "landscape",
-        unit: "px",
-        format: [900, 400]
-      });
-      doc.setFontSize(18);
-      doc.text(`Estadísticas de uso de impresoras - ${nombreMes}`, 40, 40);
-      const imgData = canvas.toDataURL("image/png", 1.0);
-      doc.addImage(imgData, "PNG", 40, 60, 800, 280);
-      doc.save(`Estadisticas_Impresoras_${nombreMes}.pdf`);
+async function getImageDataUrl(url) {
+  const response = await fetch(url);
+  const blob = await response.blob();
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onloadend = function() {
+      resolve(reader.result);
     };
-  }
-});
+    reader.readAsDataURL(blob);
+  });
+}
+
 // ...existing code...
 
-// ...existing code...
+// 1. Mostrar modal
+document.getElementById("btnReporteContadoresImpresoras").onclick = function() {
+  document.getElementById("modalReporteContadoresImpresoras").style.display = "flex";
+  // Setear fechas por defecto (últimos 7 días)
+  const hoy = new Date();
+  const hace7 = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000);
+  document.getElementById("reporteContadoresDesde").value = hace7.toISOString().slice(0,10);
+  document.getElementById("reporteContadoresHasta").value = hoy.toISOString().slice(0,10);
+  document.getElementById("tablaReporteContadoresImpresoras").innerHTML = "";
+  document.getElementById("btnExportarReporteContadoresPDF").style.display = "none";
+};
 
-function abrirModalVerRegistroMesImpresoras() {
-  const modal = document.getElementById("modalVerRegistroMesImpresoras");
-  modal.style.display = "flex";
-  const select = document.getElementById("selectMesVerRegistroImpresoras");
-  select.innerHTML = "";
-  const registros = JSON.parse(localStorage.getItem("registrosImpresoras") || "{}");
-  const mesesSet = new Set();
-  Object.keys(registros).forEach(fecha => {
-    const [anio, mes] = fecha.split("-");
-    if (anio && mes) mesesSet.add(`${anio}-${mes}`);
-  });
-  const meses = Array.from(mesesSet).sort().reverse();
-  if (meses.length === 0) {
-    select.innerHTML = `<option value="">No hay meses disponibles</option>`;
-    document.getElementById("tablaVerRegistroMesImpresoras").innerHTML = "<div style='padding:24px;text-align:center;'>No hay registros disponibles.</div>";
+// 2. Cerrar modal
+document.getElementById("btnCerrarReporteContadores").onclick = function() {
+  document.getElementById("modalReporteContadoresImpresoras").style.display = "none";
+};
+
+// 3. Generar reporte
+document.getElementById("btnGenerarReporteContadores").onclick = async function() {
+  const desde = document.getElementById("reporteContadoresDesde").value;
+  const hasta = document.getElementById("reporteContadoresHasta").value;
+  if (!desde || !hasta) {
+    alert("Selecciona ambas fechas.");
     return;
   }
-  select.innerHTML = meses.map(m => `<option value="${m}">${formatearMes(m)}</option>`).join("");
-  select.onchange = function() {
-    mostrarTablaRegistroMesImpresoras(select.value);
-  };
-  mostrarTablaRegistroMesImpresoras(select.value || meses[0]);
-  document.getElementById("msgVerRegistroMesImpresoras").textContent = "";
-}
+  document.getElementById("tablaReporteContadoresImpresoras").innerHTML = "Cargando...";
+  const datos = await obtenerDatosContadoresImpresoras(desde, hasta);
+  renderizarTablaContadores(datos, desde, hasta);
+  document.getElementById("btnExportarReporteContadoresPDF").style.display = "inline-block";
+  // Guardar datos para exportar
+  window._datosContadoresParaPDF = { datos, desde, hasta };
+};
 
-function cerrarModalVerRegistroMesImpresoras() {
-  document.getElementById("modalVerRegistroMesImpresoras").style.display = "none";
-}
-
-function mostrarTablaRegistroMesImpresoras(mes) {
-  const registros = JSON.parse(localStorage.getItem("registrosImpresoras") || "{}");
-  const filas = [];
-  Object.keys(registros).forEach(fecha => {
-    if (!fecha.startsWith(mes)) return;
-    const porCopiado = registros[fecha];
-    Object.keys(porCopiado).forEach(copiado => {
-      Object.keys(porCopiado[copiado]).forEach(turno => {
-        const porImpresora = porCopiado[copiado][turno];
-        Object.keys(porImpresora).forEach(nombre => {
-          const data = porImpresora[nombre];
-          // Si hay imágenes, muestra botón, si no, muestra "-"
-          const aperturaBtn = (data.apertura && data.apertura.length > 0)
-            ? `<button class="calc-btn calc-btn-outline" style="padding:2px 10px;font-size:0.95rem;" onclick="verPDFImpresora('${fecha}','${copiado}','${turno}','${nombre}','apertura')">Foto</button>`
-            : "-";
-          const cierreBtn = (data.cierre && data.cierre.length > 0)
-            ? `<button class="calc-btn calc-btn-outline" style="padding:2px 10px;font-size:0.95rem;" onclick="verPDFImpresora('${fecha}','${copiado}','${turno}','${nombre}','cierre')">Foto</button>`
-            : "-";
-          filas.push([
-            fecha,
-            nombre,
-            copiado,
-            turno === "TM" ? "Mañana" : "Tarde",
-            aperturaBtn,
-            cierreBtn
-          ]);
-        });
-      });
-    });
-  });
-  if (filas.length === 0) {
-    document.getElementById("tablaVerRegistroMesImpresoras").innerHTML = "<div style='padding:24px;text-align:center;'>No hay registros para este mes.</div>";
-    return;
+// 4. Exportar PDF
+document.getElementById("btnExportarReporteContadoresPDF").onclick = function() {
+  if (window._datosContadoresParaPDF) {
+    exportarContadoresPDF(window._datosContadoresParaPDF.datos, window._datosContadoresParaPDF.desde, window._datosContadoresParaPDF.hasta);
   }
-  // Renderizar tabla
-  let tabla = `<table style="width:100%;border-collapse:collapse;background:var(--bg-card-header);border-radius:8px;overflow:hidden;">
-    <thead>
-      <tr>
-        <th>FECHA</th>
-        <th>MAQUINA</th>
-        <th>COPIADO</th>
-        <th>TURNO</th>
-        <th>APERTURA</th>
-        <th>CIERRE</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${filas.map(fila => `<tr>
-        <td>${fila[0]}</td>
-        <td>${fila[1]}</td>
-        <td>${fila[2]}</td>
-        <td>${fila[3]}</td>
-        <td>${fila[4]}</td>
-        <td>${fila[5]}</td>
-      </tr>`).join("")}
-    </tbody>
-  </table>`;
-  document.getElementById("tablaVerRegistroMesImpresoras").innerHTML = tabla;
+};
+
+// --- Función para obtener los datos de Firebase ---
+async function obtenerDatosContadoresImpresoras(desde, hasta) {
+  // Convierte fechas a objetos Date
+  const d1 = new Date(desde);
+  const d2 = new Date(hasta);
+  // Recorrer días del rango
+  let fechas = [];
+  for (let d = new Date(d1); d <= d2; d.setDate(d.getDate() + 1)) {
+    fechas.push(d.toISOString().slice(0,10));
+  }
+  // Estructura: { copiado: { impresora: { marca, nombre, apertura, cierre, diferencia, color, bn } } }
+  const copiados = ["ingenieria", "sociales", "salud", "becas_salud", "becas_ingenieria", "hec"];
+  let resultado = {};
+  for (const copiado of copiados) {
+    resultado[copiado] = {};
+  }
+  // Recorrer fechas y traer datos
+  for (const fecha of fechas) {
+    const ref = window.firebaseRef(window.firebaseDatabase, `registro_impresoras/${fecha}`);
+    const snap = await window.firebaseGet(ref);
+    if (snap.exists()) {
+      const porCopiado = snap.val();
+      for (const copiado in porCopiado) {
+        for (const turno in porCopiado[copiado]) {
+          const lista = porCopiado[copiado][turno];
+          for (const imp of lista) {
+            const key = imp.nombre || imp.maquina || imp.marca || "Desconocida";
+            if (!resultado[copiado][key]) {
+              resultado[copiado][key] = {
+                marca: imp.marca || "",
+                nombre: imp.nombre || key,
+                apertura: imp.apertura,
+                cierre: imp.cierre,
+                diferencia: (imp.cierre ?? 0) - (imp.apertura ?? 0),
+                color: /color/i.test((imp.nombre||"")) || /color/i.test((imp.marca||"")) ? true : false,
+                bn: !(/color/i.test((imp.nombre||"")) || /color/i.test((imp.marca||""))),
+                detalles: []
+              };
+            } else {
+              // Acumular diferencias y actualizar cierre si es mayor
+              resultado[copiado][key].diferencia += (imp.cierre ?? 0) - (imp.apertura ?? 0);
+              if (imp.cierre > resultado[copiado][key].cierre) resultado[copiado][key].cierre = imp.cierre;
+              if (imp.apertura < resultado[copiado][key].apertura) resultado[copiado][key].apertura = imp.apertura;
+            }
+            resultado[copiado][key].detalles.push({
+              fecha, turno, apertura: imp.apertura, cierre: imp.cierre
+            });
+          }
+        }
+      }
+    }
+  }
+  return resultado;
 }
 
-// Modifica la función verPDFImpresora para aceptar el tipo (apertura/cierre)
-async function verPDFImpresora(fecha, copiado, turno, nombre, tipo = null) {
-  const registros = JSON.parse(localStorage.getItem("registrosImpresoras") || "{}");
-  const data = registros[fecha]?.[copiado]?.[turno]?.[nombre];
-  if (!data) {
-    alert("No se encontraron imágenes para esta impresora.");
-    return;
-  }
+// --- Renderizar tabla ---
+function renderizarTablaContadores(datos, desde, hasta) {
+  let html = `<div class="reporte-contadores-periodo"><b>Periodo:</b> ${formatearFecha(desde)} al ${formatearFecha(hasta)}</div>`;
+  let totalGeneral = 0;
+  const precioBN = 40, precioColor = 115;
 
+  for (const copiado in datos) {
+    const impresoras = datos[copiado];
+    if (Object.keys(impresoras).length === 0) continue;
+
+    html += `<div class="reporte-contadores-copiado-title" style="margin-top:32px;margin-bottom:8px;">${copiado.charAt(0).toUpperCase() + copiado.slice(1).replace("_"," ")}</div>`;
+    html += `<div style="overflow-x:auto;"><table class="reporte-contadores-table" style="width:100%;border-collapse:separate;border-spacing:0;background:var(--bg-card-header);border-radius:12px;box-shadow:0 2px 16px rgba(0,0,0,0.08);margin-bottom:18px;">
+      <thead>
+        <tr>
+          <th style="background:#3b82f6;color:#fff;font-weight:700;font-size:1.08rem;">Marca</th>
+          <th style="background:#3b82f6;color:#fff;font-weight:700;font-size:1.08rem;">Nombre</th>
+          <th style="background:#3b82f6;color:#fff;font-weight:700;font-size:1.08rem;">Contador inicial</th>
+          <th style="background:#3b82f6;color:#fff;font-weight:700;font-size:1.08rem;">Contador final</th>
+          <th style="background:#3b82f6;color:#fff;font-weight:700;font-size:1.08rem;">Contadores totales</th>
+          <th style="background:#3b82f6;color:#fff;font-weight:700;font-size:1.08rem;">Precio</th>
+          <th style="background:#3b82f6;color:#fff;font-weight:700;font-size:1.08rem;">Precio final</th>
+        </tr>
+      </thead>
+      <tbody>`;
+    let subtotal = 0;
+    let rowIndex = 0;
+    for (const key in impresoras) {
+      const imp = impresoras[key];
+      const precio = imp.color ? precioColor : precioBN;
+      const precioFinal = imp.diferencia * precio;
+      subtotal += precioFinal;
+      html += `<tr${rowIndex % 2 === 1 ? ' style="background:#f3f4f6;"' : ''}>
+        <td>${imp.marca || "-"}</td>
+        <td>${imp.nombre || key}</td>
+        <td>${imp.apertura ?? "-"}</td>
+        <td>${imp.cierre ?? "-"}</td>
+        <td>${imp.diferencia}</td>
+        <td>$${precio}</td>
+        <td>$${precioFinal.toLocaleString("es-AR")}</td>
+      </tr>`;
+      rowIndex++;
+    }
+    html += `<tr class="reporte-contadores-total-row">
+      <td colspan="6" style="text-align:right;background:#d1fae5;color:#059669;font-weight:700;">Total ${copiado}:</td>
+      <td style="background:#d1fae5;color:#059669;font-weight:700;">$${subtotal.toLocaleString("es-AR")}</td>
+    </tr>`;
+    html += `</tbody></table></div>`;
+    totalGeneral += subtotal;
+  }
+  html += `<div class="reporte-contadores-total-general" style="font-weight:800;font-size:1.18rem;margin-top:18px;color:#059669;text-align:right;">Total general a pagar: $${totalGeneral.toLocaleString("es-AR")}</div>`;
+  document.getElementById("tablaReporteContadoresImpresoras").innerHTML = html;
+}
+
+// --- Exportar a PDF ---
+function exportarContadoresPDF(datos, desde, hasta) {
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-  let y = 18;
+  const doc = new jsPDF({ orientation: "landscape" });
+  let y = 14;
   doc.setFontSize(16);
-  doc.text(`Registro de Impresora - ${nombre}`, 14, y);
+  doc.text(`Reporte de contadores de impresoras`, 14, y);
   y += 8;
   doc.setFontSize(12);
-  doc.text(`Fecha: ${fecha}   Copiado: ${copiado.toUpperCase()}   Turno: ${turno === "TM" ? "Mañana" : "Tarde"}`, 14, y);
-  y += 10;
-
-  // Solo muestra apertura/cierre según el tipo
-  if (!tipo || tipo === "apertura") {
-    if (data.apertura && data.apertura.length > 0) {
-      doc.setFontSize(13);
-      doc.text("Contador apertura:", 14, y);
-      y += 6;
-      for (const imgData of data.apertura) {
-        doc.addImage(imgData, "JPEG", 14, y, 60, 40);
-        y += 44;
-        if (y > 250) {
-          doc.addPage();
-          y = 18;
-        }
-      }
+  doc.text(`Periodo: ${formatearFecha(desde)} al ${formatearFecha(hasta)}`, 14, y);
+  y += 8;
+  const precioBN = 40, precioColor = 115;
+  let totalGeneral = 0;
+  for (const copiado in datos) {
+    const impresoras = datos[copiado];
+    if (Object.keys(impresoras).length === 0) continue;
+    y += 10;
+    doc.setFontSize(13);
+    doc.text(`${copiado.charAt(0).toUpperCase() + copiado.slice(1).replace("_"," ")}`, 14, y);
+    y += 4;
+    const rows = [];
+    let subtotal = 0;
+    for (const key in impresoras) {
+      const imp = impresoras[key];
+      const precio = imp.color ? precioColor : precioBN;
+      const precioFinal = imp.diferencia * precio;
+      subtotal += precioFinal;
+      rows.push([
+        imp.marca || "-", imp.nombre || key, imp.apertura ?? "-", imp.cierre ?? "-", imp.diferencia, `$${precio}`, `$${precioFinal.toLocaleString("es-AR")}`
+      ]);
     }
-  }
-  if (!tipo || tipo === "cierre") {
-    if (data.cierre && data.cierre.length > 0) {
-      doc.setFontSize(13);
-      doc.text("Contador cierre:", 14, y);
-      y += 6;
-      for (const imgData of data.cierre) {
-        doc.addImage(imgData, "JPEG", 14, y, 60, 40);
-        y += 44;
-        if (y > 250) {
-          doc.addPage();
-          y = 18;
-        }
-      }
-    }
-  }
-
-  doc.save(`Contador_${nombre}_${fecha}_${copiado}_${turno}_${tipo || "completo"}.pdf`);
-}
-
-
-// ...existing code...
-
-function abrirModalVerRegistroMesImpresoras() {
-  const modal = document.getElementById("modalVerRegistroMesImpresoras");
-  modal.style.display = "flex";
-  document.body.classList.add("overflow-hidden"); // Bloquear scroll fondo
-  const select = document.getElementById("selectMesVerRegistroImpresoras");
-  select.innerHTML = "";
-  const registros = JSON.parse(localStorage.getItem("registrosImpresoras") || "{}");
-  const mesesSet = new Set();
-  Object.keys(registros).forEach(fecha => {
-    const [anio, mes] = fecha.split("-");
-    if (anio && mes) mesesSet.add(`${anio}-${mes}`);
-  });
-  const meses = Array.from(mesesSet).sort().reverse();
-  if (meses.length === 0) return;
-  select.innerHTML = meses.map(m => `<option value="${m}">${formatearMes(m)}</option>`).join("");
-  // Filtros
-  document.getElementById("filtroCopiadoRegistroMes").onchange = function() {
-    mostrarTablaRegistroMesImpresoras(select.value);
-  };
-  document.getElementById("filtroTurnoRegistroMes").onchange = function() {
-    mostrarTablaRegistroMesImpresoras(select.value);
-  };
-  select.onchange = function() {
-    mostrarTablaRegistroMesImpresoras(select.value);
-  };
-  mostrarTablaRegistroMesImpresoras(select.value || meses[0]);
-  document.getElementById("msgVerRegistroMesImpresoras").textContent = "";
-}
-
-function cerrarModalVerRegistroMesImpresoras() {
-  document.getElementById("modalVerRegistroMesImpresoras").style.display = "none";
-  document.body.classList.remove("overflow-hidden"); // Desbloquear scroll fondo
-}
-
-function mostrarTablaRegistroMesImpresoras(mes) {
-  const registros = JSON.parse(localStorage.getItem("registrosImpresoras") || "{}");
-  const copiadoFiltro = document.getElementById("filtroCopiadoRegistroMes").value;
-  const turnoFiltro = document.getElementById("filtroTurnoRegistroMes").value;
-  const filas = [];
-  Object.keys(registros).forEach(fecha => {
-    if (!fecha.startsWith(mes)) return;
-    const copiados = registros[fecha];
-    Object.keys(copiados).forEach(copiado => {
-      if (copiadoFiltro && copiadoFiltro !== "" && copiado !== copiadoFiltro) return;
-      Object.keys(copiados[copiado]).forEach(turno => {
-        if (turnoFiltro && turnoFiltro !== "" && turno !== turnoFiltro) return;
-        const impresoras = copiados[copiado][turno];
-        Object.keys(impresoras).forEach(nombre => {
-          const data = impresoras[nombre];
-          filas.push([
-            fecha,
-            nombre,
-            copiado,
-            turno === "TM" ? "Mañana" : "Tarde",
-            (data.apertura && data.apertura.length > 0) ? `<button class="calc-btn calc-btn-outline" onclick="verPDFImpresora('${fecha}','${copiado}','${turno}','${nombre}','apertura')">Foto</button>` : "-",
-            (data.cierre && data.cierre.length > 0) ? `<button class="calc-btn calc-btn-outline" onclick="verPDFImpresora('${fecha}','${copiado}','${turno}','${nombre}','cierre')">Foto</button>` : "-"
-          ]);
-        });
-      });
+    rows.push([
+      { content: "Total " + copiado, colSpan: 6, styles: { halign: 'right', fontStyle: 'bold' } },
+      { content: `$${subtotal.toLocaleString("es-AR")}`, styles: { fontStyle: 'bold', fillColor: [209,250,229] } }
+    ]);
+    doc.autoTable({
+      head: [["Marca", "Nombre", "Contador inicial", "Contador final", "Contadores totales", "Precio", "Precio final"]],
+      body: rows,
+      startY: y + 2,
+      theme: 'grid',
+      styles: { fontSize: 11 },
+      headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' },
+      bodyStyles: { fillColor: [245, 245, 245] }
     });
-  });
-  if (filas.length === 0) {
-    document.getElementById("tablaVerRegistroMesImpresoras").innerHTML = "<div style='padding:24px;text-align:center;color:var(--text-secondary);'>No hay registros para este mes y filtros.</div>";
+    y = doc.lastAutoTable.finalY;
+    totalGeneral += subtotal;
+  }
+  y += 10;
+  doc.setFontSize(14);
+  doc.text(`Total general a pagar: $${totalGeneral.toLocaleString("es-AR")}`, 14, y);
+  doc.save(`Reporte_Contadores_Impresoras_${desde}_a_${hasta}.pdf`);
+}
+
+// --- Utilidad para formatear fecha ---
+function formatearFecha(fecha) {
+  if (!fecha) return "";
+  const [y,m,d] = fecha.split("-");
+  return `${d}/${m}/${y}`;
+}
+
+document.getElementById("btnLimpiarRegistroMesImpresoras").onclick = async function() {
+  const mes = document.getElementById("mesRegistroImpresoras").value;
+  if (!mes) {
+    alert("Selecciona un mes.");
     return;
   }
-  // Renderizar tabla
-  let tabla = `<table style="width:100%;border-collapse:collapse;background:var(--bg-card-header);border-radius:8px;overflow:hidden;">
-    <thead>
-      <tr>
-        <th>FECHA</th>
-        <th>MAQUINA</th>
-        <th>COPIADO</th>
-        <th>TURNO</th>
-        <th>APERTURA</th>
-        <th>CIERRE</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${filas.map(fila => `<tr>
-        <td>${fila[0]}</td>
-        <td>${fila[1]}</td>
-        <td>${fila[2]}</td>
-        <td>${fila[3]}</td>
-        <td>${fila[4]}</td>
-        <td>${fila[5]}</td>
-      </tr>`).join("")}
-    </tbody>
-  </table>`;
-  document.getElementById("tablaVerRegistroMesImpresoras").innerHTML = tabla;
-}
-
-// ...existing code...
-
-// ...existing code...
-function showLoginScreen() {
-  const loginScreen = document.getElementById("loginScreen");
-  const calculatorScreen = document.getElementById("calculatorScreen");
-  loginScreen.style.display = "flex";
-  calculatorScreen.style.display = "none";
-  loginScreen.classList.remove("animated-fadeOutDown", "animating");
-  loginScreen.classList.add("animated-fadeInUp");
-  setTimeout(() => {
-    loginScreen.classList.remove("animated-fadeInUp");
-  }, 500);
-
-  document.getElementById("turnoSelectorFixed").style.display = "none";
-  ocultarPanelRegistroImpresoras();
-
-  // Evita el scroll en la pantalla de perfiles
-  document.body.classList.add("no-scroll");
-
-  // Oculta la card de estadísticas de impresoras
-  const cardEstadisticas = document.getElementById("cardEstadisticasImpresoras");
-  if (cardEstadisticas) cardEstadisticas.style.display = "none";
-}
-// ...existing code...
-
-// ...existing code...
-function abrirModalEstadisticasImpresoras() {
-  document.getElementById("modalEstadisticasImpresoras").style.display = "flex";
-  cargarOpcionesMesEstadisticasImpresoras();
-  mostrarGraficoEstadisticasImpresoras(document.getElementById("selectorMesEstadisticasImpresoras").value);
-}
-
-function cerrarModalEstadisticasImpresoras() {
-  document.getElementById("modalEstadisticasImpresoras").style.display = "none";
-}
-
-function cargarOpcionesMesEstadisticasImpresoras() {
-  const select = document.getElementById("selectorMesEstadisticasImpresoras");
-  select.innerHTML = "";
-  const registros = JSON.parse(localStorage.getItem("registrosImpresoras") || "{}");
-  const mesesSet = new Set();
-  Object.keys(registros).forEach(fecha => {
-    const [anio, mes] = fecha.split("-");
-    if (anio && mes) mesesSet.add(`${anio}-${mes}`);
-  });
-  const meses = Array.from(mesesSet).sort().reverse();
-  const hoy = new Date();
-  const mesActual = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}`;
-  if (meses.length === 0) {
-    select.innerHTML = `<option value="${mesActual}">${formatearMes(mesActual)}</option>`;
-  } else {
-    select.innerHTML = meses.map(m => `<option value="${m}">${formatearMes(m)}</option>`).join("");
+  if (!window.firebaseInitialized || !window.firebaseDatabase) {
+    alert("Firebase no disponible.");
+    return;
   }
-  select.onchange = function() {
-    mostrarGraficoEstadisticasImpresoras(select.value);
-  };
-}
-
-let chartEstadisticasImpresoras = null;
-function mostrarGraficoEstadisticasImpresoras(mes) {
-  const registros = JSON.parse(localStorage.getItem("registrosImpresoras") || "{}");
-  const conteo = {};
-  Object.keys(registros).forEach(fecha => {
-    if (!fecha.startsWith(mes)) return;
-    Object.keys(registros[fecha]).forEach(copiado => {
-      Object.keys(registros[fecha][copiado]).forEach(turno => {
-        Object.keys(registros[fecha][copiado][turno]).forEach(nombre => {
-          conteo[nombre] = (conteo[nombre] || 0) + 1;
-        });
-      });
-    });
-  });
-  const impresoras = Object.keys(conteo);
-  const cantidades = impresoras.map(i => conteo[i]);
-  const ctx = document.getElementById("graficoEstadisticasImpresoras").getContext("2d");
-  if (chartEstadisticasImpresoras) chartEstadisticasImpresoras.destroy();
-  chartEstadisticasImpresoras = new window.Chart(ctx, {
-    type: "bar",
-    data: {
-      labels: impresoras,
-      datasets: [{
-        label: "Cantidad de usos en el mes",
-        data: cantidades,
-        backgroundColor: "rgba(59,130,246,0.7)",
-        borderColor: "rgba(59,130,246,1)",
-        borderWidth: 2,
-        borderRadius: 8,
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { display: false }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: { stepSize: 1 }
-        }
+  if (!confirm(`¿Seguro que deseas borrar TODOS los registros del mes ${mes}? Esta acción no se puede deshacer.`)) return;
+  const ref = window.firebaseRef(window.firebaseDatabase, `registro_impresoras`);
+  const snap = await window.firebaseGet(ref);
+  if (snap.exists()) {
+    const data = snap.val();
+    const updates = {};
+    Object.keys(data).forEach(fecha => {
+      if (fecha.startsWith(mes)) {
+        updates[fecha] = null;
       }
-    }
-  });
-}
-
-document.getElementById("btnExportarGraficoImpresorasPDFModal").onclick = function() {
-  const canvas = document.getElementById("graficoEstadisticasImpresoras");
-  const mes = document.getElementById("selectorMesEstadisticasImpresoras").value;
-  const nombreMes = formatearMes(mes);
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({
-    orientation: "landscape",
-    unit: "px",
-    format: [900, 400]
-  });
-  doc.setFontSize(18);
-  doc.text(`Estadísticas de uso de impresoras - ${nombreMes}`, 40, 40);
-  const imgData = canvas.toDataURL("image/png", 1.0);
-  doc.addImage(imgData, "PNG", 40, 60, 800, 280);
-  doc.save(`Estadisticas_Impresoras_${nombreMes}.pdf`);
+    });
+    await window.firebaseSet(ref, { ...data, ...updates });
+    alert("Registros del mes eliminados correctamente.");
+    cargarTablaRegistroMes();
+  }
 };
 // ...existing code...
