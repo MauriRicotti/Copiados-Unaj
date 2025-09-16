@@ -2671,6 +2671,8 @@ async function consultarHistorico() {
   }
 }
 
+
+
 document.getElementById("btnReportesSugerencias").onclick = function() {
   document.getElementById("modalReportesSugerencias").style.display = "flex";
   document.getElementById("reportNombre").value = "";
