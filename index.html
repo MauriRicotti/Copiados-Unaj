@@ -721,33 +721,5 @@
         <div id="msgPasswordAdminImpresoras" style="color:#ef4444;margin-top:12px;font-size:0.98rem;"></div>
     </div>
 </div>
-
-<!-- Modal ajustes impresoras -->
-<div id="modalAjustesImpresoras" style="display:none;position:fixed;z-index:10002;top:0;left:0;width:100vw;height:100vh;background:rgba(30,41,59,0.45);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
-    <div style="background:var(--bg-card);padding:32px 24px;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.18);max-width:95vw;width:380px;text-align:center;">
-        <h2 style="margin-bottom:18px;font-size:1.2rem;color:var(--text-heading);">Ajustes de impresoras</h2>
-        <div style="margin-bottom:14px;">
-            <label style="font-weight:600;">Nombre de la impresora:</label>
-            <input type="text" id="ajustesNombreImpresora" maxlength="60" class="calc-input" style="margin-top:6px;" placeholder="Nombre">
-        </div>
-        <div style="margin-bottom:14px;">
-            <label style="font-weight:600;">Marca:</label>
-            <input type="text" id="ajustesMarcaImpresora" maxlength="40" class="calc-input" style="margin-top:6px;" placeholder="Marca">
-        </div>
-        <div style="margin-bottom:14px;">
-            <label style="font-weight:600;">Tipo:</label>
-            <div style="display:flex;gap:12px;justify-content:center;">
-                <label><input type="checkbox" id="ajustesTipoByN"> Blanco y Negro</label>
-                <label><input type="checkbox" id="ajustesTipoColor"> Color</label>
-            </div>
-        </div>
-        <div style="margin-bottom:18px;">
-            <button class="calc-btn calc-btn-success" id="btnAgregarImpresora">Agregar impresora</button>
-            <button class="calc-btn calc-btn-danger" id="btnEliminarImpresora">Eliminar impresora</button>
-        </div>
-        <div id="listaImpresorasExistentes" style="margin-bottom:12px;text-align:left;"></div>
-        <button class="calc-btn calc-btn-secondary" id="btnCerrarAjustesImpresoras">Cerrar</button>
-    </div>
-</div>
 </body>
 </html>

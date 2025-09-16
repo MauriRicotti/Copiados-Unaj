@@ -1678,6 +1678,7 @@ function calcExportarPDF() {
   const ahora = new Date();
   const mes = ahora.toLocaleString("es-ES", { month: "long" });
   const año = ahora.getFullYear();
+  const fechaHoy = ahora.toLocaleDateString("es-ES");
   const nombreCopiado = calcInstitutos[currentFotocopiado]?.name || "Copiado";
   const turno = currentTurno === "TM" ? "Mañana" : "Tarde";
 
@@ -1692,7 +1693,8 @@ function calcExportarPDF() {
   doc.text(`Registro de Ventas - ${nombreCopiado}`, 14, 18);
   doc.setFontSize(12);
   doc.text(`Mes: ${mes.charAt(0).toUpperCase() + mes.slice(1)} ${año}`, 14, 26);
-  doc.text(`Turno: ${turno}`, 14, 34);
+  doc.text(`Fecha: ${fechaHoy}`, 14, 32); // Fecha del día en el PDF
+  doc.text(`Turno: ${turno}`, 14, 38);
 
   const ventasEfectivo = ventas.filter(v => v.metodoPago === 'efectivo').map(v => `$${v.total}`);
   const ventasTransferencia = ventas.filter(v => v.metodoPago === 'transferencia').map(v => `$${v.total}`);
@@ -1705,7 +1707,7 @@ function calcExportarPDF() {
     ]);
   }
 
-  let y = 42;
+  let y = 46;
   doc.setFontSize(13);
   doc.text('Ventas:', 14, y);
   y += 8;
@@ -1789,7 +1791,8 @@ function calcExportarPDF() {
     });
   }
 
-  doc.save(`RegistroVentas_${nombreCopiado}_${mes}_${año}_${turno}.pdf`);
+  // El nombre del archivo incluye la fecha del día
+  doc.save(`RegistroVentas_${nombreCopiado}_${mes}_${año}_${fechaHoy}_${turno}.pdf`);
 }
 
 async function exportarTodosLosRegistrosPDFZip() {
@@ -1803,6 +1806,7 @@ async function exportarTodosLosRegistrosPDFZip() {
   const ahora = new Date();
   const mes = ahora.toLocaleString("es-ES", { month: "long" });
   const año = ahora.getFullYear();
+  const fechaHoy = ahora.toLocaleDateString("es-ES"); // <-- NUEVO
   const turno = currentTurno || "TM";
 
   for (const tipo of institutos) {
@@ -1823,7 +1827,8 @@ async function exportarTodosLosRegistrosPDFZip() {
     doc.text(`Registro de Ventas - ${nombres[tipo]}`, 14, 18);
     doc.setFontSize(12);
     doc.text(`Mes: ${mes.charAt(0).toUpperCase() + mes.slice(1)} ${año}`, 14, 26);
-    doc.text(`Turno: ${turno === "TM" ? "Mañana" : "Tarde"}`, 14, 34);
+    doc.text(`Fecha: ${fechaHoy}`, 14, 32); // <-- NUEVO
+    doc.text(`Turno: ${turno === "TM" ? "Mañana" : "Tarde"}`, 14, 38);
 
     const ventas = data.ventas || [];
     const totalEfectivo = ventas.filter(v => v.metodoPago === 'efectivo').reduce((acc, v) => acc + v.total, 0);
@@ -1839,7 +1844,7 @@ async function exportarTodosLosRegistrosPDFZip() {
         ventasTransferencia[i] || ''
       ]);
     }
-    let y = 42;
+    let y = 46;
     doc.setFontSize(13);
     doc.text('Ventas:', 14, y);
     y += 8;
@@ -1922,12 +1927,12 @@ async function exportarTodosLosRegistrosPDFZip() {
       });
     }
 
-    const nombrePDF = `${nombres[tipo]}_${mes}_${año}_${turno}.pdf`;
+    const nombrePDF = `${nombres[tipo]}_${mes}_${año}_${fechaHoy}_${turno}.pdf`;
     const pdfBlob = doc.output("blob");
     zip.file(nombrePDF, pdfBlob);
   }
 
-  const nombreZip = `Registros_Copiados_UNAJ_${mes}_${año}_${turno}.zip`;
+  const nombreZip = `Registros_Copiados_UNAJ_${mes}_${año}_${fechaHoy}_${turno}.zip`;
   zip.generateAsync({ type: "blob" }).then(function(content) {
     const link = document.createElement("a");
     link.href = URL.createObjectURL(content);
@@ -1936,7 +1941,6 @@ async function exportarTodosLosRegistrosPDFZip() {
     link.click();
     setTimeout(() => {
       document.body.removeChild(link);
-      URL.revokeObjectURL(link.href);
     }, 100);
   });
 }
@@ -3573,4 +3577,82 @@ document.getElementById("btnCancelarReporte").onclick = function() {
   ocultarModalAnimado("modalReportesSugerencias");
 };
 
-// ...existing code...
+
+function calcActualizarComparativa() {
+  calcMostrarComparativa();
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  const btnExportarEstadisticas = document.querySelector('button[title="Exportar estadísticas a PDF"]');
+  if (btnExportarEstadisticas) {
+    btnExportarEstadisticas.onclick = calcExportarEstadisticasPDF;
+  }
+
+  const btnActualizarComparativa = document.querySelector('button[title="Actualizar datos"]');
+  if (btnActualizarComparativa) {
+    btnActualizarComparativa.onclick = calcActualizarComparativa;
+  }
+});
+
+function calcExportarEstadisticasPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  doc.setFontSize(16);
+  doc.text("Comparativa por Fotocopiado - Estadísticas", 14, 18);
+
+  doc.setFontSize(12);
+  doc.text(`Total General: ${document.getElementById("calcTotalGeneralComp").textContent}`, 14, 28);
+  doc.text(`Fotocopiado Líder: ${document.getElementById("calcInstitutoLider").textContent}`, 14, 36);
+  doc.text(`Ventas Totales: ${document.getElementById("calcVentasTotales").textContent}`, 14, 44);
+
+  let y = 54;
+
+  const canvasIngresos = document.getElementById("calcChartIngresos");
+  if (canvasIngresos) {
+    const imgIngresos = canvasIngresos.toDataURL("image/png", 1.0);
+    doc.setFontSize(13);
+    doc.text("Ingresos por Fotocopiados", 14, y);
+    y += 6;
+    doc.addImage(imgIngresos, "PNG", 14, y, 180, 60);
+    y += 65;
+  }
+
+  const canvasMetodos = document.getElementById("calcChartMetodos");
+  if (canvasMetodos) {
+    const imgMetodos = canvasMetodos.toDataURL("image/png", 1.0);
+    doc.setFontSize(13);
+    doc.text("Métodos de Pago", 14, y);
+    y += 6;
+    doc.addImage(imgMetodos, "PNG", 14, y, 180, 60);
+    y += 65;
+  }
+
+  doc.setFontSize(13);
+  doc.text("Detalles por Fotocopiado", 14, y);
+  y += 8;
+
+  const cards = document.querySelectorAll("#calcDetallesGrid .calc-detail-card");
+  const tabla = [];
+  cards.forEach(card => {
+    const nombre = card.querySelector("h4").textContent;
+    const stats = Array.from(card.querySelectorAll(".calc-detail-stat")).map(stat => {
+      const spans = stat.querySelectorAll("span");
+      return [spans[0].textContent, spans[1].textContent];
+    });
+    tabla.push([nombre, ...stats.map(s => `${s[0]} ${s[1]}`)]);
+  });
+
+  doc.autoTable({
+    head: [["Fotocopiado", "Total de Ingresos", "Ventas en Efectivo", "Ventas por Transferencia", "Número de Ventas", "Promedio por Venta", "Pérdidas", "Extras"]],
+    body: tabla,
+    startY: y,
+    theme: 'grid',
+    styles: { fontSize: 10 },
+    headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' },
+    bodyStyles: { fillColor: [245, 245, 245] }
+  });
+
+  doc.save("Estadisticas_Comparativa_Fotocopiados.pdf");
+}
