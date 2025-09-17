@@ -246,6 +246,9 @@
                                     <input type="checkbox" id="calcTransferencia" class="calc-checkbox" onchange="calcSeleccionarMetodo('transferencia')">
                                     <span>Transferencia</span>
                                 </label>
+                                <button type="button" class="calc-btn calc-btn-outline" id="calcAmbosBtn" onclick="mostrarModalAmbosPagos()" style="margin-left:10px;">
+                                    Ambos métodos de pago
+                                </button>
                             </div>
                         </div>
                         <div class="calc-cambio-group">
@@ -683,7 +686,6 @@
                     </button>
                 </li>
             </ul>
-            <!-- Sección de información rápida -->
             <div style="margin-top:32px;padding:18px 12px 8px 12px;border-top:1px solid var(--border-color);font-size:0.98rem;color:var(--text-secondary);">
                 <div style="font-weight:600;color:var(--text-heading);margin-bottom:6px;">Sistema de Fotocopiados UNAJ</div>
                 <div>Versión: <span style="font-weight:500;">v1.0.0</span></div>
@@ -701,15 +703,11 @@
     </div>
 
     <footer class="watermark-footer">
-        <p>Web y software creados y diseñados por <a href="https://mauricioricotti.free.nf/?i=1" target="_blank" rel="noopener noreferrer">Mauricio Ricotti</a></p>
-    </footer>
-
     <script src="/Code.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
-<!-- Modal contraseña admin -->
 <div id="modalPasswordAdminImpresoras" style="display:none;position:fixed;z-index:10001;top:0;left:0;width:100vw;height:100vh;background:rgba(30,41,59,0.45);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
     <div style="background:var(--bg-card);padding:32px 24px;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.18);max-width:95vw;width:340px;text-align:center;">
         <h2 style="margin-bottom:18px;font-size:1.2rem;color:var(--text-heading);">Contraseña de administrador</h2>

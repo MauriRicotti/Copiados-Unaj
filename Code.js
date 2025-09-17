@@ -3,7 +3,6 @@ const firebaseConfig = {
   authDomain: "fotocopiado-unaj.firebaseapp.com",
   databaseURL: "https://fotocopiado-unaj-default-rtdb.firebaseio.com/",
   projectId: "fotocopiado-unaj",
-  //.*storageBucket: "fotocopiado-unaj.firebasestorage.app",
   storageBucket: "fotocopiado-unaj.appspot.com",
   messagingSenderId: "198572714385",
   appId: "1:198572714385:web:2ec73dfa4386daa47a5230",
@@ -770,11 +769,9 @@ async function calcMostrarComparativa() {
       comparativaScreen.classList.remove("animated-fadeInUp");
     }, 500);
 
-    // Mostrar la card de impresoras solo en el panel de control
     const cardImpresoras = document.getElementById("panelRegistroImpresoras");
     if (cardImpresoras) {
       cardImpresoras.style.display = "block";
-      // Establecer la fecha predeterminada en el filtro de impresoras
       const filtroFecha = document.getElementById("filtroFechaImpresoras");
       const filtroCopiado = document.getElementById("filtroCopiadoImpresoras");
       const filtroTurno = document.getElementById("filtroTurnoImpresoras");
@@ -782,7 +779,6 @@ async function calcMostrarComparativa() {
       if (filtroFecha) filtroFecha.value = hoy.toISOString().slice(0, 10);
       if (filtroCopiado) filtroCopiado.value = "salud";
       if (filtroTurno) filtroTurno.value = "TM";
-      // Mostrar automáticamente los registros del día actual, copiado salud, turno mañana
       if (filtroFecha && filtroCopiado && filtroTurno) {
         mostrarRegistrosImpresoras(filtroFecha.value, filtroCopiado.value, filtroTurno.value);
       }
@@ -810,7 +806,6 @@ function calcVolverDesdeComparativa() {
   setTimeout(() => {
     comparativaScreen.style.display = "none";
     comparativaScreen.classList.remove("animated-fadeOutDown", "animating");
-    // Oculta la card de impresoras siempre que salgas del panel de control
     if (cardImpresoras) cardImpresoras.style.display = "none";
     if (cameFromLogin) {
       document.getElementById("loginScreen").style.display = "flex";
@@ -1693,7 +1688,7 @@ function calcExportarPDF() {
   doc.text(`Registro de Ventas - ${nombreCopiado}`, 14, 18);
   doc.setFontSize(12);
   doc.text(`Mes: ${mes.charAt(0).toUpperCase() + mes.slice(1)} ${año}`, 14, 26);
-  doc.text(`Fecha: ${fechaHoy}`, 14, 32); // Fecha del día en el PDF
+  doc.text(`Fecha: ${fechaHoy}`, 14, 32);
   doc.text(`Turno: ${turno}`, 14, 38);
 
   const ventasEfectivo = ventas.filter(v => v.metodoPago === 'efectivo').map(v => `$${v.total}`);
@@ -1791,7 +1786,6 @@ function calcExportarPDF() {
     });
   }
 
-  // El nombre del archivo incluye la fecha del día
   doc.save(`RegistroVentas_${nombreCopiado}_${mes}_${año}_${fechaHoy}_${turno}.pdf`);
 }
 
@@ -1806,7 +1800,7 @@ async function exportarTodosLosRegistrosPDFZip() {
   const ahora = new Date();
   const mes = ahora.toLocaleString("es-ES", { month: "long" });
   const año = ahora.getFullYear();
-  const fechaHoy = ahora.toLocaleDateString("es-ES"); // <-- NUEVO
+  const fechaHoy = ahora.toLocaleDateString("es-ES");
   const turno = currentTurno || "TM";
 
   for (const tipo of institutos) {
@@ -1827,7 +1821,7 @@ async function exportarTodosLosRegistrosPDFZip() {
     doc.text(`Registro de Ventas - ${nombres[tipo]}`, 14, 18);
     doc.setFontSize(12);
     doc.text(`Mes: ${mes.charAt(0).toUpperCase() + mes.slice(1)} ${año}`, 14, 26);
-    doc.text(`Fecha: ${fechaHoy}`, 14, 32); // <-- NUEVO
+    doc.text(`Fecha: ${fechaHoy}`, 14, 32);
     doc.text(`Turno: ${turno === "TM" ? "Mañana" : "Tarde"}`, 14, 38);
 
     const ventas = data.ventas || [];
@@ -3431,7 +3425,6 @@ document.getElementById("btnLimpiarRegistroMesImpresoras").onclick = async funct
   }
 };
 
-// ...existing code...
 document.addEventListener("DOMContentLoaded", () => {
   const btnMenu = document.getElementById("btnMenuHamburguesa");
   const panel = document.getElementById("menuLateralPanel");
@@ -3455,7 +3448,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// ...existing code...
 document.addEventListener("DOMContentLoaded", () => {
   const btnMenu = document.getElementById("btnMenuHamburguesa");
   const panel = document.getElementById("menuLateralPanel");
@@ -3495,7 +3487,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.addEventListener("keydown", function(e) {
       if (panel.classList.contains("abierto") && e.key === "Escape") cerrarMenuLateral();
     });
-    // Cierra al seleccionar cualquier botón del menú lateral
     panel.querySelectorAll("button, a").forEach(el => {
       el.onclick = function(e) {
         cerrarMenuLateral();
@@ -3531,8 +3522,6 @@ function mostrarModalAnimado(modalId) {
   }, 500);
 }
 
-// ...existing code...
-
 function mostrarModalAnimado(modalId) {
   const modal = document.getElementById(modalId);
   if (!modal) return;
@@ -3555,7 +3544,6 @@ function ocultarModalAnimado(modalId) {
   }, 300);
 }
 
-// MODAL REGISTRAR IMPRESORAS
 document.getElementById("btnRegistrarImpresoras").onclick = function() {
   mostrarModalAnimado("modalRegistroImpresoras");
   document.getElementById("registroFecha").value = new Date().toISOString().slice(0,10);
@@ -3566,7 +3554,6 @@ document.getElementById("btnCancelarRegistroImpresoras").onclick = function() {
   ocultarModalAnimado("modalRegistroImpresoras");
 };
 
-// MODAL REPORTES Y SUGERENCIAS
 document.getElementById("btnReportesSugerencias").onclick = function() {
   mostrarModalAnimado("modalReportesSugerencias");
   document.getElementById("reportNombre").value = "";

@@ -597,7 +597,7 @@ body {
   border: none;
 }
 
-/* Archivos */
+
 .calc-archivo {
   border-left: 4px solid #3b82f6;
 }
@@ -641,7 +641,7 @@ body {
   cursor: pointer;
 }
 
-/* Tabla */
+
 .calc-table {
   width: 100%;
   border-collapse: collapse;
@@ -1873,7 +1873,7 @@ body.overflow-hidden {
   align-items: stretch;
 }
 
-/* Vertical en celulares */
+
 @media (max-width: 599px) {
   .modal-historico-horizontal {
     flex-direction: column;
@@ -1953,7 +1953,7 @@ body.overflow-hidden {
   }
 }
 
-/* Modal Registro de Impresoras: diseño responsive */
+
 #modalRegistroImpresoras > div {
   display: flex;
   flex-direction: row;
@@ -2012,7 +2012,7 @@ body.overflow-hidden {
   box-sizing: border-box;
 }
 
-/* ...existing code... */
+
 #panelRegistroImpresoras {
   max-width: 1200px;
   width: 100%;
@@ -2025,7 +2025,7 @@ body.overflow-hidden {
   overflow: hidden;
 }
 
-/* ...existing code... */
+
 .impresoras-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -2070,9 +2070,7 @@ body.overflow-hidden {
   margin-left: auto;
   min-width: 160px;
 }
-/* ...existing code... */
 
-/* ...existing code... */
 .impresoras-filtros-row {
   display: flex;
   justify-content: space-between;
@@ -2131,9 +2129,7 @@ body.overflow-hidden {
     min-width: 90px;
   }
 }
-/* ...existing code... */
 
-/* ...existing code... */
 .impresoras-filtros-bar {
   display: flex;
   align-items: center;
@@ -2172,32 +2168,13 @@ body.overflow-hidden {
     max-width: 100%;
   }
 }
-/* ...existing code... */
 
-/* ...existing code... */
+
 #cardEstadisticasImpresoras {
   margin-top: 32px;
   margin-bottom: 24px;
 }
-/* ...existing code... */
 
-/* ...existing code... */
-#cardEstadisticasImpresoras {
-  max-width: 1200px;
-  width: 100%;
-  margin: 32px auto 24px auto;
-  border-radius: 12px;
-  border: 1px solid var(--border-color);
-  box-shadow: 0 2px 4px var(--shadow);
-  background: var(--bg-card);
-  display: block;
-  overflow: hidden;
-}
-/* ...existing code... */
-
-/* ...existing code... */
-
-/* Ajuste para la card de estadísticas de impresoras */
 #cardEstadisticasImpresoras {
   max-width: 1200px;
   width: 100%;
@@ -2210,7 +2187,19 @@ body.overflow-hidden {
   overflow: hidden;
 }
 
-/* Ajuste para el canvas del gráfico */
+#cardEstadisticasImpresoras {
+  max-width: 1200px;
+  width: 100%;
+  margin: 32px auto 24px auto;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 4px var(--shadow);
+  background: var(--bg-card);
+  display: block;
+  overflow: hidden;
+}
+
+
 #graficoEstadisticasImpresoras {
   width: 100% !important;
   max-width: 100vw;
@@ -2220,7 +2209,7 @@ body.overflow-hidden {
   margin: 0 auto;
 }
 
-/* Responsive para celulares */
+
 @media (max-width: 600px) {
   #cardEstadisticasImpresoras {
     max-width: 98vw;
@@ -2240,16 +2229,14 @@ body.overflow-hidden {
   }
 }
 
-/* Opcional: mejora la rotación de las etiquetas del eje X en Chart.js */
+
 .chartjs-render-monitor .chartjs-x-axis-label {
   font-size: 0.85rem !important;
   transform: rotate(-30deg) !important;
   text-align: right !important;
 }
 
-/* ...existing code... */
 
-/* ...existing code... */
 #cardEstadisticasImpresoras .calc-card-content {
   display: flex;
   flex-direction: column;
@@ -2259,9 +2246,7 @@ body.overflow-hidden {
   margin-bottom: 0;
   align-self: flex-start;
 }
-/* ...existing code... */
 
-/* ...existing code... */
 #modalVerRegistroMesImpresoras > div {
   max-width: 1200px;
   width: 98vw;
@@ -2274,18 +2259,14 @@ body.overflow-hidden {
   gap: 48px;
   align-items: flex-start;
 }
-/* ...existing code... */
 
-/* ...existing code... */
 #modalVerRegistroMesImpresoras table th,
 #modalVerRegistroMesImpresoras table td {
   padding: 14px 18px;
   font-size: 1.08rem;
   text-align: center;
 }
-/* ...existing code... */
 
-/* MODAL REGISTRO MES IMPRESORAS */
 #modalVerRegistroMesImpresoras > div {
   max-width: 1400px;
   width: 98vw;
@@ -2755,9 +2736,6 @@ body.overflow-hidden {
   }
 }
 
-/* ...existing code... */
-
-/* Menú lateral */
 .menu-hamburguesa-btn {
   background: var(--bg-card);
   border: 2px solid var(--border-color);
