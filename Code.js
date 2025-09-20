@@ -1477,7 +1477,8 @@ function selectFotocopiado(tipo) {
 
 function login(tipo = null) {
   const fotocopiadoType = tipo || selectedFotocopiado
-  const password = document.getElementById(`passwordInput-${fotocopiadoType}`).value
+  const passwordInput = document.getElementById(`passwordInput-${fotocopiadoType}`)
+  const password = passwordInput.value
 
   if (!fotocopiadoType) {
     alert("Por favor selecciona un fotocopiado")
@@ -1485,12 +1486,12 @@ function login(tipo = null) {
   }
 
   if (password === calcInstitutos[fotocopiadoType].password) {
+    if (passwordInput) passwordInput.blur();
     currentFotocopiado = fotocopiadoType
     localStorage.setItem("currentFotocopiado", currentFotocopiado)
     mostrarTurnoModal();
   } else {
     alert("Contraseña incorrecta")
-    const passwordInput = document.getElementById(`passwordInput-${fotocopiadoType}`)
     if (passwordInput) {
       passwordInput.value = ""
       passwordInput.focus()
