@@ -1402,11 +1402,11 @@ function showLoginScreen() {
   const calculatorScreen = document.getElementById("calculatorScreen");
   loginScreen.style.display = "flex";
   calculatorScreen.style.display = "none";
-  loginScreen.classList.remove("animated-fadeOutDown", "animating");
-  loginScreen.classList.add("animated-fadeInUp");
-  setTimeout(() => {
-    loginScreen.classList.remove("animated-fadeInUp");
-  }, 500);
+  // loginScreen.classList.remove("animated-fadeOutDown", "animating");
+  // loginScreen.classList.add("animated-fadeInUp");
+  // setTimeout(() => {
+  //   loginScreen.classList.remove("animated-fadeInUp");
+  // }, 500);
 
   document.getElementById("turnoSelectorFixed").style.display = "none";
 }
@@ -1561,62 +1561,51 @@ function calcCargarDatos() {
 function loadFromFirebase() {
   return new Promise((resolve) => {
     if (!isFirebaseEnabled || !database || !currentFotocopiado) {
-      console.log("[v0] Firebase no disponible, cargando desde localStorage")
-      calcCargarDatos()
-      resolve()
-      return
+      calcCargarDatos();
+      resolve();
+      return;
     }
 
-    console.log("[v0] Forzando carga de datos más recientes desde Firebase...")
-    updateSyncStatus("🔄", "Obteniendo datos actuales...")
+    console.log("[v0] Forzando carga de datos más recientes desde Firebase...");
+    updateSyncStatus("🔄", "Obteniendo datos actuales...");
 
-    const fotocopiadoRef = window.firebaseRef(database, `fotocopiados/${currentFotocopiado}`)
+    const fotocopiadoRef = window.firebaseRef(database, `fotocopiados/${currentFotocopiado}`);
 
     window
       .firebaseGet(fotocopiadoRef)
       .then((snapshot) => {
         try {
-          const firebaseData = snapshot.val()
-          console.log("[v0] Datos más recientes de Firebase:", firebaseData)
-
-          if (firebaseData && (firebaseData.ventas || firebaseData.efectivo || firebaseData.transferencia)) {
-            calcRegistroVentas = {
-              efectivo: firebaseData.efectivo || 0,
-              transferencia: firebaseData.transferencia || 0,
-              ventas: firebaseData.ventas || [],
-              perdidas: firebaseData.perdidas || [],
-              totalPerdidas: firebaseData.totalPerdidas || 0,
-              resetTimestamp: firebaseData.resetTimestamp || Date.now(),
-            }
-            console.log("[v0] Datos actualizados desde Firebase (fuente de verdad):", calcRegistroVentas)
-            updateSyncStatus("🟢", "Datos actualizados desde servidor")
-          } else {
-            console.log("[v0] No hay datos en Firebase, inicializando registro vacío")
-            calcRegistroVentas = {
-              efectivo: 0,
-              transferencia: 0,
-              ventas: [],
-              resetTimestamp: Date.now(),
-            }
-            updateSyncStatus("🟢", "Registro inicializado")
-          }
-
-          calcGuardarDatosLocal()
-          resolve()
+          const data = snapshot.val() || {};
+          calcRegistroVentas = {
+            efectivo: data.efectivo || 0,
+            transferencia: data.transferencia || 0,
+            ventas: data.ventas || [],
+            extras: data.extras || [],
+            perdidas: data.perdidas || [],
+            totalPerdidas: data.totalPerdidas || 0,
+            resetTimestamp: data.resetTimestamp || 0,
+            isReset: data.isReset || false,
+            lastUpdated: data.lastUpdated || 0,
+            deviceId: data.deviceId || deviceId,
+          };
+          calcGuardarDatosLocal();
+          calcActualizarTabla();
+          updateSyncStatus("🟢", "Datos actualizados");
+          if (typeof resolve === "function") resolve();
         } catch (error) {
-          console.error("[v0] Error cargando desde Firebase:", error)
-          calcCargarDatos() 
-          updateSyncStatus("🔴", "Error cargando datos")
-          resolve()
+          console.error("[v0] Error procesando datos de Firebase:", error);
+          calcCargarDatos();
+          updateSyncStatus("🔴", "Error de conexión");
+          if (typeof resolve === "function") resolve();
         }
       })
       .catch((error) => {
-        console.error("[v0] Error accediendo a Firebase:", error)
-        calcCargarDatos() 
-        updateSyncStatus("🔴", "Error de conexión")
-        resolve()
-      })
-  })
+        console.error("[v0] Error accediendo a Firebase:", error);
+        calcCargarDatos();
+        updateSyncStatus("🔴", "Error de conexión");
+        if (typeof resolve === "function") resolve();
+      });
+  });
 }
 
 function calcOcultarDetalles() {

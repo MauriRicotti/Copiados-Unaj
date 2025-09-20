@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Fotocopiados - UNAJ</title>
+    <script>
+      try {
+        const tema = localStorage.getItem("calcTema") || "light";
+        document.documentElement.setAttribute("data-theme", tema);
+      } catch(e){}
+    </script>
     <link rel="stylesheet" href="/Style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -39,6 +45,14 @@
     <link rel="icon" type="image/png" href="/imagenes/unaj-removebg-preview.png">
 </head>
 <body>
+    <div id="loaderUNAJ">
+        <img src="/imagenes/unaj-removebg-preview.png" alt="UNAJ Logo" id="loaderUNAJLogo">
+        <div class="loader-textos">
+            <div class="loader-titulo">Universidad Nacional Arturo Jauretche</div>
+            <div class="loader-autor">Por Mauricio Ricotti</div>
+        </div>
+    </div>
+
     <div id="turnoSelectorFixed" style="display:none;position:fixed;top:18px;right:18px;z-index:1001;background:var(--bg-card);padding:6px 12px 6px 10px;border-radius:8px;box-shadow:0 2px 8px var(--shadow);border:1px solid var(--border-color);display:flex;align-items:center;gap:6px;font-size:0.95rem;min-width:110px;">
         <label for="turnoSelect" style="font-weight:600;font-size:0.97rem;">Turno:</label>
         <select id="turnoSelect" class="calc-select" style="width:auto;display:inline-block;font-size:0.97rem;padding:6px 18px 6px 8px;">
@@ -406,10 +420,15 @@
                         <button id="calcThemeToggleComp" class="calc-theme-toggle header-btn" onclick="calcToggleTheme()" title="Cambiar tema">
                             <span id="themeTextComp" class="calc-theme-text">🌙 Oscuro</span>
                         </button>
-                        <button onclick="calcVolverDesdeComparativa()" class="calc-btn calc-btn-outline header-btn" title="Volver">
-                            Volver
-                        </button>
-                        <button class="calc-btn calc-btn-outline header-btn" onclick="abrirModalHistorico()">Ver historial</button>
+                        <button class="calc-btn calc-btn-outline header-btn"
+                        onclick="window.open('https://drive.google.com/drive/folders/1YQOLGukNez7iTxNcehyQAAvy9Gvs9-2C?usp=sharing', '_blank')"
+                        title="Abrir carpeta de Drive">
+                        Drive
+                    </button>
+                    <button class="calc-btn calc-btn-outline header-btn" onclick="abrirModalHistorico()">Ver historial</button>
+                    <button onclick="calcVolverDesdeComparativa()" class="calc-btn calc-btn-outline header-btn" title="Volver">
+                        Volver
+                    </button>
                     </div>
                 </div>
             </header>
@@ -719,5 +738,24 @@
         <div id="msgPasswordAdminImpresoras" style="color:#ef4444;margin-top:12px;font-size:0.98rem;"></div>
     </div>
 </div>
+
+        <script>
+    window.addEventListener("DOMContentLoaded", function() {
+        const logo = document.getElementById("loaderUNAJLogo");
+        const textos = document.querySelector(".loader-textos");
+        if (logo) logo.classList.add("loader-fade-in");
+        if (textos) textos.classList.add("loader-fade-in");
+        setTimeout(function() {
+            const loader = document.getElementById("loaderUNAJ");
+            if (logo) logo.classList.remove("loader-fade-in");
+            if (textos) textos.classList.remove("loader-fade-in");
+            if (loader) {
+                loader.classList.add("loader-hide");
+                setTimeout(() => loader.style.display = "none", 700);
+            }
+        }, 1500);
+    });
+    </script>
+    
 </body>
 </html>

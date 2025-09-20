@@ -99,6 +99,10 @@ body {
   background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
 }
 
+[data-theme="light"] .login-screen {
+  background: linear-gradient(120deg, #95c5ff 0%, #e4ebff 40%, #ffffffa7 100%);
+}
+
 .login-container {
   width: 100%;
   max-width: 1200px;
@@ -173,6 +177,13 @@ body {
   object-fit: contain;
   border-radius: 8px;
   transition: transform 0.3s ease;
+  border: 2px solid #e5e7eb;
+  background: #fff;
+}
+
+[data-theme="dark"] .instituto-logo {
+  border: 2px solid #2564eb3f;
+  background: #2d3748;
 }
 
 .fotocopiado-card:hover .instituto-logo {
@@ -2960,4 +2971,153 @@ body.overflow-hidden {
 
 #modalVerRegistroMesImpresoras table {
   min-width: 700px; 
+}
+
+#loaderUNAJ {
+  position: fixed;
+  z-index: 99999;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(27, 37, 51, 0.85);
+  backdrop-filter: blur(4px);
+  transition: opacity 0.6s cubic-bezier(.4,0,.2,1), visibility 0.6s cubic-bezier(.4,0,.2,1);
+  opacity: 1;
+  visibility: visible;
+}
+
+#loaderUNAJLogo {
+  width: 180px;
+  max-width: 38vw;
+  min-width: 90px;
+  filter: drop-shadow(0 6px 32px rgba(0, 0, 0, 0.07));
+  transition: opacity 0.6s cubic-bezier(.4,0,.2,1), transform 0.6s cubic-bezier(.4,0,.2,1);
+  opacity: 1;
+  transform: scale(1);
+  display: block;
+  margin: 0 auto;
+}
+
+.loader-textos {
+  margin-top: 18px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#loaderUNAJ.loader-hide {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+#loaderUNAJ.loader-hide #loaderUNAJLogo {
+  opacity: 0;
+  transform: scale(0.92);
+}
+
+@keyframes loaderLogoFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+#loaderUNAJLogo.loader-fade-in {
+  animation: loaderLogoFadeIn 0.7s cubic-bezier(.4,0,.2,1);
+}
+
+.loader-textos {
+  margin-top: 18px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 90vw;
+  width: 100%;
+  box-sizing: border-box;
+  word-break: break-word;
+}
+
+.loader-titulo {
+  font-size: 1.58rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  line-height: 1.2;
+  max-width: 90vw;
+}
+
+.loader-autor {
+  font-size: 0.92rem;
+  color: #e0e7ff;
+  margin-top: 6px;
+  font-weight: 400;
+  letter-spacing: 0.2px;
+  opacity: 0.85;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.13);
+  max-width: 90vw;
+}
+
+@media (max-width: 600px) {
+  #loaderUNAJLogo {
+    width: 110px;
+    max-width: 60vw;
+    min-width: 60px;
+  }
+  .loader-titulo {
+    font-size: 1rem;
+  }
+  .loader-autor {
+    font-size: 0.8rem;
+  }
+  .loader-textos {
+    margin-top: 12px;
+    padding: 0 8px;
+  }
+}
+
+@keyframes loaderLogoFadeOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+}
+
+#loaderUNAJLogo.loader-fade-out,
+.loader-textos.loader-fade-out {
+  animation: loaderLogoFadeOut 0.7s cubic-bezier(.4,0,.2,1);
+}
+
+#loaderUNAJLogo,
+.loader-textos {
+  opacity: 0;
+  transform: scale(0.92);
+}
+
+#loaderUNAJLogo.loader-fade-in,
+.loader-textos.loader-fade-in {
+  opacity: 1;
+  transform: scale(1);
+  animation: loaderLogoFadeIn 0.7s cubic-bezier(.4,0,.2,1);
+}
+
+#loaderUNAJLogo.loader-fade-out,
+.loader-textos.loader-fade-out {
+  animation: loaderLogoFadeOut 0.7s cubic-bezier(.4,0,.2,1);
+  opacity: 0;
+  transform: scale(0.92);
 }
