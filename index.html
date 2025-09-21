@@ -476,38 +476,58 @@
                     <div class="calc-card-title">Detalles por Fotocopiado</div>
                 </div>
                 <div class="calc-card-content">
-                    <div id="calcDetallesGrid" class="calc-details-grid">
-                    </div>
+                    <div id="calcDetallesGrid" class="calc-details-grid"></div>
                 </div>
             </div>
-            <div id="panelRegistroImpresoras" class="calc-card" style="margin-top:32px; display:none;">
-              <div class="calc-card-header">
-                <div class="calc-card-title">Registro de uso de impresoras</div>
-                <div class="impresoras-filtros-bar">
-                  <label>Fecha:</label>
-                  <input type="date" id="filtroFechaImpresoras" class="calc-input filtro-input" value="">
-                  <label>Copiado:</label>
-                  <select id="filtroCopiadoImpresoras" class="calc-select filtro-input">
-                    <option value="todos">Todos</option>
-                    <option value="salud">Salud</option>
-                    <option value="sociales">Sociales</option>
-                    <option value="ingenieria">Ingeniería</option>
-                    <option value="becas_salud">Becas Salud</option>
-                    <option value="becas_ingenieria">Becas Ingeniería</option>
-                    <option value="hec">HEC</option>
-                  </select>
-                  <label>Turno:</label>
-                  <select id="filtroTurnoImpresoras" class="calc-select filtro-input">
-                    <option value="todos">Todos</option>
-                    <option value="TM">Mañana</option>
-                    <option value="TT">Tarde</option>
-                  </select>
-                  <button class="calc-btn calc-btn-primary buscar-impresoras-btn" id="btnBuscarImpresoras">Buscar</button>
-                  <button class="calc-btn calc-btn-outline" id="btnVerRegistroMesImpresoras">Ver registro del mes</button>
-                  <button class="calc-btn calc-btn-outline" id="btnReporteContadoresImpresoras">Reporte contadores</button>
+
+            <!-- Registro de uso de impresoras -->
+            <div id="panelRegistroImpresoras" class="calc-card" style="margin-top:32px;">
+                <div class="calc-card-header">
+                    <div class="calc-card-title">Registro de uso de impresoras</div>
+                    <div class="impresoras-filtros-bar">
+                      <label>Fecha:</label>
+                      <input type="date" id="filtroFechaImpresoras" class="calc-input filtro-input" value="">
+                      <label>Copiado:</label>
+                      <select id="filtroCopiadoImpresoras" class="calc-select filtro-input">
+                        <option value="todos">Todos</option>
+                        <option value="salud">Salud</option>
+                        <option value="sociales">Sociales</option>
+                        <option value="ingenieria">Ingeniería</option>
+                        <option value="becas_salud">Becas Salud</option>
+                        <option value="becas_ingenieria">Becas Ingeniería</option>
+                        <option value="hec">HEC</option>
+                      </select>
+                      <label>Turno:</label>
+                      <select id="filtroTurnoImpresoras" class="calc-select filtro-input">
+                        <option value="todos">Todos</option>
+                        <option value="TM">Mañana</option>
+                        <option value="TT">Tarde</option>
+                      </select>
+                      <button class="calc-btn calc-btn-primary buscar-impresoras-btn" id="btnBuscarImpresoras">Buscar</button>
+                      <button class="calc-btn calc-btn-outline" id="btnVerRegistroMesImpresoras">Ver registro del mes</button>
+                      <button class="calc-btn calc-btn-outline" id="btnReporteContadoresImpresoras">Reporte contadores</button>
+                    </div>
                 </div>
+                <div class="calc-card-content" id="listaRegistroImpresoras"></div>
               </div>
-              <div class="calc-card-content" id="listaRegistroImpresoras"></div>
+
+              <!-- Reportes y Sugerencias -->
+              <div id="reportesPanelControl" class="calc-card" style="margin-top:48px;">
+                <div class="calc-card-header">
+                    <div class="calc-card-title">Reportes y Sugerencias</div>
+                    <div style="margin-top:10px;">
+                        <select id="filtroEstadoReporte" class="calc-select" style="width:auto;display:inline-block;">
+                            <option value="todos">Todos</option>
+                            <option value="revision">En revisión</option>
+                            <option value="solucionado">Solucionado</option>
+                            <option value="descartado">Descartado</option>
+                        </select>
+                        <select id="filtroMesReporte" class="calc-select" style="width:auto;display:inline-block;">
+                            <!-- opciones de mes -->
+                        </select>
+                    </div>
+                </div>
+                <div class="calc-card-content" id="reportesListaPanel"></div>
             </div>
         </div>
     </div>
@@ -751,6 +771,23 @@
                 setTimeout(() => loader.style.display = "none", 700);
             }
         }, 1500);
+    });
+    </script>
+
+    <audio id="audioBienvenida" src="imagenes/short-logo-with-piano-and-violin-133358.mp3" preload="auto"></audio>
+    <script>
+    window.addEventListener('DOMContentLoaded', function() {
+        const audio = document.getElementById('audioBienvenida');
+        audio.volume = 0.5;
+        audio.play().catch(() => {
+            const playOnInteraction = () => {
+                audio.play();
+                document.removeEventListener('click', playOnInteraction);
+                document.removeEventListener('touchstart', playOnInteraction);
+            };
+            document.addEventListener('click', playOnInteraction);
+            document.addEventListener('touchstart', playOnInteraction);
+        });
     });
     </script>
     

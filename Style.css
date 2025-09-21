@@ -3222,3 +3222,56 @@ body.overflow-hidden {
   transition: box-shadow 0.2s, border-color 0.2s;
 }
 
+#reportesPanelControl {
+  max-width: 1200px;
+  width: 100%;
+  margin: 48px auto 24px auto; /* margen superior aumentado */
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 4px var(--shadow);
+  background: var(--bg-card);
+  display: block;
+  overflow: hidden;
+}
+
+@media (max-width: 900px) {
+  #reportesPanelControl {
+    max-width: 99vw;
+    margin-left: 0;
+    margin-right: 0;
+    border-radius: 10px;
+    margin-top: 32px !important;
+  }
+  #reportesPanelControl .calc-card-header,
+  #reportesPanelControl .calc-card-content {
+    padding: 10px !important;
+  }
+}
+
+@media (max-width: 600px) {
+  #reportesPanelControl {
+    max-width: 99vw;
+    margin-left: 0;
+    margin-right: 0;
+    border-radius: 10px;
+    margin-top: 52px !important;
+  }
+  #reportesPanelControl .calc-card-header,
+  #reportesPanelControl .calc-card-content {
+    padding: 8px !important;
+  }
+}
+
+@media (max-width: 900px) {
+  #reportesPanelControl {
+    max-width: 99vw;
+    margin-left: 0;
+    margin-right: 0;
+    border-radius: 10px;
+    margin-top: 52px !important;
+  }
+  #reportesPanelControl .calc-card-header,
+  #reportesPanelControl .calc-card-content {
+    padding: 8px !important;
+  }
+}
