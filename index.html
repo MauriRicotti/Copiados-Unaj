@@ -83,7 +83,11 @@
                 </svg>
             </button>
             <div class="login-header" style="position:relative;">
-                <h1>Sistema de Fotocopiados UNAJ</h1>
+                <h1 class="titulo-fotocopiados-unaj">
+                    <span class="titulo-gradiente">Sistema de Fotocopiados</span>
+                    <span class="titulo-unaj">UNAJ</span>
+                    <span class="titulo-brillo"></span>
+                </h1>
                 <p>Selecciona tu fotocopiado e ingresa la contraseña</p>
             </div>
             <div class="fotocopiados-grid">
@@ -91,7 +95,7 @@
                     <div class="fotocopiado-icon">
                         <img src="/imagenes/institutodesaludperfil.jpg" alt="Instituto de Ciencias de la Salud" class="instituto-logo">
                     </div>
-                    <h3>Copiados Salud</h3>
+                    <h3>Fotocopiado de Salud</h3>
                     <p>Instituto de Salud</p>
                     <div id="passwordSection-salud" class="password-section-inline" style="display: none;">
                         <div class="password-card-inline">
@@ -107,7 +111,7 @@
                     <div class="fotocopiado-icon">
                         <img src="/imagenes/intitutodecienciassocialesperfil.png" alt="Instituto de Ciencias Sociales y Administración" class="instituto-logo">
                     </div>
-                    <h3>Copiados Sociales</h3>
+                    <h3>Fotocopiado de Sociales</h3>
                     <p>Instituto de Ciencias Sociales</p>
                     <div id="passwordSection-sociales" class="password-section-inline" style="display: none;">
                         <div class="password-card-inline">
@@ -123,7 +127,7 @@
                     <div class="fotocopiado-icon">
                         <img src="/imagenes/institutodeingenieriayagronomiaperfil.jpg" alt="Instituto de Ingeniería y Agronomía" class="instituto-logo">
                     </div>
-                    <h3>Copiados Ingeniería</h3>
+                    <h3>Fotocopiado de Ingeniería</h3>
                     <p>Instituto de Ingeniería</p>
                     <div id="passwordSection-ingenieria" class="password-section-inline" style="display: none;">
                         <div class="password-card-inline">
@@ -136,11 +140,7 @@
                     </div>
                 </div>
             </div>
-            <div style="margin-top:32px; text-align:center;">
-                <button id="btnEstadisticasLogin" class="calc-btn calc-btn-primary">
-                    Panel de control
-                </button>
-            </div>
+            
         </div>
     </div>
 
@@ -423,9 +423,23 @@
                         Drive
                     </button>
                     <button class="calc-btn calc-btn-outline header-btn" onclick="abrirModalHistorico()">Ver historial</button>
+                    <button onclick="mostrarModalLimpiarBaseDatos()" class="calc-btn calc-btn-danger">
+                        Limpiar base de datos
+                    </button>
                     <button onclick="calcVolverDesdeComparativa()" class="calc-btn calc-btn-outline header-btn" title="Volver">
                         Volver
                     </button>
+                    <div id="modalLimpiarBaseDatos" style="display:none;position:fixed;z-index:10001;top:0;left:0;width:100vw;height:100vh;background:rgba(30,41,59,0.45);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
+                        <div style="background:var(--bg-card);padding:32px 24px;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.18);max-width:95vw;width:340px;text-align:center;">
+                            <h2 style="margin-bottom:18px;font-size:1.2rem;color:var(--text-heading);">Limpiar toda la base de datos</h2>
+                            <input type="password" id="inputPasswordLimpiarBD" class="calc-input" placeholder="Contraseña de administrador" style="margin-bottom:18px;">
+                            <div style="display:flex;gap:10px;">
+                                <button class="calc-btn calc-btn-danger" id="btnConfirmarLimpiarBD">Limpiar</button>
+                                <button class="calc-btn calc-btn-secondary" id="btnCancelarLimpiarBD">Cancelar</button>
+                            </div>
+                            <div id="msgLimpiarBD" style="color:#ef4444;margin-top:12px;font-size:0.98rem;"></div>
+                        </div>
+                    </div>
                     </div>
                 </div>
             </header>
@@ -480,7 +494,6 @@
                 </div>
             </div>
 
-            <!-- Registro de uso de impresoras -->
             <div id="panelRegistroImpresoras" class="calc-card" style="margin-top:32px;">
                 <div class="calc-card-header">
                     <div class="calc-card-title">Registro de uso de impresoras</div>
@@ -511,7 +524,6 @@
                 <div class="calc-card-content" id="listaRegistroImpresoras"></div>
               </div>
 
-              <!-- Reportes y Sugerencias -->
               <div id="reportesPanelControl" class="calc-card" style="margin-top:48px;">
                 <div class="calc-card-header">
                     <div class="calc-card-title">Reportes y Sugerencias</div>
@@ -523,7 +535,6 @@
                             <option value="descartado">Descartado</option>
                         </select>
                         <select id="filtroMesReporte" class="calc-select" style="width:auto;display:inline-block;">
-                            <!-- opciones de mes -->
                         </select>
                     </div>
                 </div>
@@ -707,6 +718,11 @@
             <h2 style="margin-bottom:18px;">Menú</h2>
             <ul style="list-style:none;padding:0;margin:0;">
                 <li>
+                    <button id="btnEstadisticasLogin" class="calc-btn calc-btn-primary" style="width:100%; margin-bottom:12px;">
+                        Panel de control
+                    </button>
+                </li>
+                <li>
                     <button id="btnRegistrarImpresoras" class="calc-btn calc-btn-primary" style="width:100%;margin-bottom:12px;">
                         Registrar contadores
                     </button>
@@ -790,6 +806,5 @@
         });
     });
     </script>
-    
 </body>
 </html>

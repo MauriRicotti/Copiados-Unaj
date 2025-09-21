@@ -3500,7 +3500,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-
 function mostrarModalAnimado(modalId) {
   const modal = document.getElementById(modalId);
   if (!modal) return;
@@ -3633,3 +3632,122 @@ function calcExportarEstadisticasPDF() {
 
   doc.save("Estadisticas_Comparativa_Fotocopiados.pdf");
 }
+
+function mostrarModalLimpiarBaseDatos() {
+    document.getElementById("modalLimpiarBaseDatos").style.display = "flex";
+    document.getElementById("inputPasswordLimpiarBD").value = "";
+    document.getElementById("msgLimpiarBD").textContent = "";
+    setTimeout(() => {
+        document.getElementById("inputPasswordLimpiarBD").focus();
+    }, 100);
+}
+
+document.getElementById("btnCancelarLimpiarBD").onclick = function() {
+    document.getElementById("modalLimpiarBaseDatos").style.display = "none";
+};
+
+document.getElementById("btnConfirmarLimpiarBD").onclick = async function() {
+    const pass = document.getElementById("inputPasswordLimpiarBD").value;
+    const msg = document.getElementById("msgLimpiarBD");
+    if (pass !== "admin123") {
+        msg.textContent = "Contraseña incorrecta.";
+        return;
+    }
+    if (!window.firebaseInitialized || !window.firebaseDatabase) {
+        msg.textContent = "Firebase no disponible.";
+        return;
+    }
+    if (!confirm("¿Seguro que deseas borrar TODA la base de datos? Esta acción no se puede deshacer.")) return;
+    try {
+        const db = window.firebaseDatabase;
+        const refRoot = window.firebaseRef(db, "/");
+        await window.firebaseSet(refRoot, null);
+        msg.textContent = "Base de datos limpiada correctamente.";
+        setTimeout(() => {
+            document.getElementById("modalLimpiarBaseDatos").style.display = "none";
+            location.reload();
+        }, 1200);
+    } catch (e) {
+        msg.textContent = "Error al limpiar la base de datos.";
+    }
+};
+
+document.getElementById("inputPasswordLimpiarBD").addEventListener("keydown", function(e) {
+    if (e.key === "Enter") document.getElementById("btnConfirmarLimpiarBD").click();
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+    const btnMenu = document.getElementById("btnMenuHamburguesa");
+    const panel = document.getElementById("menuLateralPanel");
+    const btnCerrar = document.getElementById("btnCerrarMenuLateral");
+    const overlay = document.getElementById("menuLateralOverlay");
+    const btnCambiarTema = document.getElementById("btnCambiarTemaLateral");
+
+    function abrirMenuLateral() {
+        panel.classList.add("abierto");
+        document.body.classList.add("overflow-hidden");
+        if (btnMenu) btnMenu.classList.add("oculto");
+        if (overlay) overlay.style.display = "block";
+    }
+    
+    function cerrarMenuLateral() {
+        panel.classList.remove("abierto");
+        document.body.classList.remove("overflow-hidden");
+        if (overlay) overlay.style.display = "none";
+        if (btnMenu) {
+            setTimeout(() => {
+                btnMenu.classList.remove("oculto");
+                btnMenu.classList.add("fade-in");
+                setTimeout(() => {
+                    btnMenu.classList.remove("fade-in");
+                }, 500);
+            }, 300);
+        }
+    }
+
+    if (btnMenu && panel && btnCerrar && overlay) {
+        btnMenu.onclick = abrirMenuLateral;
+        btnCerrar.onclick = cerrarMenuLateral;
+        overlay.onclick = cerrarMenuLateral;
+        panel.addEventListener("click", function(e) {
+            if (e.target === panel) cerrarMenuLateral();
+        });
+        document.addEventListener("keydown", function(e) {
+            if (panel.classList.contains("abierto") && e.key === "Escape") cerrarMenuLateral();
+        });
+        panel.querySelectorAll("button, a").forEach(el => {
+            el.onclick = function(e) {
+                cerrarMenuLateral();
+                if (el.id === "btnRegistrarImpresoras") {
+                    setTimeout(() => {
+                        document.getElementById("modalRegistroImpresoras").style.display = "flex";
+                        document.getElementById("registroFecha").value = new Date().toISOString().slice(0,10);
+                        renderImpresorasCheckbox();
+                        renderImpresorasArchivos();
+                    }, 350);
+                }
+                if (el.id === "btnReportesSugerencias") {
+                    setTimeout(() => {
+                        document.getElementById("modalReportesSugerencias").style.display = "flex";
+                        document.getElementById("reportNombre").value = "";
+                        document.getElementById("reportDescripcion").value = "";
+                        document.getElementById("msgReporte").textContent = "";
+                    }, 350);
+                }
+                if (el.id === "btnCambiarTemaLateral") {
+                    calcToggleTheme();
+                }
+                if (el.id === "btnEstadisticasLogin") {
+                    setTimeout(() => {
+                        document.getElementById("modalEstadisticasAdmin").style.display = "flex";
+                        document.getElementById("inputPasswordEstadisticas").value = "";
+                        document.getElementById("msgEstadisticasAdmin").textContent = "";
+                        setTimeout(() => {
+                            document.getElementById("inputPasswordEstadisticas").focus();
+                        }, 100);
+                    }, 350);
+                }
+            };
+        });
+    }
+});

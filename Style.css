@@ -3122,9 +3122,6 @@ body.overflow-hidden {
   transform: scale(0.92);
 }
 
-/* ...existing code... */
-
-/* Animación de gradiente suave para la pantalla de login usando los colores originales */
 .login-screen {
   min-height: 100vh;
   display: flex;
@@ -3152,7 +3149,6 @@ body.overflow-hidden {
   }
 }
 
-/* Tema claro: usa los colores originales */
 [data-theme="light"] .login-screen {
   background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%);
   background-size: 200% 200%;
@@ -3160,18 +3156,14 @@ body.overflow-hidden {
   animation: loginBgGradientMove 1.6s cubic-bezier(.4,0,.2,1) forwards;
 }
 
-/* Tema oscuro: usa los colores originales */
 [data-theme="dark"] .login-screen {
-  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  background: linear-gradient(135deg, #243147 0%, #1c2939 100%);
   background-size: 200% 200%;
   background-position: 0% 50%;
   animation: loginBgGradientMove 1.6s cubic-bezier(.4,0,.2,1) forwards;
 }
 
-/* ...existing code... */
-
 .fotocopiado-card {
-  /* ...existing code... */
   opacity: 0;
   transform: translateY(30px);
   animation: cardFadeInUp 0.7s cubic-bezier(.4,0,.2,1) forwards;
@@ -3225,7 +3217,7 @@ body.overflow-hidden {
 #reportesPanelControl {
   max-width: 1200px;
   width: 100%;
-  margin: 48px auto 24px auto; /* margen superior aumentado */
+  margin: 48px auto 24px auto;
   border-radius: 12px;
   border: 1px solid var(--border-color);
   box-shadow: 0 2px 4px var(--shadow);
@@ -3273,5 +3265,122 @@ body.overflow-hidden {
   #reportesPanelControl .calc-card-header,
   #reportesPanelControl .calc-card-content {
     padding: 8px !important;
+  }
+}
+
+.panel-detalles-lateral {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 420px;
+  max-width: 95vw;
+  height: 100vh;
+  background: var(--bg-card);
+  box-shadow: 2px 0 24px rgba(30,41,59,0.18);
+  z-index: 9999;
+  transform: translateX(-100%);
+  transition: transform 0.35s cubic-bezier(.4,0,.2,1);
+  display: flex;
+  flex-direction: column;
+}
+.panel-detalles-lateral.abierto {
+  transform: translateX(0);
+}
+.panel-detalles-contenido {
+  padding: 32px 24px 24px 24px;
+  overflow-y: auto;
+  height: 100%;
+  position: relative;
+}
+.panel-detalles-cerrar {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  background: transparent;
+  border: none;
+  font-size: 2rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.2s;
+  z-index: 2;
+}
+.panel-detalles-cerrar:hover {
+  color: #ef4444;
+}
+.panel-detalles-titulo {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text-heading);
+  margin-bottom: 18px;
+}
+@media (max-width: 600px) {
+  .panel-detalles-lateral {
+    width: 98vw;
+    max-width: 98vw;
+    padding: 0;
+  }
+  .panel-detalles-contenido {
+    padding: 18px 8px 8px 8px;
+  }
+  .panel-detalles-titulo {
+    font-size: 1.05rem;
+  }
+}
+
+.panel-detalles-lateral {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 50vw;
+  min-width: 420px;
+  max-width: 900px;
+  height: 100vh;
+  background: var(--bg-card);
+  box-shadow: 2px 0 24px rgba(30,41,59,0.18);
+  z-index: 9999;
+  transform: translateX(-100%);
+  transition: transform 0.35s cubic-bezier(.4,0,.2,1);
+  display: flex;
+  flex-direction: column;
+}
+@media (max-width: 900px) {
+  .panel-detalles-lateral {
+    width: 98vw;
+    min-width: 0;
+    max-width: 98vw;
+  }
+}
+
+.titulo-fotocopiados-unaj,
+.titulo-fotocopiados-unaj .titulo-gradiente,
+.titulo-fotocopiados-unaj .titulo-unaj {
+  color: #111 !important;
+  -webkit-text-fill-color: #111 !important;
+  text-shadow: none !important;
+  background: none !important;
+  text-transform: uppercase !important;
+  font-size: 2.5rem !important;
+  font-weight: 900 !important;
+  letter-spacing: 1.5px !important;
+}
+
+[data-theme="dark"] .titulo-fotocopiados-unaj,
+[data-theme="dark"] .titulo-fotocopiados-unaj .titulo-gradiente,
+[data-theme="dark"] .titulo-fotocopiados-unaj .titulo-unaj {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  text-shadow: none !important;
+  background: none !important;
+  text-transform: uppercase !important;
+  font-size: 2.5rem !important;
+  font-weight: 900 !important;
+  letter-spacing: 1.5px !important;
+}
+
+@media (max-width: 600px) {
+  .titulo-fotocopiados-unaj,
+  .titulo-fotocopiados-unaj .titulo-gradiente,
+  .titulo-fotocopiados-unaj .titulo-unaj {
+    line-height: 1.15 !important;
   }
 }
