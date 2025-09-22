@@ -2563,19 +2563,25 @@ function abrirModalHistorico() {
 function cerrarModalHistorico() {
   document.getElementById("modalHistorico").style.display = "none";
 }
+
 async function consultarHistorico() {
   const tipo = document.getElementById("historicoFotocopiado").value;
   const fecha = document.getElementById("historicoFecha").value;
   const turno = document.getElementById("historicoTurno").value;
   const resultadoDiv = document.getElementById("resultadoHistorico");
+  const btnExportar = document.getElementById("btnExportarHistoricoPDF");
 
   if (!tipo || !fecha || !turno) {
     resultadoDiv.innerHTML = "<span style='color:#ef4444;'>Completa todos los campos.</span>";
+    if (btnExportar) btnExportar.style.display = "none";
+    window._historicoDatosParaPDF = null;
     return;
   }
 
   if (!isFirebaseEnabled || !database) {
     resultadoDiv.innerHTML = "<span style='color:#ef4444;'>Firebase no disponible.</span>";
+    if (btnExportar) btnExportar.style.display = "none";
+    window._historicoDatosParaPDF = null;
     return;
   }
 
@@ -2621,6 +2627,7 @@ async function consultarHistorico() {
       resultadoDiv.innerHTML = `
         <div class="historico-resumen">
           <h3>Resumen del día</h3>
+          <div><span class="historico-label">Copiado:</span> <span class="historico-valor">${calcInstitutos[tipo]?.name || tipo}</span></div>
           <div><span class="historico-label">Fecha:</span> <span class="historico-valor">${fecha1}</span></div>
           <div><span class="historico-label">Turno:</span> <span class="historico-valor">${turno === "TM" ? "Mañana" : "Tarde"}</span></div>
           <div><span class="historico-label">Efectivo:</span> <span class="historico-valor">$${totalEfectivo.toLocaleString("es-AR")}</span></div>
@@ -2651,13 +2658,159 @@ async function consultarHistorico() {
           ` : `<div class="historico-vacio">No hay extras registrados.</div>`}
         </div>
       `;
+      
+      if (btnExportar) btnExportar.style.display = "inline-block";
+      window._historicoDatosParaPDF = {
+        copiado: tipo,
+        copiadoNombre: calcInstitutos[tipo]?.name || tipo,
+        fecha: fecha1,
+        turno,
+        efectivo: totalEfectivo,
+        transferencia: totalTransferencia,
+        ventas,
+        perdidas,
+        totalPerdidas,
+        extras
+      };
     } else {
       resultadoDiv.innerHTML = "<span style='color:#ef4444;'>No se encontraron registros para esa fecha y turno.</span>";
+      if (btnExportar) btnExportar.style.display = "none";
+      window._historicoDatosParaPDF = null;
     }
   } catch (error) {
     resultadoDiv.innerHTML = "<span style='color:#ef4444;'>Error consultando historial.</span>";
+    if (btnExportar) btnExportar.style.display = "none";
+    window._historicoDatosParaPDF = null;
   }
 }
+
+document.getElementById("btnExportarHistoricoPDF").onclick = function() {
+  const datos = window._historicoDatosParaPDF;
+  if (!datos) return;
+
+  const copiadoNombre = datos.copiadoNombre || calcInstitutos[datos.copiado]?.name || datos.copiado || "Copiado";
+  const fecha = datos.fecha || "";
+  const turnoTxt = datos.turno === "TM" ? "Mañana" : "Tarde";
+
+  let mes = "";
+  let año = "";
+  if (fecha.includes("/")) {
+    const partes = fecha.split("/");
+    mes = partes[1];
+    año = partes[2];
+  }
+  const meses = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+  const mesNombre = meses[parseInt(mes,10)-1] || "";
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  doc.setFontSize(16);
+  doc.text(`Registro de Ventas - ${copiadoNombre}`, 14, 18);
+
+  doc.setFontSize(12);
+  doc.text(`Copiado: ${copiadoNombre}`, 14, 26);
+  doc.text(`Mes: ${mesNombre} ${año}`, 14, 32);
+  doc.text(`Fecha: ${fecha}`, 14, 38);
+  doc.text(`Turno: ${turnoTxt}`, 14, 44);
+
+  const ventasEfectivo = (datos.ventas || []).filter(v => v.metodoPago === 'efectivo').map(v => `$${v.total}`);
+  const ventasTransferencia = (datos.ventas || []).filter(v => v.metodoPago === 'transferencia').map(v => `$${v.total}`);
+  const maxFilas = Math.max(ventasEfectivo.length, ventasTransferencia.length);
+  const tablaVentas = [];
+  for (let i = 0; i < maxFilas; i++) {
+    tablaVentas.push([
+      ventasEfectivo[i] || '',
+      ventasTransferencia[i] || ''
+    ]);
+  }
+
+  let y = 52;
+  doc.setFontSize(13);
+  doc.text('Ventas:', 14, y);
+  y += 8;
+  doc.autoTable({
+    head: [['Efectivo', 'Transferencia']],
+    body: tablaVentas,
+    startY: y,
+    theme: 'grid',
+    styles: { fontSize: 12 },
+    headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' },
+    bodyStyles: { fillColor: [245, 245, 245] }
+  });
+  y = doc.lastAutoTable.finalY + 10;
+
+  doc.setFontSize(13);
+  doc.text('Totales:', 14, y);
+  y += 8;
+  doc.autoTable({
+    head: [['Concepto', 'Monto']],
+    body: [
+      ['Total ventas en efectivo', `$${(datos.efectivo || 0).toLocaleString("es-AR")}`],
+      ['Total ventas en transferencia', `$${(datos.transferencia || 0).toLocaleString("es-AR")}`],
+      ['Total general', `$${((datos.efectivo || 0) + (datos.transferencia || 0)).toLocaleString("es-AR")}`]
+    ],
+    startY: y,
+    theme: 'grid',
+    styles: { fontSize: 12 },
+    headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold' },
+    bodyStyles: { fillColor: [245, 245, 245] }
+  });
+  y = doc.lastAutoTable.finalY + 10;
+
+  if (datos.perdidas && datos.perdidas.length > 0) {
+    doc.setFontSize(13);
+    doc.text('Pérdidas registradas:', 14, y);
+    y += 8;
+    const tablaPerdidas = datos.perdidas.map(p => [
+      p.fecha || fecha,
+      p.hora || "-",
+      p.nombre || "-",
+      p.cantidad,
+      p.tipo === "color" ? "Color" : "BN",
+      p.motivo,
+      `$${p.precioUnitario}`,
+      `$${p.total}`
+    ]);
+    doc.autoTable({
+      head: [['Fecha', 'Hora', 'Nombre', 'Cantidad', 'Tipo', 'Motivo', 'Precio unitario', 'Total']],
+      body: tablaPerdidas,
+      startY: y,
+      theme: 'grid',
+      styles: { fontSize: 11 },
+      headStyles: { fillColor: [245, 158, 11], textColor: 255, fontStyle: 'bold' },
+      bodyStyles: { fillColor: [255, 251, 235] }
+    });
+    y = doc.lastAutoTable.finalY + 10;
+  }
+
+  if (datos.extras && datos.extras.length > 0) {
+    doc.setFontSize(13);
+    doc.text('Extras registrados:', 14, y);
+    y += 8;
+    const tablaExtras = datos.extras.map(e => [
+      e.fecha || fecha,
+      e.hora || "-",
+      e.motivo,
+      e.cantidad,
+      e.tipo === "color" ? "Color" : "Blanco y Negro",
+      `$${e.precio || 0}`
+    ]);
+    doc.autoTable({
+      head: [['Fecha', 'Hora', 'Motivo', 'Cantidad', 'Tipo', 'Precio']],
+      body: tablaExtras,
+      startY: y,
+      theme: 'grid',
+      styles: { fontSize: 11 },
+      headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold' },
+      bodyStyles: { fillColor: [245, 245, 245] }
+    });
+    y = doc.lastAutoTable.finalY + 10;
+  }
+
+  const nombreArchivo = `RegistroVentas_${copiadoNombre.replace(/\s/g, "_")}_${mesNombre}_${año}_${fecha}_${turnoTxt}.pdf`;
+  doc.save(nombreArchivo);
+};
 
 
 
@@ -3751,3 +3904,4 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 });
+

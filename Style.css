@@ -3384,3 +3384,13 @@ body.overflow-hidden {
     line-height: 1.15 !important;
   }
 }
+
+.modal-historico-horizontal {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-historico-col.resultados {
+  max-height: 80vh;
+  overflow-y: auto;
+}
