@@ -888,8 +888,25 @@ function calcMostrarDatosComparativa(datos) {
   Object.entries(datos).forEach(([key, instituto]) => {
     const card = document.createElement("div")
     card.className = "calc-detail-card"
+    card.style.position = "relative"
+    card.tabIndex = 0
+    card.setAttribute("role", "button")
+    card.setAttribute("title", `Ir al registro de ${instituto.name}`)
+    card.onclick = (e) => {
+      if (e.target.closest(".btn-ir-copiado")) return;
+      window.irAlRegistroCopiado(key)
+    }
+    card.onkeydown = (e) => {
+      if (e.key === "Enter" || e.key === " ") window.irAlRegistroCopiado(key)
+    }
     card.innerHTML = `
-      <h4>${instituto.name}</h4>
+        <button class="calc-btn btn-ir-copiado" style="position:absolute;top:14px;right:14px;width:25px;height:25px;min-width:35px;min-height:35px;max-width:44px;max-height:44px;display:flex;align-items:center;justify-content:center;padding:0;background:var(--bg-card);border:1.5px solid var(--border-color);transition:background 0.18s,border 0.18s;" title="Ir al registro de ${instituto.name}" tabindex="0" onclick="event.stopPropagation();window.irAlRegistroCopiado('${key}')">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:auto;">
+            <path d="M7 17L17 7"/>
+            <polyline points="8 7 17 7 17 16"/>
+          </svg>
+        </button>
+        <h4>${instituto.name}</h4>
       <div class="calc-detail-stat">
           <span>Total de Ingresos:</span>
           <span>$${instituto.total.toLocaleString("es-AR")}</span>
@@ -921,6 +938,15 @@ function calcMostrarDatosComparativa(datos) {
     `
     grid.appendChild(card)
   })
+
+  let explicacion = document.getElementById("calcDetallesGridExplicacion")
+  if (!explicacion) {
+    explicacion = document.createElement("div")
+    explicacion.id = "calcDetallesGridExplicacion"
+    explicacion.style.cssText = "margin-top:10px;font-size:0.93rem;color:var(--text-secondary);text-align:center;opacity:0.85;"
+    grid.parentNode.appendChild(explicacion)
+  }
+  explicacion.innerHTML = `<em>Al darle click a cualquiera de las tarjetas de los copiados, o al icono <span style="font-size:1.1em;">↗</span> en la esquina, se puede acceder al registro del fotocopiado seleccionado.</em>`
 }
 
 function calcCrearGraficoIngresos(datos) {
@@ -2034,8 +2060,12 @@ function calcMostrarDetalles(tipo) {
   container.style.display = "block";
   container.style.maxHeight = "80vh";
   container.style.overflowY = "auto";
-  container.style.minHeight = "500px";
+  container.style.minHeight = "80vh";
   window.ventaDetalleIdMostrado = null;
+
+  setTimeout(() => {
+  container.scrollIntoView({ behavior: "smooth", block: "center" });
+}, 100);
 }
 
 function getVentaIndiceGlobal(venta) {
@@ -3905,3 +3935,58 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
+window.irAlRegistroCopiado = function(copiado) {
+  const loader = document.getElementById("loaderUNAJ");
+  const logo = document.getElementById("loaderUNAJLogo");
+  const textos = document.querySelector(".loader-textos");
+  if (loader && logo && textos) {
+    loader.style.display = "flex";
+    loader.classList.remove("loader-hide");
+    
+    logo.classList.remove("loader-fade-in", "loader-fade-out");
+    textos.classList.remove("loader-fade-in", "loader-fade-out");
+    
+    void logo.offsetWidth;
+    void textos.offsetWidth;
+    logo.classList.add("loader-fade-in");
+    textos.classList.add("loader-fade-in");
+    setTimeout(() => {
+      logo.classList.remove("loader-fade-in");
+      textos.classList.remove("loader-fade-in");
+      logo.classList.add("loader-fade-out");
+      textos.classList.add("loader-fade-out");
+      setTimeout(() => {
+        loader.classList.add("loader-hide");
+        setTimeout(() => {
+          loader.style.display = "none";
+          logo.classList.remove("loader-fade-out");
+          textos.classList.remove("loader-fade-out");
+        }, 700);
+      }, 700);
+    }, 900);
+  }
+
+  currentFotocopiado = copiado;
+  localStorage.setItem("currentFotocopiado", copiado);
+
+  setTimeout(() => {
+    document.getElementById("calcComparativaScreen").style.display = "none";
+    document.getElementById("calculatorScreen").style.display = "block";
+    document.getElementById("turnoSelectorFixed").style.display = "flex";
+
+    showSyncNotification("Cargando datos del registro seleccionado...");
+    loadFromFirebase().then(() => {
+      calcActualizarTabla();
+      setTimeout(() => {
+        const card = document.querySelector(".calc-card");
+        if (card) card.scrollIntoView({ behavior: "smooth" });
+      }, 300);
+    });
+
+    const fotocopiado = calcInstitutos[copiado];
+    if (fotocopiado) {
+      document.getElementById("fotocopiadoTitle").textContent = fotocopiado.name;
+      document.getElementById("fotocopiadoSubtitle").textContent = fotocopiado.fullName;
+    }
+  }, 900);
+};
