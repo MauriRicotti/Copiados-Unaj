@@ -25,6 +25,11 @@ const calcInstitutos = {
     fullName: "Calculadora de cobro y registro de ventas",
     password: "ingenieria123",
   },
+  hec_salud: {
+    name: "HEC Salud",
+    fullName: "Calculadora de cobro y registro de ventas",
+    password: "hecsalud123", 
+  },
 }
 
 let firebaseApp
@@ -89,7 +94,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  ["salud", "sociales", "ingenieria"].forEach(tipo => {
+  ["salud", "sociales", "ingenieria", "hec_salud"].forEach(tipo => {
     const input = document.getElementById(`passwordInput-${tipo}`);
     if (input) {
       input.addEventListener("keydown", function(e) {
@@ -363,13 +368,13 @@ function calcGuardarDatos() {
 }
 
 function calcAgregarArchivo() {
-  calcContadorArchivos++
-  const container = document.getElementById("calcArchivosContainer")
-  const div = document.createElement("div")
-  div.className = "calc-card calc-archivo"
-  div.id = `calcArchivo${calcContadorArchivos}`
+  calcContadorArchivos++;
+  const container = document.getElementById("calcArchivosContainer");
+  const div = document.createElement("div");
+  div.className = "calc-card calc-archivo";
+  div.id = `calcArchivo${calcContadorArchivos}`;
 
-  const numeroArchivo = calcArchivos.length + 1
+  const numeroArchivo = calcArchivos.length + 1;
 
   div.innerHTML = `
     <div class="calc-card-content">
@@ -427,9 +432,9 @@ function calcAgregarArchivo() {
             </div>
         </div>
     </div>
-`
+  `;
 
-  container.appendChild(div)
+  container.appendChild(div);
 
   calcArchivos.push({
     id: calcContadorArchivos,
@@ -437,29 +442,11 @@ function calcAgregarArchivo() {
     copias: 1,
     tipo: "1",
     color: "bn",
-  })
-  const propinaInput = document.getElementById("calcPropinaInput")
-  if (propinaInput) propinaInput.value = "0"
+  });
+  const propinaInput = document.getElementById("calcPropinaInput");
+  if (propinaInput) propinaInput.value = "0";
 
-  calcActualizarSubtotal(calcContadorArchivos)
-}
-
-function calcEliminarArchivo(id) {
-  if (calcArchivos.length <= 1) {
-    alert("Debe haber al menos un archivo.")
-    return
-  }
-
-  const elemento = document.getElementById(`calcArchivo${id}`)
-  if (elemento) {
-    elemento.style.transition = "opacity 0.3s ease"
-    elemento.style.opacity = "0"
-    setTimeout(() => {
-      elemento.remove()
-      calcArchivos = calcArchivos.filter((archivo) => archivo.id !== id)
-      calcReorganizarNombresArchivos()
-    }, 300)
-  }
+  calcActualizarSubtotal(calcContadorArchivos);
 }
 
 function calcReorganizarNombresArchivos() {
@@ -834,13 +821,13 @@ async function calcCargarDatosComparativa() {
   }
 
   try {
-    const institutos = ["salud", "sociales", "ingenieria"]
+    const institutos = ["salud", "sociales", "ingenieria", "hec_salud"];
     const datosInstitutos = {}
 
     for (const instituto of institutos) {
       const fotocopiadoRef = window.firebaseRef(database, `fotocopiados/${instituto}`)
       const snapshot = await window.firebaseGet(fotocopiadoRef)
-      const data = snapshot.val()
+      const data = snapshot.exists() ? snapshot.val() : {}
 
       datosInstitutos[instituto] = {
         name: calcInstitutos[instituto].name,
@@ -885,56 +872,61 @@ function calcMostrarDatosComparativa(datos) {
 
   const grid = document.getElementById("calcDetallesGrid")
   grid.innerHTML = ""
-  Object.entries(datos).forEach(([key, instituto]) => {
+
+  // Colores en el mismo orden que las barras
+  const colores = [
+    "#22c55e",   // Salud (verde)
+    "#3b82f6",   // Sociales (azul)
+    "#ef4444",   // Ingeniería (rojo)
+    "#fb923c",   // HEC Salud (naranja)
+  ]
+
+  Object.entries(datos).forEach(([key, instituto], idx) => {
     const card = document.createElement("div")
     card.className = "calc-detail-card"
     card.style.position = "relative"
     card.tabIndex = 0
     card.setAttribute("role", "button")
     card.setAttribute("title", `Ir al registro de ${instituto.name}`)
-    card.onclick = (e) => {
-      if (e.target.closest(".btn-ir-copiado")) return;
-      window.irAlRegistroCopiado(key)
-    }
-    card.onkeydown = (e) => {
-      if (e.key === "Enter" || e.key === " ") window.irAlRegistroCopiado(key)
-    }
+    card.onclick = (e) => { window.irAlRegistroCopiado(key) }
+    card.onkeydown = (e) => { if (e.key === "Enter") window.irAlRegistroCopiado(key) }
+    // Eliminada la franja de color, color solo en el nombre
     card.innerHTML = `
-        <button class="calc-btn btn-ir-copiado" style="position:absolute;top:14px;right:14px;width:25px;height:25px;min-width:35px;min-height:35px;max-width:44px;max-height:44px;display:flex;align-items:center;justify-content:center;padding:0;background:var(--bg-card);border:1.5px solid var(--border-color);transition:background 0.18s,border 0.18s;" title="Ir al registro de ${instituto.name}" tabindex="0" onclick="event.stopPropagation();window.irAlRegistroCopiado('${key}')">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:auto;">
-            <path d="M7 17L17 7"/>
-            <polyline points="8 7 17 7 17 16"/>
-          </svg>
-        </button>
-        <h4>${instituto.name}</h4>
-      <div class="calc-detail-stat">
-          <span>Total de Ingresos:</span>
-          <span>$${instituto.total.toLocaleString("es-AR")}</span>
-      </div>
-      <div class="calc-detail-stat">
-          <span>Ventas en Efectivo:</span>
-          <span>$${instituto.efectivo.toLocaleString("es-AR")}</span>
-      </div>
-      <div class="calc-detail-stat">
-          <span>Ventas por Transferencia:</span>
-          <span>$${instituto.transferencia.toLocaleString("es-AR")}</span>
-      </div>
-      <div class="calc-detail-stat">
-          <span>Número de Ventas:</span>
-          <span>${instituto.ventas.length}</span>
-      </div>
-      <div class="calc-detail-stat">
-          <span>Promedio por Venta:</span>
-          <span>$${instituto.ventas.length > 0 ? Math.round(instituto.total / instituto.ventas.length).toLocaleString("es-AR") : 0}</span>
-      </div>
-      <div class="calc-detail-stat">
-          <span>Pérdidas:</span>
-          <span>${instituto.perdidas} ($${instituto.totalPerdidas.toLocaleString("es-AR")})</span>
-      </div>
-      <div class="calc-detail-stat">
-          <span>Extras:</span>
-          <span>${instituto.extras?.length || 0} ($${instituto.extras?.reduce((acc, e) => acc + (e.precio || 0), 0).toLocaleString("es-AR")})</span>
-      </div>
+  <button class="calc-btn btn-ir-copiado" style="position:absolute;top:14px;right:14px;width:25px;height:25px;min-width:35px;min-height:35px;max-width:44px;max-height:44px;display:flex;align-items:center;justify-content:center;padding:0;background:var(--bg-card);border:1.5px solid var(--border-color);transition:background 0.18s,border 0.18s;" title="Ir al registro de ${instituto.name}" tabindex="0" onclick="event.stopPropagation();window.irAlRegistroCopiado('${key}')">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:auto;">
+      <path d="M7 17L17 7"/>
+      <polyline points="8 7 17 7 17 16"/>
+    </svg>
+  </button>
+  <h4 style="color:${colores[idx]};">${instituto.name}</h4>
+  <div class="calc-detail-stat">
+      <span>Total de Ingresos:</span>
+      <span>$${instituto.total.toLocaleString("es-AR")}</span>
+  </div>
+  <div class="calc-detail-stat">
+      <span>Ventas en Efectivo:</span>
+      <span>$${instituto.efectivo.toLocaleString("es-AR")}</span>
+  </div>
+  <div class="calc-detail-stat">
+      <span>Ventas por Transferencia:</span>
+      <span>$${instituto.transferencia.toLocaleString("es-AR")}</span>
+  </div>
+  <div class="calc-detail-stat">
+      <span>Número de Ventas:</span>
+      <span>${instituto.ventas.length}</span>
+  </div>
+  <div class="calc-detail-stat">
+      <span>Promedio por Venta:</span>
+      <span>$${instituto.ventas.length > 0 ? Math.round(instituto.total / instituto.ventas.length).toLocaleString("es-AR") : 0}</span>
+  </div>
+  <div class="calc-detail-stat">
+      <span>Pérdidas:</span>
+      <span>${instituto.perdidas} ($${instituto.totalPerdidas.toLocaleString("es-AR")})</span>
+  </div>
+  <div class="calc-detail-stat">
+      <span>Extras:</span>
+      <span>${instituto.extras?.length || 0} ($${instituto.extras?.reduce((acc, e) => acc + (e.precio || 0), 0).toLocaleString("es-AR")})</span>
+  </div>
     `
     grid.appendChild(card)
   })
@@ -968,11 +960,17 @@ function calcCrearGraficoIngresos(datos) {
           label: "Ingresos Totales",
           data: totales,
           backgroundColor: [
-            "rgba(34, 197, 94, 0.8)", 
-            "rgba(59, 130, 246, 0.8)", 
-            "rgba(239, 68, 68, 0.8)", 
+            "rgba(34, 197, 94, 0.8)",    // Salud (verde)
+            "rgba(59, 130, 246, 0.8)",   // Sociales (azul)
+            "rgba(239, 68, 68, 0.8)",    // Ingeniería (rojo)
+            "rgba(251, 146, 60, 0.85)",  // HEC Salud (naranja)
           ],
-          borderColor: ["rgba(34, 197, 94, 1)", "rgba(59, 130, 246, 1)", "rgba(239, 68, 68, 1)"],
+          borderColor: [
+            "rgba(34, 197, 94, 1)",
+            "rgba(59, 130, 246, 1)",
+            "rgba(239, 68, 68, 1)",
+            "rgba(251, 146, 60, 1)",
+          ],
           borderWidth: 2,
           borderRadius: 8,
         },
@@ -1806,11 +1804,12 @@ function calcExportarPDF() {
 }
 
 async function exportarTodosLosRegistrosPDFZip() {
-  const institutos = ["salud", "sociales", "ingenieria"];
+  const institutos = ["salud", "sociales", "ingenieria", "hec_salud"];
   const nombres = {
     salud: "Copiados_Salud",
     sociales: "Copiados_Sociales",
-    ingenieria: "Copiados_Ingenieria"
+    ingenieria: "Copiados_Ingenieria",
+    hec_salud: "HEC_Salud"
   };
   const zip = new JSZip();
   const ahora = new Date();
@@ -2060,12 +2059,11 @@ function calcMostrarDetalles(tipo) {
   container.style.display = "block";
   container.style.maxHeight = "80vh";
   container.style.overflowY = "auto";
-  container.style.minHeight = "80vh";
-  window.ventaDetalleIdMostrado = null;
-
+  container.style.minHeight = "500px";
   setTimeout(() => {
-  container.scrollIntoView({ behavior: "smooth", block: "center" });
-}, 100);
+    container.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, 100);
+  return;
 }
 
 function getVentaIndiceGlobal(venta) {
@@ -3461,10 +3459,13 @@ async function obtenerDatosContadoresImpresoras(desde, hasta) {
   return resultado;
 }
 
+// ...existing code...
 function renderizarTablaContadores(datos, desde, hasta) {
   let html = `<div class="reporte-contadores-periodo"><b>Periodo:</b> ${formatearFecha(desde)} al ${formatearFecha(hasta)}</div>`;
   let totalGeneral = 0;
-  const precioBN = 40, precioColor = 115;
+
+  // Guardar precios por impresora en memoria temporal
+  let preciosPorImpresora = {};
 
   for (const copiado in datos) {
     const impresoras = datos[copiado];
@@ -3484,34 +3485,86 @@ function renderizarTablaContadores(datos, desde, hasta) {
         </tr>
       </thead>
       <tbody>`;
+
     let subtotal = 0;
     let rowIndex = 0;
     for (const key in impresoras) {
       const imp = impresoras[key];
-      const precio = imp.color ? precioColor : precioBN;
-      const precioFinal = imp.diferencia * precio;
+      let precioDefault = 40;
+      if (imp.nombre && imp.nombre.toLowerCase().includes("color")) precioDefault = 115;
+      const precioActual = preciosPorImpresora[imp.nombre] !== undefined ? preciosPorImpresora[imp.nombre] : precioDefault;
+      const precioFinal = imp.diferencia * precioActual;
       subtotal += precioFinal;
-      html += `<tr${rowIndex % 2 === 1 ? ' style="background:#f3f4f6;"' : ''}>
-        <td>${imp.marca || "-"}</td>
-        <td>${imp.nombre || key}</td>
-        <td>${imp.apertura ?? "-"}</td>
-        <td>${imp.cierre ?? "-"}</td>
-        <td>${imp.diferencia}</td>
-        <td>$${precio}</td>
-        <td>$${precioFinal.toLocaleString("es-AR")}</td>
-      </tr>`;
+
+      html += `
+        <tr>
+          <td>-</td>
+          <td>${imp.nombre}</td>
+          <td>${imp.apertura}</td>
+          <td>${imp.cierre}</td>
+          <td>${imp.diferencia}</td>
+          <td>
+            <input type="number" min="0" step="1" value="${precioActual}" 
+              data-impresora="${imp.nombre}" 
+              class="input-precio-contador"
+              style="text-align:right;"
+              onchange="actualizarPrecioImpresora('${copiado}','${imp.nombre}',this.value)">
+          </td>
+          <td id="precioFinal_${copiado}_${rowIndex}" style="font-weight:600;">$${precioFinal.toLocaleString("es-AR")}</td>
+        </tr>
+      `;
       rowIndex++;
     }
     html += `<tr class="reporte-contadores-total-row">
       <td colspan="6" style="text-align:right;background:#d1fae5;color:#059669;font-weight:700;">Total ${copiado}:</td>
-      <td style="background:#d1fae5;color:#059669;font-weight:700;">$${subtotal.toLocaleString("es-AR")}</td>
+      <td style="background:#d1fae5;color:#059669;font-weight:700;" id="subtotal_${copiado}">$${subtotal.toLocaleString("es-AR")}</td>
     </tr>`;
     html += `</tbody></table></div>`;
     totalGeneral += subtotal;
   }
-  html += `<div class="reporte-contadores-total-general" style="font-weight:800;font-size:1.18rem;margin-top:18px;color:#059669;text-align:right;">Total general a pagar: $${totalGeneral.toLocaleString("es-AR")}</div>`;
+  html += `<div class="reporte-contadores-total-general" style="font-weight:800;font-size:1.18rem;margin-top:18px;color:#059669;text-align:right;">Total general a pagar: <span id="totalGeneralContadores">$${totalGeneral.toLocaleString("es-AR")}</span></div>`;
   document.getElementById("tablaReporteContadoresImpresoras").innerHTML = html;
+
+  window._contadoresDatosTabla = datos;
+  window._contadoresPreciosPorImpresora = preciosPorImpresora;
 }
+
+window.actualizarPrecioImpresora = function(copiado, nombre, nuevoPrecio) {
+  const datos = window._contadoresDatosTabla;
+  const precios = window._contadoresPreciosPorImpresora;
+  let subtotal = 0;
+  let rowIndex = 0;
+  for (const key in datos[copiado]) {
+    const imp = datos[copiado][key];
+    if (imp.nombre === nombre) {
+      precios[imp.nombre] = Number(nuevoPrecio);
+    }
+    const precioUsar = precios[imp.nombre] !== undefined ? precios[imp.nombre] : (imp.nombre.toLowerCase().includes("color") ? 115 : 40);
+    const precioFinal = imp.diferencia * precioUsar;
+    document.getElementById(`precioFinal_${copiado}_${rowIndex}`).textContent = `$${precioFinal.toLocaleString("es-AR")}`;
+    subtotal += precioFinal;
+    rowIndex++;
+  }
+  document.getElementById(`subtotal_${copiado}`).textContent = `$${subtotal.toLocaleString("es-AR")}`;
+
+  let totalGeneral = 0;
+  for (const cop in datos) {
+    let sub = 0;
+    let idx = 0;
+    for (const key in datos[cop]) {
+      const imp = datos[cop][key];
+      const precioUsar = precios[imp.nombre] !== undefined ? precios[imp.nombre] : (imp.nombre.toLowerCase().includes("color") ? 115 : 40);
+      sub += imp.diferencia * precioUsar;
+      idx++;
+    }
+    totalGeneral += sub;
+    if (document.getElementById(`subtotal_${cop}`))
+      document.getElementById(`subtotal_${cop}`).textContent = `$${sub.toLocaleString("es-AR")}`;
+  }
+  if (document.getElementById("totalGeneralContadores"))
+    document.getElementById("totalGeneralContadores").textContent = `$${totalGeneral.toLocaleString("es-AR")}`;
+};
+
 
 function exportarContadoresPDF(datos, desde, hasta) {
   const { jsPDF } = window.jspdf;
@@ -3990,3 +4043,4 @@ window.irAlRegistroCopiado = function(copiado) {
     }
   }, 900);
 };
+

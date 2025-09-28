@@ -3438,3 +3438,152 @@ body.overflow-hidden {
 [data-theme="dark"] .btn-ir-copiado svg {
   color: #f1f5f9;
 }
+
+.hec-salud-fullwidth {
+  grid-column: span 3;
+}
+@media (max-width: 900px) {
+  .becas-salud-fullwidth {
+    grid-column: span 1;
+  }
+}
+
+/* Scroll horizontal en desktop/tablet, vertical en mobile */
+.calc-details-grid {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+  margin-top: 20px;
+  scroll-snap-type: x mandatory;
+}
+.calc-detail-card {
+  min-width: 320px;
+  max-width: 340px;
+  flex: 0 0 340px;
+  scroll-snap-align: start;
+  position: relative;
+  border-top: 6px solid transparent;
+}
+@media (max-width: 700px) {
+  .calc-details-grid {
+    flex-direction: column;
+    gap: 16px;
+    overflow-x: unset;
+    padding-bottom: 0;
+  }
+  .calc-detail-card {
+    min-width: 0;
+    max-width: 100%;
+    flex: 1 1 100%;
+  }
+}
+
+#cardCambiarContrasenas fieldset {
+  border: none !important;
+  padding: 0;
+  margin: 0 0 18px 0;
+  background: transparent;
+}
+#cardCambiarContrasenas legend {
+  color: var(--text-heading);
+  font-size: 1.05rem;
+}
+#cardCambiarContrasenas .calc-input {
+  background: var(--bg-card);
+  border: 2px solid var(--border-color);
+}
+
+
+@media (max-width: 900px) {
+  .fotocopiados-grid {
+    grid-template-columns: 1fr !important;
+    gap: 18px !important;
+    max-width: 100vw !important;
+    padding: 0 8px !important;
+  }
+  .fotocopiado-card {
+    width: 100% !important;
+    max-width: 100vw !important;
+    min-width: 0 !important;
+    margin: 0 auto !important;
+    padding: 20px 10px !important;
+    box-sizing: border-box;
+  }
+  .hec-salud-fullwidth {
+    grid-column: span 1 !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .fotocopiado-card {
+    padding: 14px 4px !important;
+  }
+  .fotocopiados-grid {
+    gap: 12px !important;
+    padding: 0 2px !important;
+  }
+}
+
+
+@media (min-width: 600px) and (max-width: 1024px) {
+  .fotocopiados-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 24px !important;
+    max-width: 98vw !important;
+    padding: 0 18px !important;
+  }
+  .fotocopiado-card {
+    width: 100% !important;
+    max-width: 100vw !important;
+    min-width: 0 !important;
+    margin: 0 auto !important;
+    padding: 28px 18px !important;
+    box-sizing: border-box;
+  }
+  .hec-salud-fullwidth {
+    grid-column: span 1 !important;
+  }
+}
+
+.input-precio-contador {
+  width: 80px;
+  min-width: 60px;
+  max-width: 110px;
+  padding: 7px 8px;
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: var(--text-heading);
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-color);
+  border-radius: 5px;
+  text-align: right;
+  outline: none;
+  transition: border-color 0.18s, box-shadow 0.18s;
+  box-shadow: none;
+  appearance: textfield;
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
+}
+.input-precio-contador:focus {
+  border-color: #3b82f6;
+  background: var(--bg-card-header);
+}
+[data-theme="dark"] .input-precio-contador {
+  background: #232b38;
+  color: #e5e7eb;
+  border: 1.5px solid #334155;
+}
+[data-theme="dark"] .input-precio-contador:focus {
+  background: #1e293b;
+  border-color: #60a5fa;
+}
+
+
+.input-precio-contador::-webkit-inner-spin-button,
+.input-precio-contador::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+

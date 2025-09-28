@@ -139,6 +139,22 @@
                         </div>
                     </div>
                 </div>
+                <div class="fotocopiado-card hec-salud-fullwidth" onclick="selectFotocopiado('hec_salud')">
+                    <div class="fotocopiado-icon">
+                        <img src="/imagenes/82119bf6-9777-4039-b9fb-d843a9d3cdd1.png" alt="HEC Salud" class="instituto-logo">
+                    </div>
+                    <h3>Fotocopiado HEC Salud</h3>
+                    <p>Hospital del Cruce<p>
+                    <div id="passwordSection-hec_salud" class="password-section-inline" style="display: none;">
+                        <div class="password-card-inline">
+                            <div class="password-input-group">
+                                <input type="password" id="passwordInput-hec_salud" placeholder="Ingresa la contraseña" class="password-input">
+                                <button onclick="login('hec_salud')" class="login-btn">Ingresar</button>
+                            </div>
+                            <button onclick="cancelLogin('hec_salud')" class="cancel-btn">Cancelar</button>
+                        </div>
+                    </div>
+                </div>
             </div>
             
         </div>
@@ -167,10 +183,14 @@
                     <div class="header-controls">
                         <button
                             id="btnCierreTurno"
-                            class="calc-btn calc-btn-outline header-btn"
-                            title="Cierre de turno"
+                            class="logout-btn header-btn"
+                            title="Formulario de cierre de turno"
+                            style="width:44px;min-width:44px;height:44px;padding:0;display:flex;align-items:center;justify-content:center;"
                             onclick="window.open('https://docs.google.com/forms/d/e/1FAIpQLSdlilE122kDBX8_lGz2FyAKIiNzsCBo0td4EknNtio4h25LWQ/viewform', '_blank')">
-                            Cierre de turno
+                            <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                              <rect x="4" y="4" width="16" height="16" rx="3" />
+                              <path d="M8 8h8M8 12h8M8 16h4"/>
+                            </svg>
                         </button>
                         <button
                             id="calcThemeToggle"
@@ -552,6 +572,7 @@
             <option value="salud">Salud</option>
             <option value="sociales">Sociales</option>
             <option value="ingenieria">Ingeniería</option>
+            <option value="hec_salud">HEC</option>
           </select>
           <label>Fecha:</label>
           <input type="date" id="historicoFecha" class="calc-input">
