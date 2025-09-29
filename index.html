@@ -506,8 +506,16 @@
                 </div>
             </div>
             <div class="calc-card">
-                <div class="calc-card-header">
+                <div class="calc-card-header" style="display:flex;justify-content:space-between;align-items:center;">
                     <div class="calc-card-title">Detalles por Fotocopiado</div>
+                    <div style="display:flex;gap:8px;">
+                        <button class="scroll-btn" id="btnScrollLeftDetalles" title="Deslizar a la izquierda">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="15 18 9 12 15 6"/></svg>
+                        </button>
+                        <button class="scroll-btn" id="btnScrollRightDetalles" title="Deslizar a la derecha">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 6 15 12 9 18"/></svg>
+                        </button>
+                    </div>
                 </div>
                 <div class="calc-card-content">
                     <div id="calcDetallesGrid" class="calc-details-grid"></div>

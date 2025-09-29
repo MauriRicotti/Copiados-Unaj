@@ -28,7 +28,7 @@ const calcInstitutos = {
   hec_salud: {
     name: "HEC Salud",
     fullName: "Calculadora de cobro y registro de ventas",
-    password: "hecsalud123", 
+    password: "hec123", 
   },
 }
 
@@ -848,6 +848,7 @@ async function calcCargarDatosComparativa() {
   }
 }
 
+// ...existing code...
 function calcMostrarDatosComparativa(datos) {
   let totalGeneral = 0
   let ventasTotales = 0
@@ -873,12 +874,11 @@ function calcMostrarDatosComparativa(datos) {
   const grid = document.getElementById("calcDetallesGrid")
   grid.innerHTML = ""
 
-  // Colores en el mismo orden que las barras
   const colores = [
-    "#22c55e",   // Salud (verde)
-    "#3b82f6",   // Sociales (azul)
-    "#ef4444",   // Ingeniería (rojo)
-    "#fb923c",   // HEC Salud (naranja)
+    "#22c55e",
+    "#3b82f6",
+    "#f55757ff",
+    "#fb923c",
   ]
 
   Object.entries(datos).forEach(([key, instituto], idx) => {
@@ -890,7 +890,6 @@ function calcMostrarDatosComparativa(datos) {
     card.setAttribute("title", `Ir al registro de ${instituto.name}`)
     card.onclick = (e) => { window.irAlRegistroCopiado(key) }
     card.onkeydown = (e) => { if (e.key === "Enter") window.irAlRegistroCopiado(key) }
-    // Eliminada la franja de color, color solo en el nombre
     card.innerHTML = `
   <button class="calc-btn btn-ir-copiado" style="position:absolute;top:14px;right:14px;width:25px;height:25px;min-width:35px;min-height:35px;max-width:44px;max-height:44px;display:flex;align-items:center;justify-content:center;padding:0;background:var(--bg-card);border:1.5px solid var(--border-color);transition:background 0.18s,border 0.18s;" title="Ir al registro de ${instituto.name}" tabindex="0" onclick="event.stopPropagation();window.irAlRegistroCopiado('${key}')">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:auto;">
@@ -898,7 +897,7 @@ function calcMostrarDatosComparativa(datos) {
       <polyline points="8 7 17 7 17 16"/>
     </svg>
   </button>
-  <h4 style="color:${colores[idx]};">${instituto.name}</h4>
+  <h4 style="color:${colores[idx]};text-transform:uppercase;font-weight:800;">${instituto.name.toUpperCase()}</h4>
   <div class="calc-detail-stat">
       <span>Total de Ingresos:</span>
       <span>$${instituto.total.toLocaleString("es-AR")}</span>
@@ -940,6 +939,7 @@ function calcMostrarDatosComparativa(datos) {
   }
   explicacion.innerHTML = `<em>Al darle click a cualquiera de las tarjetas de los copiados, o al icono <span style="font-size:1.1em;">↗</span> en la esquina, se puede acceder al registro del fotocopiado seleccionado.</em>`
 }
+// ...existing code...
 
 function calcCrearGraficoIngresos(datos) {
   const ctx = document.getElementById("calcChartIngresos").getContext("2d")
@@ -3459,12 +3459,10 @@ async function obtenerDatosContadoresImpresoras(desde, hasta) {
   return resultado;
 }
 
-// ...existing code...
 function renderizarTablaContadores(datos, desde, hasta) {
   let html = `<div class="reporte-contadores-periodo"><b>Periodo:</b> ${formatearFecha(desde)} al ${formatearFecha(hasta)}</div>`;
   let totalGeneral = 0;
 
-  // Guardar precios por impresora en memoria temporal
   let preciosPorImpresora = {};
 
   for (const copiado in datos) {
@@ -4044,3 +4042,16 @@ window.irAlRegistroCopiado = function(copiado) {
   }, 900);
 };
 
+document.addEventListener("DOMContentLoaded", function() {
+    const btnLeft = document.getElementById("btnScrollLeftDetalles");
+    const btnRight = document.getElementById("btnScrollRightDetalles");
+    const grid = document.getElementById("calcDetallesGrid");
+    if (btnLeft && btnRight && grid) {
+        btnLeft.onclick = function() {
+            grid.scrollBy({ left: -340, behavior: "smooth" });
+        };
+        btnRight.onclick = function() {
+            grid.scrollBy({ left: 340, behavior: "smooth" });
+        };
+    }
+});

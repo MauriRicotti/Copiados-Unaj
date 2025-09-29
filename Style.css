@@ -3448,7 +3448,6 @@ body.overflow-hidden {
   }
 }
 
-/* Scroll horizontal en desktop/tablet, vertical en mobile */
 .calc-details-grid {
   display: flex;
   flex-direction: row;
@@ -3587,3 +3586,28 @@ body.overflow-hidden {
   margin: 0;
 }
 
+.scroll-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 2px solid var(--border-color);
+  background: var(--bg-card-header);
+  color: #5a6578;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.18s, border 0.18s, color 0.18s;
+  box-shadow: 0 1px 4px rgba(59,130,246,0.04);
+  padding: 0;
+}
+.scroll-btn svg {
+  display: block;
+  margin: auto;
+  color: inherit;
+}
+
+.scroll-btn:hover {
+  background: #e0e7ff;
+  color: #2563eb;
+  border-color: #a5b4fc;
+}
