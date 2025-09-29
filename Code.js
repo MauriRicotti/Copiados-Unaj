@@ -9,6 +9,13 @@ const firebaseConfig = {
   measurementId: "G-SNQ58PSQJ2",
 }
 
+function obtenerNombreTurno(turno) {
+  if (turno === "TM") return "Mañana";
+  if (turno === "TT") return "Tarde";
+  if (turno === "TU") return "Turno único";
+  return turno;
+}
+
 const calcInstitutos = {
   salud: {
     name: "Copiados Salud",
@@ -1689,7 +1696,7 @@ function calcExportarPDF() {
   const año = ahora.getFullYear();
   const fechaHoy = ahora.toLocaleDateString("es-ES");
   const nombreCopiado = calcInstitutos[currentFotocopiado]?.name || "Copiado";
-  const turno = currentTurno === "TM" ? "Mañana" : "Tarde";
+  const turno = obtenerNombreTurno(currentTurno);
 
   const ventas = calcRegistroVentas.ventas || [];
   const totalEfectivo = ventas.filter(v => v.metodoPago === 'efectivo').reduce((acc, v) => acc + v.total, 0);
@@ -1837,7 +1844,7 @@ async function exportarTodosLosRegistrosPDFZip() {
     doc.setFontSize(12);
     doc.text(`Mes: ${mes.charAt(0).toUpperCase() + mes.slice(1)} ${año}`, 14, 26);
     doc.text(`Fecha: ${fechaHoy}`, 14, 32);
-    doc.text(`Turno: ${turno === "TM" ? "Mañana" : "Tarde"}`, 14, 38);
+    doc.text(`Turno: ${obtenerNombreTurno(turno)}`, 14, 38);
 
     const ventas = data.ventas || [];
     const totalEfectivo = ventas.filter(v => v.metodoPago === 'efectivo').reduce((acc, v) => acc + v.total, 0);
@@ -2657,7 +2664,7 @@ async function consultarHistorico() {
           <h3>Resumen del día</h3>
           <div><span class="historico-label">Copiado:</span> <span class="historico-valor">${calcInstitutos[tipo]?.name || tipo}</span></div>
           <div><span class="historico-label">Fecha:</span> <span class="historico-valor">${fecha1}</span></div>
-          <div><span class="historico-label">Turno:</span> <span class="historico-valor">${turno === "TM" ? "Mañana" : "Tarde"}</span></div>
+          <div><span class="historico-label">Turno:</span> <span class="historico-valor">${obtenerNombreTurno(turno)}</span></div>
           <div><span class="historico-label">Efectivo:</span> <span class="historico-valor">$${totalEfectivo.toLocaleString("es-AR")}</span></div>
           <div><span class="historico-label">Transferencia:</span> <span class="historico-valor">$${totalTransferencia.toLocaleString("es-AR")}</span></div>
           <div><span class="historico-label">Total:</span> <span class="historico-valor">$${(totalEfectivo + totalTransferencia).toLocaleString("es-AR")}</span></div>
@@ -2718,7 +2725,7 @@ document.getElementById("btnExportarHistoricoPDF").onclick = function() {
 
   const copiadoNombre = datos.copiadoNombre || calcInstitutos[datos.copiado]?.name || datos.copiado || "Copiado";
   const fecha = datos.fecha || "";
-  const turnoTxt = datos.turno === "TM" ? "Mañana" : "Tarde";
+  const turnoTxt = obtenerNombreTurno(datos.turno);
 
   let mes = "";
   let año = "";
@@ -3251,7 +3258,7 @@ async function mostrarRegistrosImpresoras(fecha, copiado, turno) {
         <div class="impresora-nombre">${r.nombre}</div>
         <div><b>Copiado:</b> ${r.copiado}</div>
         <div><b>Fecha:</b> ${r.fecha}</div>
-        <div><b>Turno:</b> ${r.turno === "TM" ? "Mañana" : "Tarde"}</div>
+        <div><b>Turno:</b> ${obtenerNombreTurno(r.turno)}</div>
         <div style="margin-top:8px;">
           <b>Apertura:</b> ${r.apertura}
           <br>
@@ -3335,7 +3342,7 @@ async function cargarTablaRegistroMes() {
       <td>${r.fecha}</td>
       <td>${r.maquina}</td>
       <td>${r.copiado}</td>
-      <td>${r.turno === "TM" ? "Mañana" : r.turno === "TT" ? "Tarde" : r.turno}</td>
+      <td>${obtenerNombreTurno(r.turno)}</td>
       <td>${r.apertura}</td>
       <td>${r.cierre}</td>
       <td style="font-weight:600;color:${r.diferencia < 0 ? '#dc2626' : '#059669'};">${r.diferencia}</td>
@@ -3351,7 +3358,7 @@ async function descargarPDFImpresora(maquina, fecha, copiado, turno, tipo, urlIm
   doc.setFontSize(12);
   doc.text(`Fecha: ${fecha}`, 14, 28);
   doc.text(`Copiado: ${copiado}`, 14, 36);
-  doc.text(`Turno: ${turno === "TM" ? "Mañana" : "Tarde"}`, 14, 44);
+  doc.text(`Turno: ${obtenerNombreTurno(turno)}`, 14, 44);
 
   try {
     const imgData = await getImageDataUrl(urlImagen);
