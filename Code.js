@@ -378,7 +378,7 @@ function calcAgregarArchivo() {
   calcContadorArchivos++;
   const container = document.getElementById("calcArchivosContainer");
   const div = document.createElement("div");
-  div.className = "calc-card calc-archivo";
+  div.className = "calc-card calc-archivo animated-fadeInUp animating";
   div.id = `calcArchivo${calcContadorArchivos}`;
 
   const numeroArchivo = calcArchivos.length + 1;
@@ -443,6 +443,10 @@ function calcAgregarArchivo() {
 
   container.appendChild(div);
 
+  setTimeout(() => {
+    div.classList.remove("animated-fadeInUp", "animating");
+  }, 400);
+
   calcArchivos.push({
     id: calcContadorArchivos,
     paginas: 1,
@@ -454,6 +458,24 @@ function calcAgregarArchivo() {
   if (propinaInput) propinaInput.value = "0";
 
   calcActualizarSubtotal(calcContadorArchivos);
+}
+
+function calcEliminarArchivo(id) {
+  if (calcArchivos.length <= 1) {
+    showSyncNotification("Debe haber al menos un archivo para realizar la venta.");
+    return;
+  }
+  const div = document.getElementById(`calcArchivo${id}`);
+  if (div) {
+    div.classList.add("animated-fadeOutDown", "animating");
+    setTimeout(() => {
+      if (div.parentNode) div.parentNode.removeChild(div);
+    }, 400);
+  }
+
+  calcArchivos = calcArchivos.filter(a => a.id !== id);
+
+  calcReorganizarNombresArchivos();
 }
 
 function calcReorganizarNombresArchivos() {
@@ -1472,10 +1494,14 @@ function showCalculatorScreen() {
 
   showSyncNotification("Cargando datos más recientes del servidor...")
 
+  calcArchivos = [];
+  calcContadorArchivos = 0;
+  calcTotal = 0;
+  calcMetodoPago = null;
+  document.getElementById("calcArchivosContainer").innerHTML = "";
+  calcAgregarArchivo();
+
   loadFromFirebase().then(() => {
-    if (calcArchivos.length === 0) {
-      calcAgregarArchivo()
-    }
     calcActualizarTabla()
     listenToFirebaseChanges()
     setTimeout(() => {
