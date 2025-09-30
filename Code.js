@@ -1780,10 +1780,10 @@ function calcExportarPDF() {
     headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold' },
     bodyStyles: { fillColor: [245, 245, 245] }
   });
+  y = doc.lastAutoTable.finalY + 10;
 
   const perdidas = calcRegistroVentas.perdidas || [];
   if (perdidas.length > 0) {
-    y = doc.lastAutoTable.finalY + 10;
     doc.setFontSize(13);
     doc.text('Pérdidas registradas:', 14, y);
     y += 8;
@@ -1831,6 +1831,7 @@ function calcExportarPDF() {
       headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold' },
       bodyStyles: { fillColor: [245, 245, 245] }
     });
+    y = doc.lastAutoTable.finalY + 10;
   }
 
   doc.save(`RegistroVentas_${nombreCopiado}_${mes}_${año}_${fechaHoy}_${turno}.pdf`);
@@ -4089,3 +4090,98 @@ document.addEventListener("DOMContentLoaded", function() {
         };
     }
 });
+
+// ...existing code...
+
+document.getElementById("btnExportarRegistroMesImpresorasPDF").onclick = async function() {
+  const mes = document.getElementById("mesRegistroImpresoras").value;
+  const fechaFiltro = document.getElementById("fechaRegistroImpresoras").value;
+  const copiado = document.getElementById("copiadoRegistroImpresoras").value;
+  const turno = document.getElementById("turnoRegistroImpresoras").value;
+
+  // Obtén los datos de la tabla
+  const tbody = document.querySelector("#tablaRegistroMesImpresoras tbody");
+  const filas = Array.from(tbody.querySelectorAll("tr")).map(tr => {
+    const tds = tr.querySelectorAll("td");
+    return {
+      fecha: tds[0]?.textContent || "",
+      maquina: tds[1]?.textContent || "",
+      copiado: tds[2]?.textContent || "",
+      turno: tds[3]?.textContent || "",
+      apertura: tds[4]?.textContent || "",
+      cierre: tds[5]?.textContent || "",
+      diferencia: tds[6]?.textContent || ""
+    };
+  });
+
+  if (filas.length === 0) {
+    alert("No hay datos para exportar.");
+    return;
+  }
+
+  // Agrupar por fecha y turno
+  const agrupado = {};
+  filas.forEach(f => {
+    if (!agrupado[f.turno]) agrupado[f.turno] = {};
+    if (!agrupado[f.turno][f.fecha]) agrupado[f.turno][f.fecha] = [];
+    agrupado[f.turno][f.fecha].push(f);
+  });
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: "landscape" });
+
+  doc.setFontSize(16);
+  doc.text(`Registro de contadores de impresoras`, 14, 18);
+  doc.setFontSize(12);
+  doc.text(`Mes: ${mes}`, 14, 26);
+  let y = 34;
+  if (fechaFiltro) { doc.text(`Filtro por fecha: ${fechaFiltro}`, 14, y); y += 8; }
+  if (copiado && copiado !== "todos") { doc.text(`Copiado: ${copiado}`, 14, y); y += 8; }
+  if (turno && turno !== "todos") { doc.text(`Turno: ${obtenerNombreTurno(turno)}`, 14, y); y += 8; }
+
+  // Orden de los turnos
+  const ordenTurnos = ["Mañana", "Tarde", "Turno único"];
+  const clavesTurnos = Object.keys(agrupado);
+
+  ordenTurnos.forEach(turnoNombre => {
+    // Buscar la clave real del turno (puede ser "Mañana", "Tarde", "Turno único")
+    const claveTurno = clavesTurnos.find(t => t === turnoNombre);
+    if (!claveTurno) return;
+
+    y += 10;
+    doc.setFontSize(14);
+    doc.text(`Turno: ${turnoNombre}`, 14, y);
+    y += 6;
+
+    const fechas = Object.keys(agrupado[claveTurno]).sort();
+    fechas.forEach(fecha => {
+      y += 8;
+      doc.setFontSize(12);
+      doc.text(`Fecha: ${fecha}`, 14, y);
+      y += 4;
+
+      const tabla = agrupado[claveTurno][fecha].map(f => [
+        f.maquina,
+        f.copiado,
+        f.apertura,
+        f.cierre,
+        f.diferencia
+      ]);
+
+      doc.autoTable({
+        head: [['Maquina', 'Copiado', 'Apertura', 'Cierre', 'Diferencia']],
+        body: tabla,
+        startY: y,
+        theme: 'grid',
+        styles: { fontSize: 11 },
+        headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' },
+        bodyStyles: { fillColor: [245, 245, 245] }
+      });
+      y = doc.lastAutoTable.finalY + 2;
+    });
+  });
+
+  doc.save(`Registro_Contadores_Impresoras_${mes}.pdf`);
+};
+
+// ...existing code...
