@@ -877,7 +877,6 @@ async function calcCargarDatosComparativa() {
   }
 }
 
-// ...existing code...
 function calcMostrarDatosComparativa(datos) {
   let totalGeneral = 0
   let ventasTotales = 0
@@ -968,7 +967,6 @@ function calcMostrarDatosComparativa(datos) {
   }
   explicacion.innerHTML = `<em>Al darle click a cualquiera de las tarjetas de los copiados, o al icono <span style="font-size:1.1em;">↗</span> en la esquina, se puede acceder al registro del fotocopiado seleccionado.</em>`
 }
-// ...existing code...
 
 function calcCrearGraficoIngresos(datos) {
   const ctx = document.getElementById("calcChartIngresos").getContext("2d")
@@ -989,10 +987,10 @@ function calcCrearGraficoIngresos(datos) {
           label: "Ingresos Totales",
           data: totales,
           backgroundColor: [
-            "rgba(34, 197, 94, 0.8)",    // Salud (verde)
-            "rgba(59, 130, 246, 0.8)",   // Sociales (azul)
-            "rgba(239, 68, 68, 0.8)",    // Ingeniería (rojo)
-            "rgba(251, 146, 60, 0.85)",  // HEC Salud (naranja)
+            "rgba(34, 197, 94, 0.8)",
+            "rgba(59, 130, 246, 0.8)",
+            "rgba(239, 68, 68, 0.8)",
+            "rgba(251, 146, 60, 0.85)",
           ],
           borderColor: [
             "rgba(34, 197, 94, 1)",
@@ -1455,11 +1453,6 @@ function showLoginScreen() {
   const calculatorScreen = document.getElementById("calculatorScreen");
   loginScreen.style.display = "flex";
   calculatorScreen.style.display = "none";
-  // loginScreen.classList.remove("animated-fadeOutDown", "animating");
-  // loginScreen.classList.add("animated-fadeInUp");
-  // setTimeout(() => {
-  //   loginScreen.classList.remove("animated-fadeInUp");
-  // }, 500);
 
   document.getElementById("turnoSelectorFixed").style.display = "none";
 }
@@ -4091,15 +4084,12 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 });
 
-// ...existing code...
-
 document.getElementById("btnExportarRegistroMesImpresorasPDF").onclick = async function() {
   const mes = document.getElementById("mesRegistroImpresoras").value;
   const fechaFiltro = document.getElementById("fechaRegistroImpresoras").value;
   const copiado = document.getElementById("copiadoRegistroImpresoras").value;
   const turno = document.getElementById("turnoRegistroImpresoras").value;
 
-  // Obtén los datos de la tabla
   const tbody = document.querySelector("#tablaRegistroMesImpresoras tbody");
   const filas = Array.from(tbody.querySelectorAll("tr")).map(tr => {
     const tds = tr.querySelectorAll("td");
@@ -4119,7 +4109,6 @@ document.getElementById("btnExportarRegistroMesImpresorasPDF").onclick = async f
     return;
   }
 
-  // Agrupar por fecha y turno
   const agrupado = {};
   filas.forEach(f => {
     if (!agrupado[f.turno]) agrupado[f.turno] = {};
@@ -4139,12 +4128,10 @@ document.getElementById("btnExportarRegistroMesImpresorasPDF").onclick = async f
   if (copiado && copiado !== "todos") { doc.text(`Copiado: ${copiado}`, 14, y); y += 8; }
   if (turno && turno !== "todos") { doc.text(`Turno: ${obtenerNombreTurno(turno)}`, 14, y); y += 8; }
 
-  // Orden de los turnos
   const ordenTurnos = ["Mañana", "Tarde", "Turno único"];
   const clavesTurnos = Object.keys(agrupado);
 
   ordenTurnos.forEach(turnoNombre => {
-    // Buscar la clave real del turno (puede ser "Mañana", "Tarde", "Turno único")
     const claveTurno = clavesTurnos.find(t => t === turnoNombre);
     if (!claveTurno) return;
 
@@ -4183,5 +4170,3 @@ document.getElementById("btnExportarRegistroMesImpresorasPDF").onclick = async f
 
   doc.save(`Registro_Contadores_Impresoras_${mes}.pdf`);
 };
-
-// ...existing code...
