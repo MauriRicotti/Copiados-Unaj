@@ -3062,7 +3062,9 @@ const IMPRESORAS_TODAS = [
   "LUPE COLOR",
   "FELIX",
   "MARI HEC",
+  "MARI HEC COLOR",
   "DANY HEC",
+  "DANY HEC COLOR",
   "POCHA B/N",
   "POCHA COLOR"
 ];
@@ -3521,31 +3523,30 @@ function renderizarTablaContadores(datos, desde, hasta) {
     let rowIndex = 0;
     for (const key in impresoras) {
       const imp = impresoras[key];
-      let precioDefault = 40;
-      if (imp.nombre && imp.nombre.toLowerCase().includes("color")) precioDefault = 115;
+      let precioDefault = imp.nombre && imp.nombre.toUpperCase().includes("COLOR") ? 115 : 40;
       const precioActual = preciosPorImpresora[imp.nombre] !== undefined ? preciosPorImpresora[imp.nombre] : precioDefault;
       const precioFinal = imp.diferencia * precioActual;
       subtotal += precioFinal;
 
-      html += `
-        <tr>
-          <td>-</td>
-          <td>${imp.nombre}</td>
-          <td>${imp.apertura}</td>
-          <td>${imp.cierre}</td>
-          <td>${imp.diferencia}</td>
-          <td>
-            <input type="number" min="0" step="1" value="${precioActual}" 
-              data-impresora="${imp.nombre}" 
-              class="input-precio-contador"
-              style="text-align:right;"
-              onchange="actualizarPrecioImpresora('${copiado}','${imp.nombre}',this.value)">
-          </td>
-          <td id="precioFinal_${copiado}_${rowIndex}" style="font-weight:600;">$${precioFinal.toLocaleString("es-AR")}</td>
-        </tr>
-      `;
-      rowIndex++;
-    }
+    html += `
+      <tr>
+        <td>-</td>
+        <td>${imp.nombre}</td>
+        <td>${imp.apertura}</td>
+        <td>${imp.cierre}</td>
+        <td>${imp.diferencia}</td>
+        <td>
+          <input type="number" min="0" step="1" value="${precioActual}" 
+            data-impresora="${imp.nombre}" 
+            class="input-precio-contador"
+            style="text-align:right;"
+            onchange="actualizarPrecioImpresora('${copiado}','${imp.nombre}',this.value)">
+        </td>
+        <td id="precioFinal_${copiado}_${rowIndex}" style="font-weight:600;">$${precioFinal.toLocaleString("es-AR")}</td>
+      </tr>
+    `;
+    rowIndex++;
+  }
     html += `<tr class="reporte-contadores-total-row">
       <td colspan="6" style="text-align:right;background:#d1fae5;color:#059669;font-weight:700;">Total ${copiado}:</td>
       <td style="background:#d1fae5;color:#059669;font-weight:700;" id="subtotal_${copiado}">$${subtotal.toLocaleString("es-AR")}</td>
