@@ -86,9 +86,7 @@
             </button>
             <div class="login-header" style="position:relative;">
                 <h1 class="titulo-fotocopiados-unaj">
-                    <span class="titulo-gradiente">Sistema de Fotocopiados</span>
-                    <span class="titulo-unaj">UNAJ</span>
-                    <span class="titulo-brillo"></span>
+                    <span>Sistema de Fotocopiados UNAJ</span>
                 </h1>
                 <p>Selecciona tu fotocopiado e ingresa la contraseña</p>
             </div>
@@ -282,6 +280,15 @@
                                     <input type="checkbox" id="calcTransferencia" class="calc-checkbox" onchange="calcSeleccionarMetodo('transferencia')">
                                     <span>Transferencia</span>
                                 </label>
+                                <label class="calc-checkbox-item">
+                                    <input type="checkbox" id="calcDividido" class="calc-checkbox" onchange="calcSeleccionarMetodo('dividido')">
+                                    <span>Pago dividido</span>
+                                </label>
+                            </div>
+                            <div id="calcDivididoInputs" style="display:none;gap:10px;margin-top:10px;align-items:center;">
+                                <label>Efectivo: <input type="number" id="calcDivididoEfectivo" class="calc-input" min="0" step="1" style="width:100px;"></label>
+                                <label>Transferencia: <input type="number" id="calcDivididoTransferencia" class="calc-input" min="0" step="1" style="width:100px;"></label>
+                                <span id="calcDivididoError" style="font-size:0.95rem; color:var(--text-secondary); margin-left:12px;"></span>
                             </div>
                         </div>
                         <div class="calc-cambio-group">
@@ -345,6 +352,18 @@
                                     </button>
                                 </td>
                             </tr>
+                            <tr>
+                                <td>Pagos divididos</td>
+                                <td style="text-align: right; font-family: monospace; font-size: 1.1rem;" id="calcTotalDividido">
+                                    <span id="calcTotalDivididoEfectivo">$0</span> | 
+                                    <span id="calcTotalDivididoTransferencia">$0</span>
+                                </td>
+                                <td style="text-align: center;">
+                                    <button onclick="calcMostrarDetalles('dividido')" class="calc-btn calc-btn-outline" style="padding: 6px 12px; font-size: 0.9rem;">
+                                        Ver detalles (<span id="calcCountDividido">0</span>)
+                                    </button>
+                                </td>
+                            </tr>
                             <tr class="calc-table-total">
                                 <td>Total General</td>
                                 <td style="text-align: right; font-family: monospace; font-size: 1.2rem;" id="calcTotalGeneral">$0</td>
@@ -374,6 +393,20 @@
                             <div class="calc-mobile-card-actions">
                                 <button onclick="calcMostrarDetalles('transferencia')" class="calc-btn calc-btn-outline" style="padding: 8px 16px; font-size: 0.9rem;">
                                     Ver detalles (<span id="calcCountTransferenciaMobile">0</span>)
+                                </button>
+                            </div>
+                        </div>
+                        <div class="calc-mobile-card">
+                            <div class="calc-mobile-card-header">
+                                <span>Pagos divididos</span>
+                                <span class="calc-mobile-card-total" id="calcTotalDivididoMobile">
+                                    <span id="calcTotalDivididoEfectivoMobile">$0</span> | 
+                                    <span id="calcTotalDivididoTransferenciaMobile">$0</span>
+                                </span>
+                            </div>
+                            <div class="calc-mobile-card-actions">
+                                <button onclick="calcMostrarDetalles('dividido')" class="calc-btn calc-btn-outline" style="padding: 8px 16px; font-size: 0.9rem;">
+                                    Ver detalles (<span id="calcCountDivididoMobile">0</span>)
                                 </button>
                             </div>
                         </div>

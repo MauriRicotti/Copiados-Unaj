@@ -3611,3 +3611,36 @@ body.overflow-hidden {
   color: #2563eb;
   border-color: #a5b4fc;
 }
+
+#calcDivididoInputs {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+@media (max-width: 600px) {
+  .calc-card-content .calc-flex {
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+  }
+  .calc-card-content .calc-btn {
+    width: 100%;
+    font-size: 1rem;
+    padding: 12px 0;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+}
+
+@media (max-width: 600px) {
+  .titulo-fotocopiados-unaj,
+  .titulo-fotocopiados-unaj .titulo-gradiente,
+  .titulo-fotocopiados-unaj .titulo-unaj {
+    font-size: 1.3rem !important;
+    line-height: 1.15 !important;
+    word-break: break-word;
+    padding: 0 2px;
+  }
+}
+

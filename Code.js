@@ -553,7 +553,6 @@ function calcCalcularTotal() {
     totalCalculado += hojasNecesarias * precioHoja * archivo.copias;
   })
 
-
   calcTotal = totalCalculado
   const propinaInput = document.getElementById("calcPropinaInput")
   const propinaLabel = document.getElementById("calcPropinaLabel")
@@ -569,9 +568,15 @@ function calcCalcularTotal() {
   calcMetodoPago = null
   document.getElementById("calcEfectivo").checked = false
   document.getElementById("calcTransferencia").checked = false
+  document.getElementById("calcDividido").checked = false;
   document.getElementById("calcDineroCliente").value = ""
   document.getElementById("calcResultadoCambio").style.display = "none"
   document.getElementById("calcBtnFinalizar").disabled = true
+
+  // Limpiar campos de pago dividido
+  document.getElementById("calcDivididoEfectivo").value = "";
+  document.getElementById("calcDivididoTransferencia").value = "";
+  document.getElementById("calcDivididoError").textContent = "";
 
   document.getElementById("calcPagoContainer").scrollIntoView({ behavior: "smooth" })
 
@@ -586,44 +591,69 @@ function calcCalcularTotal() {
 function calcCancelarVenta() {
   if (confirm("¿Estás seguro de que quieres cancelar la venta actual? Se perderán todos los archivos agregados.")) {
     document.getElementById("calcArchivosContainer").innerHTML = ""
-
     document.getElementById("calcPagoContainer").style.display = "none"
-
     calcArchivos = []
     calcContadorArchivos = 0
     calcTotal = 0
     calcMetodoPago = null
 
-    calcAgregarArchivo()
+    document.getElementById("calcDivididoEfectivo").value = "";
+    document.getElementById("calcDivididoTransferencia").value = "";
+    document.getElementById("calcDivididoError").textContent = "";
 
+    calcAgregarArchivo()
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
 }
 
 function calcSeleccionarMetodo(metodo) {
-  const efectivoCheck = document.getElementById("calcEfectivo")
-  const transferenciaCheck = document.getElementById("calcTransferencia")
-  const btnFinalizar = document.getElementById("calcBtnFinalizar")
-
-  if (metodo === "efectivo") {
-    if (efectivoCheck.checked) {
-      calcMetodoPago = "efectivo"
-      transferenciaCheck.checked = false
-      btnFinalizar.disabled = false
-    } else {
-      calcMetodoPago = null
-      btnFinalizar.disabled = true
+    const efectivoCheck = document.getElementById("calcEfectivo");
+    const transferenciaCheck = document.getElementById("calcTransferencia");
+    const divididoCheck = document.getElementById("calcDividido");
+    const btnFinalizar = document.getElementById("calcBtnFinalizar");
+    const divididoInputs = document.getElementById("calcDivididoInputs");
+    if (metodo === "efectivo") {
+        calcMetodoPago = efectivoCheck.checked ? "efectivo" : null;
+        transferenciaCheck.checked = false;
+        divididoCheck.checked = false;
+        divididoInputs.style.display = "none";
+        btnFinalizar.disabled = !efectivoCheck.checked;
+    } else if (metodo === "transferencia") {
+        calcMetodoPago = transferenciaCheck.checked ? "transferencia" : null;
+        efectivoCheck.checked = false;
+        divididoCheck.checked = false;
+        divididoInputs.style.display = "none";
+        btnFinalizar.disabled = !transferenciaCheck.checked;
+    } else if (metodo === "dividido") {
+        if (divididoCheck.checked) {
+            calcMetodoPago = "dividido";
+            efectivoCheck.checked = false;
+            transferenciaCheck.checked = false;
+            divididoInputs.style.display = "flex";
+            btnFinalizar.disabled = true;
+            document.getElementById("calcDivididoEfectivo").value = "";
+            document.getElementById("calcDivididoTransferencia").value = "";
+            document.getElementById("calcDivididoError").textContent = "";
+            ["calcDivididoEfectivo", "calcDivididoTransferencia"].forEach(id => {
+                document.getElementById(id).oninput = function() {
+                    const efectivo = Number(document.getElementById("calcDivididoEfectivo").value) || 0;
+                    const transferencia = Number(document.getElementById("calcDivididoTransferencia").value) || 0;
+                    const total = calcTotal + (Number(document.getElementById("calcPropinaInput").value) || 0);
+                    if (efectivo + transferencia === total) {
+                        btnFinalizar.disabled = false;
+                        document.getElementById("calcDivididoError").textContent = "";
+                    } else {
+                        btnFinalizar.disabled = true;
+                        document.getElementById("calcDivididoError").textContent = "La suma debe ser igual al total.";
+                    }
+                };
+            });
+        } else {
+            calcMetodoPago = null;
+            divididoInputs.style.display = "none";
+            btnFinalizar.disabled = true;
+        }
     }
-  } else {
-    if (transferenciaCheck.checked) {
-      calcMetodoPago = "transferencia"
-      efectivoCheck.checked = false
-      btnFinalizar.disabled = false
-    } else {
-      calcMetodoPago = null
-      btnFinalizar.disabled = true
-    }
-  }
 }
 
 function calcCalcularCambio() {
@@ -656,51 +686,61 @@ function calcCalcularCambio() {
 }
 
 function calcFinalizarVenta() {
-  if (!calcMetodoPago) {
-    alert("Por favor selecciona un método de pago.");
-    return;
-  }
+    if (!calcMetodoPago) {
+        alert("Por favor selecciona un método de pago.");
+        return;
+    }
+    const ahora = new Date();
+    const propina = Number.parseFloat(document.getElementById("calcPropinaInput")?.value) || 0;
+    let ventaDetalle = {
+        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        fecha: ahora.toLocaleDateString("es-ES"),
+        hora: ahora.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }),
+        total: calcTotal + propina,
+        propina: propina,
+        archivos: [...calcArchivos],
+        precioHojaBN: Number.parseFloat(document.getElementById("calcPrecioHoja").value),
+        precioHojaColor: Number.parseFloat(document.getElementById("calcPrecioHojaColor").value),
+        deviceId: deviceId,
+        timestamp: Date.now(),
+    };
+    if (calcMetodoPago === "efectivo") {
+        ventaDetalle.metodoPago = "efectivo";
+        calcRegistroVentas.efectivo += ventaDetalle.total;
+    } else if (calcMetodoPago === "transferencia") {
+        ventaDetalle.metodoPago = "transferencia";
+        calcRegistroVentas.transferencia += ventaDetalle.total;
+    } else if (calcMetodoPago === "dividido") {
+        ventaDetalle.metodoPago = "dividido";
+        ventaDetalle.dividido = {
+            efectivo: Number(document.getElementById("calcDivididoEfectivo").value) || 0,
+            transferencia: Number(document.getElementById("calcDivididoTransferencia").value) || 0
+        };
+        calcRegistroVentas.dividido = (calcRegistroVentas.dividido || 0) + ventaDetalle.dividido.efectivo + ventaDetalle.dividido.transferencia;
+        calcRegistroVentas.efectivo += ventaDetalle.dividido.efectivo;
+        calcRegistroVentas.transferencia += ventaDetalle.dividido.transferencia;
+    }
+    calcRegistroVentas.ventas.push(ventaDetalle);
+    calcGuardarDatos();
+    if (typeof calcActualizarTabla === "function") {
+        calcActualizarTabla();
+    }
+    document.getElementById("calcArchivosContainer").innerHTML = "";
+    document.getElementById("calcPagoContainer").style.display = "none";
+    calcArchivos = [];
+    calcContadorArchivos = 0;
+    calcTotal = 0;
+    calcMetodoPago = null;
+    if (document.getElementById("calcPropinaInput")) document.getElementById("calcPropinaInput").value = "0";
 
-  const ahora = new Date();
-  const propina = Number.parseFloat(document.getElementById("calcPropinaInput")?.value) || 0;
-  const ventaDetalle = {
-    id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    fecha: ahora.toLocaleDateString("es-ES"),
-    hora: ahora.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }),
-    total: calcTotal + propina,
-    propina: propina,
-    metodoPago: calcMetodoPago,
-    archivos: [...calcArchivos],
-    precioHojaBN: Number.parseFloat(document.getElementById("calcPrecioHoja").value),
-    precioHojaColor: Number.parseFloat(document.getElementById("calcPrecioHojaColor").value),
-    deviceId: deviceId,
-    timestamp: Date.now(),
-  };
+    // Limpiar campos de pago dividido
+    document.getElementById("calcDivididoEfectivo").value = "";
+    document.getElementById("calcDivididoTransferencia").value = "";
+    document.getElementById("calcDivididoError").textContent = "";
 
-  if (calcMetodoPago === "efectivo") {
-    calcRegistroVentas.efectivo += ventaDetalle.total;
-  } else {
-    calcRegistroVentas.transferencia += ventaDetalle.total;
-  }
-  calcRegistroVentas.ventas.push(ventaDetalle);
-
-  calcGuardarDatos();
-
-  if (typeof calcActualizarTabla === "function") {
-    calcActualizarTabla();
-  }
-
-  document.getElementById("calcArchivosContainer").innerHTML = "";
-  document.getElementById("calcPagoContainer").style.display = "none";
-  calcArchivos = [];
-  calcContadorArchivos = 0;
-  calcTotal = 0;
-  calcMetodoPago = null;
-  if (document.getElementById("calcPropinaInput")) document.getElementById("calcPropinaInput").value = "0";
-  calcAgregarArchivo();
-  window.scrollTo({ top: 0, behavior: "smooth" });
+    calcAgregarArchivo();
+    window.scrollTo({ top: 0, behavior: "smooth" });
 }
-
 
 async function calcRestablecerVentas() {
   const password = prompt("Ingresa la contraseña de administrador para restablecer las ventas:");
@@ -910,6 +950,10 @@ function calcMostrarDatosComparativa(datos) {
   ]
 
   Object.entries(datos).forEach(([key, instituto], idx) => {
+    // Calcular pagos divididos para la tarjeta
+    const ventasDividido = (instituto.ventas || []).filter(v => v.metodoPago === "dividido");
+    const totalDividido = ventasDividido.reduce((acc, v) => acc + ((v.dividido?.efectivo || 0) + (v.dividido?.transferencia || 0)), 0);
+
     const card = document.createElement("div")
     card.className = "calc-detail-card"
     card.style.position = "relative"
@@ -937,6 +981,10 @@ function calcMostrarDatosComparativa(datos) {
   <div class="calc-detail-stat">
       <span>Ventas por Transferencia:</span>
       <span>$${instituto.transferencia.toLocaleString("es-AR")}</span>
+  </div>
+  <div class="calc-detail-stat">
+      <span>Pagos divididos:</span>
+      <span>$${totalDividido.toLocaleString("es-AR")}</span>
   </div>
   <div class="calc-detail-stat">
       <span>Número de Ventas:</span>
@@ -1718,8 +1766,13 @@ function calcExportarPDF() {
   const turno = obtenerNombreTurno(currentTurno);
 
   const ventas = calcRegistroVentas.ventas || [];
-  const totalEfectivo = ventas.filter(v => v.metodoPago === 'efectivo').reduce((acc, v) => acc + v.total, 0);
-  const totalTransferencia = ventas.filter(v => v.metodoPago === 'transferencia').reduce((acc, v) => acc + v.total, 0);
+
+  const ventasDividido = ventas.filter(v => v.metodoPago === 'dividido');
+  const totalDivididoEfectivo = ventasDividido.reduce((acc, v) => acc + (v.dividido?.efectivo || 0), 0);
+  const totalDivididoTransferencia = ventasDividido.reduce((acc, v) => acc + (v.dividido?.transferencia || 0), 0);
+
+  const totalEfectivo = ventas.filter(v => v.metodoPago === 'efectivo').reduce((acc, v) => acc + v.total, 0) + totalDivididoEfectivo;
+  const totalTransferencia = ventas.filter(v => v.metodoPago === 'transferencia').reduce((acc, v) => acc + v.total, 0) + totalDivididoTransferencia;
   const totalGeneral = totalEfectivo + totalTransferencia;
 
   const { jsPDF } = window.jspdf;
@@ -1756,6 +1809,31 @@ function calcExportarPDF() {
     bodyStyles: { fillColor: [245, 245, 245] }
   });
   y = doc.lastAutoTable.finalY + 10;
+
+  if (ventasDividido.length > 0) {
+    doc.setFontSize(13);
+    doc.text('Pagos divididos:', 14, y);
+    y += 8;
+    const tablaDivididos = ventasDividido.map((v, i) => [
+      `#${i + 1}`,
+      v.fecha || "-",
+      v.hora || "-",
+      `$${v.total.toLocaleString("es-AR")}`,
+      `$${v.dividido?.efectivo?.toLocaleString("es-AR") || 0}`,
+      `$${v.dividido?.transferencia?.toLocaleString("es-AR") || 0}`,
+      v.propina && v.propina > 0 ? `$${v.propina}` : "-"
+    ]);
+    doc.autoTable({
+      head: [['N°', 'Fecha', 'Hora', 'Total', 'Efectivo', 'Transferencia', 'Propina']],
+      body: tablaDivididos,
+      startY: y,
+      theme: 'grid',
+      styles: { fontSize: 11 },
+      headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold' },
+      bodyStyles: { fillColor: [245, 245, 245] }
+    });
+    y = doc.lastAutoTable.finalY + 10;
+  }
 
   doc.setFontSize(13);
   doc.text('Totales:', 14, y);
@@ -1988,20 +2066,70 @@ function calcActualizarTabla() {
   const ventasEfectivo = (calcRegistroVentas.ventas || []).filter(v => v.metodoPago === "efectivo").length;
   const ventasTransferencia = (calcRegistroVentas.ventas || []).filter(v => v.metodoPago === "transferencia").length;
   const ventasTotales = (calcRegistroVentas.ventas || []).length;
+  const ventasDividido = (calcRegistroVentas.ventas || []).filter(v => v.metodoPago === "dividido");
+  const totalDividido = ventasDividido.reduce((acc, v) => acc + ((v.dividido?.efectivo || 0) + (v.dividido?.transferencia || 0)), 0);
 
-  document.getElementById("calcTotalEfectivo").innerText = `$${efectivo.toLocaleString("es-AR")}`;
-  document.getElementById("calcTotalTransferencia").innerText = `$${transferencia.toLocaleString("es-AR")}`;
-  document.getElementById("calcTotalGeneral").innerText = `$${total.toLocaleString("es-AR")}`;
-  document.getElementById("calcCountEfectivo").innerText = ventasEfectivo;
-  document.getElementById("calcCountTransferencia").innerText = ventasTransferencia;
-  document.getElementById("calcTotalVentas").innerText = `${ventasTotales} ventas`;
+  const totalDivididoEfectivo = ventasDividido.reduce((acc, v) => acc + (v.dividido?.efectivo || 0), 0);
+  const totalDivididoTransferencia = ventasDividido.reduce((acc, v) => acc + (v.dividido?.transferencia || 0), 0);
 
-  document.getElementById("calcTotalEfectivoMobile").innerText = `$${efectivo.toLocaleString("es-AR")}`;
-  document.getElementById("calcTotalTransferenciaMobile").innerText = `$${transferencia.toLocaleString("es-AR")}`;
-  document.getElementById("calcTotalGeneralMobile").innerText = `$${total.toLocaleString("es-AR")}`;
-  document.getElementById("calcCountEfectivoMobile").innerText = ventasEfectivo;
-  document.getElementById("calcCountTransferenciaMobile").innerText = ventasTransferencia;
-  document.getElementById("calcTotalVentasMobile").innerText = `${ventasTotales} ventas`;
+  const elDividido = document.getElementById("calcTotalDividido");
+  if (elDividido) {
+    elDividido.innerHTML = `
+      Efectivo: $${totalDivididoEfectivo.toLocaleString("es-AR")}
+      &nbsp;|&nbsp;
+      Transferencia: $${totalDivididoTransferencia.toLocaleString("es-AR")}
+    `;
+  }
+  if (document.getElementById("calcCountDividido")) {
+    document.getElementById("calcCountDividido").innerText = ventasDividido.length;
+  }
+  if (document.getElementById("calcTotalEfectivo")) {
+    document.getElementById("calcTotalEfectivo").innerText = `$${efectivo.toLocaleString("es-AR")}`;
+  }
+  if (document.getElementById("calcTotalTransferencia")) {
+    document.getElementById("calcTotalTransferencia").innerText = `$${transferencia.toLocaleString("es-AR")}`;
+  }
+  if (document.getElementById("calcTotalGeneral")) {
+    document.getElementById("calcTotalGeneral").innerText = `$${total.toLocaleString("es-AR")}`;
+  }
+  if (document.getElementById("calcCountEfectivo")) {
+    document.getElementById("calcCountEfectivo").innerText = ventasEfectivo;
+  }
+  if (document.getElementById("calcCountTransferencia")) {
+    document.getElementById("calcCountTransferencia").innerText = ventasTransferencia;
+  }
+  if (document.getElementById("calcTotalVentas")) {
+    document.getElementById("calcTotalVentas").innerText = `${ventasTotales} ventas`;
+  }
+
+  if (document.getElementById("calcTotalDivididoEfectivoMobile")) {
+    document.getElementById("calcTotalDivididoEfectivoMobile").innerText = `$${totalDivididoEfectivo.toLocaleString("es-AR")}`;
+  }
+  if (document.getElementById("calcTotalDivididoTransferenciaMobile")) {
+    document.getElementById("calcTotalDivididoTransferenciaMobile").innerText = `$${totalDivididoTransferencia.toLocaleString("es-AR")}`;
+  }
+  if (document.getElementById("calcCountDivididoMobile")) {
+    document.getElementById("calcCountDivididoMobile").innerText = ventasDividido.length;
+  }
+
+  if (document.getElementById("calcTotalEfectivoMobile")) {
+    document.getElementById("calcTotalEfectivoMobile").innerText = `$${efectivo.toLocaleString("es-AR")}`;
+  }
+  if (document.getElementById("calcTotalTransferenciaMobile")) {
+    document.getElementById("calcTotalTransferenciaMobile").innerText = `$${transferencia.toLocaleString("es-AR")}`;
+  }
+  if (document.getElementById("calcTotalGeneralMobile")) {
+    document.getElementById("calcTotalGeneralMobile").innerText = `$${total.toLocaleString("es-AR")}`;
+  }
+  if (document.getElementById("calcCountEfectivoMobile")) {
+    document.getElementById("calcCountEfectivoMobile").innerText = ventasEfectivo;
+  }
+  if (document.getElementById("calcCountTransferenciaMobile")) {
+    document.getElementById("calcCountTransferenciaMobile").innerText = ventasTransferencia;
+  }
+  if (document.getElementById("calcTotalVentasMobile")) {
+    document.getElementById("calcTotalVentasMobile").innerText = `${ventasTotales} ventas`;
+  }
 
   const extras = calcRegistroVentas.extras || [];
   const mobile = document.querySelector(".calc-table-mobile");
@@ -2022,75 +2150,96 @@ function calcActualizarTabla() {
     mobile.insertBefore(card, mobile.lastElementChild);
   }
   const totalExtras = extras.reduce((acc, e) => acc + (e.precio || 0), 0);
-  document.getElementById("calcTotalExtrasMobile").innerText = `$${totalExtras.toLocaleString("es-AR")}`;
-  document.getElementById("calcCountExtrasMobile").innerText = extras.length;
+  if (document.getElementById("calcTotalExtrasMobile")) {
+    document.getElementById("calcTotalExtrasMobile").innerText = `$${totalExtras.toLocaleString("es-AR")}`;
+  }
+  if (document.getElementById("calcCountExtrasMobile")) {
+    document.getElementById("calcCountExtrasMobile").innerText = extras.length;
+  }
 }
 
-function calcMostrarDetalles(tipo) {
-  const container = document.getElementById("calcDetallesContainer");
-  const content = document.getElementById("calcDetallesContent");
-  const title = document.getElementById("calcDetallesTitle");
-
-  const ventas = (calcRegistroVentas.ventas || []).filter(v => v.metodoPago === tipo);
-
-  title.textContent = `Detalles de Ventas (${tipo === "efectivo" ? "Efectivo" : "Transferencia"})`;
-
-  const ajustesOpciones = {
-    "1": "Simple/Doble faz",
-    "2": "Doble faz (2 pág/carilla)",
-    "4": "Doble faz (4 pág/carilla)",
-    "6": "Doble faz (6 pág/carilla)",
-    "9": "Doble faz (9 pág/carilla)"
-  };
-
-  if (ventas.length === 0) {
-    content.innerHTML = `<div style="padding: 24px; text-align: center; color: var(--text-secondary);">No hay ventas registradas para este método de pago.</div>`;
-  } else {
-    content.innerHTML = ventas.map((venta, idx) => `
-      <div class="calc-venta-item" style="margin-bottom:18px;">
-        <ul>
-          <li><b>#${idx + 1}</b> - <b>Fecha:</b> ${venta.fecha} <b>Hora:</b> ${venta.hora}</li>
-          <li><b>Total:</b> $${venta.total.toLocaleString("es-AR")}${venta.propina && venta.propina > 0 ? ` (Propina: $${venta.propina})` : ""}</li>
-                            <li><b>Precios:</b> BN $${venta.precioHojaBN} / Color $${venta.precioHojaColor}</li>
-        </ul>
-        <div style="margin-top:10px;">
-          <b>Archivos de la venta:</b>
+calcMostrarDetalles = function(tipo) {
+  if (tipo === "perdidas") {
+    return;
+  }
+  if (tipo === "extras") {
+    return;
+  }
+  if (tipo === "dividido" || tipo === "efectivo" || tipo === "transferencia") {
+    const container = document.getElementById("calcDetallesContainer");
+    const content = document.getElementById("calcDetallesContent");
+    const title = document.getElementById("calcDetallesTitle");
+    let ventas = [];
+    if (tipo === "dividido") {
+      ventas = (calcRegistroVentas.ventas || []).filter(v => v.metodoPago === "dividido");
+      title.textContent = "Detalles de Pagos Divididos";
+    } else if (tipo === "efectivo") {
+      ventas = (calcRegistroVentas.ventas || []).filter(v => v.metodoPago === "efectivo");
+      title.textContent = "Detalles de Ventas (Efectivo)";
+    } else if (tipo === "transferencia") {
+      ventas = (calcRegistroVentas.ventas || []).filter(v => v.metodoPago === "transferencia");
+      title.textContent = "Detalles de Ventas (Transferencia)";
+    }
+    if (ventas.length === 0) {
+      content.innerHTML = `<div style="padding: 24px; text-align: center; color: var(--text-secondary);">No hay ventas registradas en este método.</div>`;
+    } else {
+      content.innerHTML = ventas.map((venta, idx) => {
+        const archivosHtml = venta.archivos.map((a, i) => `
+          <div style="background:var(--bg-card-header);border:1px solid var(--border-color);border-radius:8px;padding:10px 14px;margin-bottom:10px;">
+            <b>Archivo ${i + 1}</b> 
+            <span style="margin-left:10px;">
+              <b>Páginas:</b> ${a.paginas} 
+              <b>Copias:</b> ${a.copias} 
+              <b>Ajuste:</b> ${a.tipo === "1" ? "Simple/Doble faz" : `${a.tipo} pág/carilla`} 
+              <b>Tipo impresión:</b> ${a.color === "color" ? "Color" : "Blanco y Negro"}
+            </span>
+            <div><b>Precio archivo:</b> $${calcularPrecioArchivo(a, venta.precioHojaBN, venta.precioHojaColor)}</div>
+          </div>
+        `).join("");
+        let metodoPagoHtml = "";
+        if (venta.metodoPago === "dividido") {
+          metodoPagoHtml = `
+            <br><b>Efectivo:</b> $${venta.dividido.efectivo.toLocaleString("es-AR")}
+            <br><b>Transferencia:</b> $${venta.dividido.transferencia.toLocaleString("es-AR")}
+          `;
+        }
+        return `
+        <div class="calc-venta-item" style="margin-bottom:18px;">
           <div>
-            ${venta.archivos.map((archivo, i) => {
-              const paginasPorCarilla = Number.parseInt(archivo.tipo) || 1;
-              const hojasNecesarias = Math.ceil(archivo.paginas / paginasPorCarilla);
-              const precioHoja = archivo.color === "color" ? venta.precioHojaColor : venta.precioHojaBN;
-              const precioArchivo = hojasNecesarias * precioHoja * archivo.copias;
-              return `
-                <div style="margin:10px 0; padding:10px; border-radius:8px; background:var(--bg-card-header); border:1px solid var(--border-color);">
-                  <b>Archivo ${i + 1}</b><br>
-                  <b>Páginas:</b> ${archivo.paginas} &nbsp; 
-                  <b>Copias:</b> ${archivo.copias} &nbsp; 
-                  <b>Ajuste:</b> ${ajustesOpciones[archivo.tipo] || archivo.tipo} &nbsp; 
-                  <b>Tipo impresión:</b> ${archivo.color === "color" ? "Color" : "Blanco y Negro"}<br>
-                  <b>Precio archivo:</b> $${precioArchivo.toLocaleString("es-AR")}
-                </div>
-              `;
-            }).join("")}
+            <b>#${idx + 1} - Fecha:</b> ${venta.fecha} <b>Hora:</b> ${venta.hora}<br>
+            <b>Total:</b> $${venta.total.toLocaleString("es-AR")}
+            ${venta.propina && venta.propina > 0 ? `<br><b>Propina:</b> $${venta.propina}` : ""}
+            ${metodoPagoHtml}
+            <br><b>Precios:</b> BN $${venta.precioHojaBN} / Color $${venta.precioHojaColor}
+          </div>
+          <div style="margin-top:10px;"><b>Archivos de la venta:</b></div>
+          ${archivosHtml}
+          <div style="display:flex;gap:10px;margin-top:14px;">
+            <button class="calc-btn calc-btn-danger" onclick="eliminarVentaPorIndice(${getVentaIndiceGlobal(venta)}, '${tipo}')">Eliminar</button>
+            ${venta.metodoPago !== "dividido" ? `<button class="calc-btn calc-btn-secondary" onclick="cambiarMetodoPagoVenta(${getVentaIndiceGlobal(venta)}, '${tipo}')">Cambiar método de pago</button>` : ""}
+            <button class="calc-btn calc-btn-success" onclick="mostrarPropinaDetalle(${getVentaIndiceGlobal(venta)})">Agregar/Modificar propina</button>
           </div>
         </div>
-        <div style="margin-top:12px; display:flex; flex-wrap:wrap; gap:10px;">
-          <button class="calc-btn calc-btn-danger" onclick="eliminarVentaPorIndice(${getVentaIndiceGlobal(venta)}, '${tipo}')">Eliminar</button>
-          <button class="calc-btn calc-btn-secondary" onclick="cambiarMetodoPagoVenta(${getVentaIndiceGlobal(venta)}, '${tipo}')">Cambiar método de pago</button>
-          <button class="calc-btn calc-btn-success" onclick="mostrarPropinaDetalle(${getVentaIndiceGlobal(venta)})">Agregar/Modificar propina</button>
-        </div>
-      </div>
-    `).join("");
+        `;
+      }).join("");
+    }
+    container.style.display = "block";
+    container.style.maxHeight = "80vh";
+    container.style.overflowY = "auto";
+    container.style.minHeight = "500px";
+    setTimeout(() => {
+      container.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 100);
+    return;
   }
+  oldCalcMostrarDetalles(tipo);
+};
 
-  container.style.display = "block";
-  container.style.maxHeight = "80vh";
-  container.style.overflowY = "auto";
-  container.style.minHeight = "500px";
-  setTimeout(() => {
-    container.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, 100);
-  return;
+function calcularPrecioArchivo(a, precioBN, precioColor) {
+    const paginasPorCarilla = Number.parseInt(a.tipo) || 1;
+    const hojasNecesarias = Math.ceil(a.paginas / paginasPorCarilla);
+    const precioHoja = a.color === "color" ? precioColor : precioBN;
+    return hojasNecesarias * precioHoja * a.copias;
 }
 
 function getVentaIndiceGlobal(venta) {
@@ -2101,11 +2250,16 @@ function eliminarVentaPorIndice(idx, tipo) {
   if (!confirm("¿Seguro que deseas eliminar esta venta?")) return;
   const venta = calcRegistroVentas.ventas[idx];
   if (!venta) return;
+
   if (venta.metodoPago === "efectivo") {
     calcRegistroVentas.efectivo -= venta.total;
-  } else {
+  } else if (venta.metodoPago === "transferencia") {
     calcRegistroVentas.transferencia -= venta.total;
+  } else if (venta.metodoPago === "dividido" && venta.dividido) {
+    calcRegistroVentas.efectivo -= venta.dividido.efectivo || 0;
+    calcRegistroVentas.transferencia -= venta.dividido.transferencia || 0;
   }
+
   calcRegistroVentas.ventas.splice(idx, 1);
   calcGuardarDatos();
   calcActualizarTabla();
@@ -2116,11 +2270,11 @@ function cambiarMetodoPagoVenta(idx, tipoActual) {
   const venta = calcRegistroVentas.ventas[idx];
   if (!venta) return;
   if (venta.metodoPago === "efectivo") {
-    calcRegistroVentas.efectivo -= venta.total;
+    calcRegistroVentas.efectivo = Math.max(0, calcRegistroVentas.efectivo - venta.total);
     calcRegistroVentas.transferencia += venta.total;
     venta.metodoPago = "transferencia";
-  } else {
-    calcRegistroVentas.transferencia -= venta.total;
+  } else if (venta.metodoPago === "transferencia") {
+    calcRegistroVentas.transferencia = Math.max(0, calcRegistroVentas.transferencia - venta.total);
     calcRegistroVentas.efectivo += venta.total;
     venta.metodoPago = "efectivo";
   }
@@ -2667,8 +2821,9 @@ async function consultarHistorico() {
       }
     }
     if (encontrados.length > 0) {
-      let totalEfectivo = 0, totalTransferencia = 0;
+      let totalEfectivo = 0, totalTransferencia = 0, totalDividido = 0;
       let ventas = [], perdidas = [], extras = [];
+      let ventasDividido = [];
       encontrados.forEach(r => {
         totalEfectivo += r.efectivo || 0;
         totalTransferencia += r.transferencia || 0;
@@ -2676,6 +2831,8 @@ async function consultarHistorico() {
         perdidas = perdidas.concat(r.perdidas || []);
         extras = extras.concat(r.extras || []);
       });
+      ventasDividido = ventas.filter(v => v.metodoPago === "dividido");
+      totalDividido = ventasDividido.reduce((acc, v) => acc + ((v.dividido?.efectivo || 0) + (v.dividido?.transferencia || 0)), 0);
       const totalPerdidas = perdidas.reduce((acc, p) => acc + (p.total || 0), 0);
       const totalExtras = extras.reduce((acc, e) => acc + (e.precio || 0), 0);
 
@@ -2687,8 +2844,27 @@ async function consultarHistorico() {
           <div><span class="historico-label">Turno:</span> <span class="historico-valor">${obtenerNombreTurno(turno)}</span></div>
           <div><span class="historico-label">Efectivo:</span> <span class="historico-valor">$${totalEfectivo.toLocaleString("es-AR")}</span></div>
           <div><span class="historico-label">Transferencia:</span> <span class="historico-valor">$${totalTransferencia.toLocaleString("es-AR")}</span></div>
-          <div><span class="historico-label">Total:</span> <span class="historico-valor">$${(totalEfectivo + totalTransferencia).toLocaleString("es-AR")}</span></div>
+          <div><span class="historico-label">Pagos divididos:</span> <span class="historico-valor">$${totalDividido.toLocaleString("es-AR")}</span></div>
+          <div><span class="historico-label">Total:</span> <span class="historico-valor">$${(totalEfectivo + totalTransferencia + totalDividido).toLocaleString("es-AR")}</span></div>
           <div><span class="historico-label">Ventas:</span> <span class="historico-valor">${ventas.length}</span></div>
+          <div><span class="historico-label">Ventas en efectivo:</span> <span class="historico-valor">${ventas.filter(v => v.metodoPago === "efectivo").length}</span></div>
+          <div><span class="historico-label">Ventas por transferencia:</span> <span class="historico-valor">${ventas.filter(v => v.metodoPago === "transferencia").length}</span></div>
+          <div><span class="historico-label">Ventas divididas:</span> <span class="historico-valor">${ventasDividido.length}</span></div>
+          ${ventasDividido.length > 0 ? `
+            <hr>
+            <div><b>Detalle de pagos divididos:</b></div>
+            <ul class="historico-lista">
+              ${ventasDividido.map((v, i) => `
+                <li>
+                  <b>#${i + 1}</b> - <b>Fecha:</b> ${v.fecha || "-"} <b>Hora:</b> ${v.hora || "-"}
+                  <br><b>Total:</b> $${v.total.toLocaleString("es-AR")}
+                  <br><b>Efectivo:</b> $${v.dividido?.efectivo?.toLocaleString("es-AR") || 0}
+                  <b>Transferencia:</b> $${v.dividido?.transferencia?.toLocaleString("es-AR") || 0}
+                  ${v.propina && v.propina > 0 ? `<br><b>Propina:</b> $${v.propina}` : ""}
+                </li>
+              `).join("")}
+            </ul>
+          ` : ""}
           <hr>
           <div><b>Pérdidas:</b> ${perdidas.length}</div>
           ${perdidas.length > 0 ? `
@@ -2722,7 +2898,9 @@ async function consultarHistorico() {
         turno,
         efectivo: totalEfectivo,
         transferencia: totalTransferencia,
+        dividido: totalDividido,
         ventas,
+        ventasDividido,
         perdidas,
         totalPerdidas,
         extras
@@ -2795,6 +2973,32 @@ document.getElementById("btnExportarHistoricoPDF").onclick = function() {
   });
   y = doc.lastAutoTable.finalY + 10;
 
+  // Agregar pagos divididos al PDF
+  if (datos.ventasDividido && datos.ventasDividido.length > 0) {
+    doc.setFontSize(13);
+    doc.text('Pagos divididos:', 14, y);
+    y += 8;
+    const tablaDivididos = datos.ventasDividido.map((v, i) => [
+      `#${i + 1}`,
+      v.fecha || "-",
+      v.hora || "-",
+      `$${v.total.toLocaleString("es-AR")}`,
+      `$${v.dividido?.efectivo?.toLocaleString("es-AR") || 0}`,
+      `$${v.dividido?.transferencia?.toLocaleString("es-AR") || 0}`,
+      v.propina && v.propina > 0 ? `$${v.propina}` : "-"
+    ]);
+    doc.autoTable({
+      head: [['N°', 'Fecha', 'Hora', 'Total', 'Efectivo', 'Transferencia', 'Propina']],
+      body: tablaDivididos,
+      startY: y,
+      theme: 'grid',
+      styles: { fontSize: 11 },
+      headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold' },
+      bodyStyles: { fillColor: [245, 245, 245] }
+    });
+    y = doc.lastAutoTable.finalY + 10;
+  }
+
   doc.setFontSize(13);
   doc.text('Totales:', 14, y);
   y += 8;
@@ -2803,7 +3007,8 @@ document.getElementById("btnExportarHistoricoPDF").onclick = function() {
     body: [
       ['Total ventas en efectivo', `$${(datos.efectivo || 0).toLocaleString("es-AR")}`],
       ['Total ventas en transferencia', `$${(datos.transferencia || 0).toLocaleString("es-AR")}`],
-      ['Total general', `$${((datos.efectivo || 0) + (datos.transferencia || 0)).toLocaleString("es-AR")}`]
+      ['Total pagos divididos', `$${(datos.dividido || 0).toLocaleString("es-AR")}`],
+      ['Total general', `$${((datos.efectivo || 0) + (datos.transferencia || 0) + (datos.dividido || 0)).toLocaleString("es-AR")}`]
     ],
     startY: y,
     theme: 'grid',
@@ -2866,8 +3071,6 @@ document.getElementById("btnExportarHistoricoPDF").onclick = function() {
   const nombreArchivo = `RegistroVentas_${copiadoNombre.replace(/\s/g, "_")}_${mesNombre}_${año}_${fecha}_${turnoTxt}.pdf`;
   doc.save(nombreArchivo);
 };
-
-
 
 document.getElementById("btnReportesSugerencias").onclick = function() {
   document.getElementById("modalReportesSugerencias").style.display = "flex";
