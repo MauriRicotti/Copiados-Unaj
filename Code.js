@@ -17,15 +17,9 @@ function obtenerNombreTurno(turno) {
 }
 
 
-// contraseñas
-
-// ...existing code...
 let contrasenasDinamicas = null;
-// ...existing code...
 
-// ...existing code...
 async function cargarContrasenasDinamicas() {
-  // Intenta cargar desde Firebase
   if (window.firebaseInitialized && window.firebaseDatabase) {
     try {
       const ref = window.firebaseRef(window.firebaseDatabase, "contrasenas");
@@ -36,7 +30,6 @@ async function cargarContrasenasDinamicas() {
       }
     } catch (e) {}
   }
-  // Fallback localStorage
   function getLS(key, def) {
     const val = localStorage.getItem(key);
     if (!val) return { actual: def, anterior: "" };
@@ -124,7 +117,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   addOutsideClickListener();
   setTimeout(initializeFirebase, 100);
 
-  // Cargar contraseñas dinámicas y mostrar en la card
   await cargarContrasenasDinamicas();
   if (document.getElementById("cardCambiarContrasenas")) {
     mostrarContrasenasEnCard();
@@ -158,15 +150,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   const btnEstadisticasLogin = document.getElementById("btnEstadisticasLogin");
   if (btnEstadisticasLogin) {
     btnEstadisticasLogin.onclick = function() {
-      // Mostrar modal de acceso al panel de control
       document.getElementById("modalEstadisticasAdmin").style.display = "flex";
       document.getElementById("inputPasswordEstadisticas").value = "";
       document.getElementById("msgEstadisticasAdmin").textContent = "";
       setTimeout(() => {
         document.getElementById("inputPasswordEstadisticas").focus();
       }, 100);
-  
-      // Cerrar panel lateral si está abierto
+
       const panel = document.getElementById("menuLateralPanel");
       const overlay = document.getElementById("menuLateralOverlay");
       if (panel && panel.classList.contains("abierto")) {
@@ -197,7 +187,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // Mostrar contraseñas en la card si existe
   if (document.getElementById("cardCambiarContrasenas")) {
     mostrarContrasenasEnCard();
   }
@@ -627,7 +616,6 @@ function calcCalcularTotal() {
   document.getElementById("calcResultadoCambio").style.display = "none"
   document.getElementById("calcBtnFinalizar").disabled = true
 
-  // Limpiar campos de pago dividido
   document.getElementById("calcDivididoEfectivo").value = "";
   document.getElementById("calcDivididoTransferencia").value = "";
   document.getElementById("calcDivididoError").textContent = "";
@@ -787,7 +775,6 @@ function calcFinalizarVenta() {
     calcMetodoPago = null;
     if (document.getElementById("calcPropinaInput")) document.getElementById("calcPropinaInput").value = "0";
 
-    // Limpiar campos de pago dividido
     document.getElementById("calcDivididoEfectivo").value = "";
     document.getElementById("calcDivididoTransferencia").value = "";
     document.getElementById("calcDivididoError").textContent = "";
@@ -1006,7 +993,6 @@ function calcMostrarDatosComparativa(datos) {
   ]
 
   Object.entries(datos).forEach(([key, instituto], idx) => {
-    // Calcular pagos divididos para la tarjeta
     const ventasDividido = (instituto.ventas || []).filter(v => v.metodoPago === "dividido");
     const totalDividido = ventasDividido.reduce((acc, v) => acc + ((v.dividido?.efectivo || 0) + (v.dividido?.transferencia || 0)), 0);
 
@@ -1639,10 +1625,8 @@ async function login(tipo = null) {
     return;
   }
 
-  // Espera a que se carguen las contraseñas dinámicas si aún no están
   if (!contrasenasDinamicas) await cargarContrasenasDinamicas();
 
-  // Compara con la contraseña dinámica actual
   const passCorrecta =
     contrasenasDinamicas?.[fotocopiadoType]?.actual ||
     (fotocopiadoType === "salud" ? "salud123" :
@@ -3042,7 +3026,6 @@ document.getElementById("btnExportarHistoricoPDF").onclick = function() {
   });
   y = doc.lastAutoTable.finalY + 10;
 
-  // Agregar pagos divididos al PDF
   if (datos.ventasDividido && datos.ventasDividido.length > 0) {
     doc.setFontSize(13);
     doc.text('Pagos divididos:', 14, y);
@@ -4445,7 +4428,6 @@ document.getElementById("btnExportarRegistroMesImpresorasPDF").onclick = async f
   doc.save(`Registro_Contadores_Impresoras_${mes}.pdf`);
 };
 
-// Cargar contraseñas actuales al abrir el panel
 async function cargarContrasenasPanel() {
   const msg = document.getElementById("msgCambiarContrasenas");
   msg.textContent = "";
@@ -4461,7 +4443,6 @@ async function cargarContrasenasPanel() {
       document.getElementById("passAdmin").value = data?.admin || "";
     }
   } else {
-    // LocalStorage fallback
     document.getElementById("passSalud").value = localStorage.getItem("passSalud") || "";
     document.getElementById("passSociales").value = localStorage.getItem("passSociales") || "";
     document.getElementById("passIngenieria").value = localStorage.getItem("passIngenieria") || "";
@@ -4470,7 +4451,6 @@ async function cargarContrasenasPanel() {
   }
 }
 
-// Guardar cambios de contraseñas
 document.getElementById("formCambiarContrasenas").onsubmit = async function(e) {
   e.preventDefault();
   const msg = document.getElementById("msgCambiarContrasenas");
@@ -4479,7 +4459,6 @@ document.getElementById("formCambiarContrasenas").onsubmit = async function(e) {
 
   if (!contrasenasDinamicas) await cargarContrasenasDinamicas();
 
-  // Obtener valores actuales y nuevos
   const actual = {
     salud: document.getElementById("passSaludActual").value.trim(),
     sociales: document.getElementById("passSocialesActual").value.trim(),
@@ -4495,7 +4474,6 @@ document.getElementById("formCambiarContrasenas").onsubmit = async function(e) {
     admin: document.getElementById("passAdminNueva").value.trim()
   };
 
-  // Validar que si se quiere cambiar una contraseña, se ingrese la actual y la nueva
   for (const key of Object.keys(actual)) {
     if ((actual[key] || nueva[key]) && (!actual[key] || !nueva[key])) {
       msg.textContent = "Debes ingresar la contraseña actual y la nueva para cada campo que quieras cambiar.";
@@ -4503,7 +4481,6 @@ document.getElementById("formCambiarContrasenas").onsubmit = async function(e) {
     }
   }
 
-  // Validar contraseñas actuales
   for (const key of Object.keys(actual)) {
     if (actual[key] && nueva[key]) {
       const actualCorrecta = contrasenasDinamicas?.[key]?.actual || (
@@ -4520,13 +4497,11 @@ document.getElementById("formCambiarContrasenas").onsubmit = async function(e) {
     }
   }
 
-  // Si no hay cambios, avisar
   if (!Object.values(nueva).some(v => v)) {
     msg.textContent = "No hay cambios para guardar.";
     return;
   }
 
-  // Construir nuevo objeto de contraseñas
   const nuevasContrasenas = { ...contrasenasDinamicas };
   for (const key of Object.keys(nueva)) {
     if (actual[key] && nueva[key]) {
@@ -4543,14 +4518,12 @@ document.getElementById("formCambiarContrasenas").onsubmit = async function(e) {
     }
   }
 
-  // Guardar en Firebase o localStorage
   if (window.firebaseInitialized && window.firebaseDatabase) {
     const ref = window.firebaseRef(window.firebaseDatabase, "contrasenas");
     await window.firebaseSet(ref, nuevasContrasenas);
     msg.textContent = "Contraseñas actualizadas correctamente.";
     msg.style.color = "#059669";
   } else {
-    // LocalStorage fallback
     for (const key of Object.keys(nueva)) {
       if (actual[key] && nueva[key]) {
         localStorage.setItem(
@@ -4572,18 +4545,15 @@ document.getElementById("formCambiarContrasenas").onsubmit = async function(e) {
     msg.style.color = "#059669";
   }
 
-  // Limpiar campos
   for (const key of Object.keys(actual)) {
     document.getElementById("pass" + (key === "hec_salud" ? "HEC" : key.charAt(0).toUpperCase() + key.slice(1)) + "Actual").value = "";
     document.getElementById("pass" + (key === "hec_salud" ? "HEC" : key.charAt(0).toUpperCase() + key.slice(1)) + "Nueva").value = "";
   }
 
-  // Recargar contraseñas dinámicas
   await cargarContrasenasDinamicas();
   mostrarContrasenasEnCard();
 };
 
-// Cancelar cambios
 document.getElementById("btnCancelarCambiarContrasenas").onclick = function() {
   [
     "passSaludActual", "passSaludNueva",
@@ -4598,7 +4568,6 @@ document.getElementById("btnCancelarCambiarContrasenas").onclick = function() {
   document.getElementById("msgCambiarContrasenas").textContent = "";
 };
 
-// Cargar contraseñas al mostrar el panel
 document.addEventListener("DOMContentLoaded", () => {
   if (document.getElementById("cardCambiarContrasenas")) {
     cargarContrasenasPanel();
@@ -4632,3 +4601,34 @@ function mostrarContrasenasEnCard() {
     }
   }
 }
+
+const btnCancelarEstadisticas = document.getElementById("btnCancelarEstadisticas");
+if (btnCancelarEstadisticas) {
+  btnCancelarEstadisticas.onclick = function() {
+    document.getElementById("modalEstadisticasAdmin").style.display = "none";
+    const loginScreen = document.getElementById("loginScreen");
+    const btnMenu = document.getElementById("btnMenuHamburguesa");
+    if (loginScreen && loginScreen.style.display !== "none" && btnMenu) {
+      btnMenu.classList.remove("oculto");
+    }
+  };
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+  const wrapper = document.getElementById("cardCambiarContrasenasWrapper");
+  const explicacion = document.getElementById("contrasenasExplicacion");
+  const explicacionTexto = document.getElementById("contrasenasExplicacionTexto");
+  const btn = document.getElementById("btnDesplegarContrasenas");
+  const card = document.getElementById("cardCambiarContrasenas");
+
+  if (btn && wrapper && card && explicacion) {
+    btn.onclick = function() {
+      wrapper.classList.add("desplegado");
+      wrapper.classList.remove("blur-sensible");
+      card.classList.remove("oculto");
+      card.classList.add("visible");
+      btn.style.display = "none";
+      if (explicacionTexto) explicacionTexto.style.display = "none";
+    };
+  }
+});
