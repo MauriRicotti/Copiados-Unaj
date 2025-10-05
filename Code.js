@@ -16,28 +16,69 @@ function obtenerNombreTurno(turno) {
   return turno;
 }
 
+
+// contraseñas
+
+// ...existing code...
+let contrasenasDinamicas = null;
+// ...existing code...
+
+// ...existing code...
+async function cargarContrasenasDinamicas() {
+  // Intenta cargar desde Firebase
+  if (window.firebaseInitialized && window.firebaseDatabase) {
+    try {
+      const ref = window.firebaseRef(window.firebaseDatabase, "contrasenas");
+      const snap = await window.firebaseGet(ref);
+      if (snap.exists()) {
+        contrasenasDinamicas = snap.val();
+        return;
+      }
+    } catch (e) {}
+  }
+  // Fallback localStorage
+  function getLS(key, def) {
+    const val = localStorage.getItem(key);
+    if (!val) return { actual: def, anterior: "" };
+    try {
+      const obj = JSON.parse(val);
+      if (typeof obj === "object" && obj.actual) return obj;
+      return { actual: obj, anterior: "" };
+    } catch {
+      return { actual: val, anterior: "" };
+    }
+  }
+  contrasenasDinamicas = {
+    salud: getLS("passSalud", "salud123"),
+    sociales: getLS("passSociales", "sociales123"),
+    ingenieria: getLS("passIngenieria", "ingenieria123"),
+    hec_salud: getLS("passHEC", "hec123"),
+    admin: getLS("passAdmin", "admin123")
+  };
+}
+
 const calcInstitutos = {
   salud: {
-    name: "Copiados Salud",
+    name: "Copiado de Salud",
     fullName: "Calculadora de cobro y registro de ventas",
     password: "salud123",
   },
   sociales: {
-    name: "Copiados Sociales",
+    name: "Copiado de Sociales",
     fullName: "Calculadora de cobro y registro de ventas",
     password: "sociales123",
   },
   ingenieria: {
-    name: "Copiados Ingeniería",
+    name: "Copiado de Ingeniería",
     fullName: "Calculadora de cobro y registro de ventas",
     password: "ingenieria123",
   },
   hec_salud: {
-    name: "HEC Salud",
+    name: "Copiado de HEC Salud",
     fullName: "Calculadora de cobro y registro de ventas",
-    password: "hec123", 
+    password: "hec123",
   },
-}
+};
 
 let firebaseApp
 let database
@@ -76,20 +117,24 @@ function calcToggleTheme() {
   localStorage.setItem("calcTema", nuevoTema)
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  calcCargarTema()
-  generateDeviceId()
-  checkExistingSession()
-  addOutsideClickListener()
-  setTimeout(initializeFirebase, 100)
+document.addEventListener("DOMContentLoaded", async () => {
+  calcCargarTema();
+  generateDeviceId();
+  checkExistingSession();
+  addOutsideClickListener();
+  setTimeout(initializeFirebase, 100);
 
-  const propinaInput = document.getElementById("calcPropinaInput")
+  // Cargar contraseñas dinámicas y mostrar en la card
+  await cargarContrasenasDinamicas();
+  if (document.getElementById("cardCambiarContrasenas")) {
+    mostrarContrasenasEnCard();
+  }
+
+  const propinaInput = document.getElementById("calcPropinaInput");
   if (propinaInput) {
     propinaInput.addEventListener("focus", function() {
-      if (this.value === "0") {
-        this.value = ""
-      }
-    })
+      if (this.value === "0") this.value = "";
+    });
   }
 
   const turnoSelect = document.getElementById("turnoSelect");
@@ -98,16 +143,14 @@ document.addEventListener("DOMContentLoaded", () => {
     turnoSelect.onchange = function() {
       currentTurno = this.value;
       localStorage.setItem("currentTurno", currentTurno);
-    }
+    };
   }
 
   ["salud", "sociales", "ingenieria", "hec_salud"].forEach(tipo => {
     const input = document.getElementById(`passwordInput-${tipo}`);
     if (input) {
       input.addEventListener("keydown", function(e) {
-        if (e.key === "Enter") {
-          login(tipo);
-        }
+        if (e.key === "Enter") login(tipo);
       });
     }
   });
@@ -115,29 +158,35 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnEstadisticasLogin = document.getElementById("btnEstadisticasLogin");
   if (btnEstadisticasLogin) {
     btnEstadisticasLogin.onclick = function() {
+      // Mostrar modal de acceso al panel de control
       document.getElementById("modalEstadisticasAdmin").style.display = "flex";
       document.getElementById("inputPasswordEstadisticas").value = "";
       document.getElementById("msgEstadisticasAdmin").textContent = "";
       setTimeout(() => {
         document.getElementById("inputPasswordEstadisticas").focus();
       }, 100);
-    };
-  }
-  const btnCancelarEstadisticas = document.getElementById("btnCancelarEstadisticas");
-  if (btnCancelarEstadisticas) {
-    btnCancelarEstadisticas.onclick = function() {
-      document.getElementById("modalEstadisticasAdmin").style.display = "none";
+  
+      // Cerrar panel lateral si está abierto
+      const panel = document.getElementById("menuLateralPanel");
+      const overlay = document.getElementById("menuLateralOverlay");
+      if (panel && panel.classList.contains("abierto")) {
+        panel.classList.remove("abierto");
+        document.body.classList.remove("overflow-hidden");
+        if (overlay) overlay.style.display = "none";
+      }
     };
   }
   const btnConfirmarEstadisticas = document.getElementById("btnConfirmarEstadisticas");
   if (btnConfirmarEstadisticas) {
-    btnConfirmarEstadisticas.onclick = function() {
+    btnConfirmarEstadisticas.onclick = async function() {
       const pass = document.getElementById("inputPasswordEstadisticas").value;
-      if (pass === "admin123") {
+      if (!contrasenasDinamicas) await cargarContrasenasDinamicas();
+      const passAdmin = contrasenasDinamicas?.admin?.actual || "admin123";
+      if (pass === passAdmin) {
         document.getElementById("modalEstadisticasAdmin").style.display = "none";
         mostrarEstadisticasDesdeLogin();
       } else {
-        document.getElementById("msgEstadisticasAdmin").textContent = "Contraseña incorrecta.";
+        document.getElementById("msgEstadisticasAdmin").textContent = "Contraseña incorrecta";
       }
     };
   }
@@ -147,7 +196,12 @@ document.addEventListener("DOMContentLoaded", () => {
       if (e.key === "Enter") btnConfirmarEstadisticas.click();
     });
   }
-})
+
+  // Mostrar contraseñas en la card si existe
+  if (document.getElementById("cardCambiarContrasenas")) {
+    mostrarContrasenasEnCard();
+  }
+});
 
 function initializeFirebase() {
   try {
@@ -745,7 +799,9 @@ function calcFinalizarVenta() {
 async function calcRestablecerVentas() {
   const password = prompt("Ingresa la contraseña de administrador para restablecer las ventas:");
   if (password === null || password === "") return;
-  if (password !== "admin123") {
+  if (!contrasenasDinamicas) await cargarContrasenasDinamicas();
+  const passAdmin = contrasenasDinamicas?.admin || "admin123";
+  if (password !== passAdmin) {
     alert("Contraseña incorrecta. No se puede restablecer el registro de ventas.");
     return;
   }
@@ -1573,26 +1629,37 @@ function selectFotocopiado(tipo) {
   }
 }
 
-function login(tipo = null) {
-  const fotocopiadoType = tipo || selectedFotocopiado
-  const passwordInput = document.getElementById(`passwordInput-${fotocopiadoType}`)
-  const password = passwordInput.value
+async function login(tipo = null) {
+  const fotocopiadoType = tipo || selectedFotocopiado;
+  const passwordInput = document.getElementById(`passwordInput-${fotocopiadoType}`);
+  const password = passwordInput.value;
 
   if (!fotocopiadoType) {
-    alert("Por favor selecciona un fotocopiado")
-    return
+    alert("Por favor selecciona un fotocopiado");
+    return;
   }
 
-  if (password === calcInstitutos[fotocopiadoType].password) {
+  // Espera a que se carguen las contraseñas dinámicas si aún no están
+  if (!contrasenasDinamicas) await cargarContrasenasDinamicas();
+
+  // Compara con la contraseña dinámica actual
+  const passCorrecta =
+    contrasenasDinamicas?.[fotocopiadoType]?.actual ||
+    (fotocopiadoType === "salud" ? "salud123" :
+     fotocopiadoType === "sociales" ? "sociales123" :
+     fotocopiadoType === "ingenieria" ? "ingenieria123" :
+     fotocopiadoType === "hec_salud" ? "hec123" : "");
+
+  if (password === passCorrecta) {
     if (passwordInput) passwordInput.blur();
-    currentFotocopiado = fotocopiadoType
-    localStorage.setItem("currentFotocopiado", currentFotocopiado)
+    currentFotocopiado = fotocopiadoType;
+    localStorage.setItem("currentFotocopiado", currentFotocopiado);
     mostrarTurnoModal();
   } else {
-    alert("Contraseña incorrecta")
+    alert("Contraseña incorrecta");
     if (passwordInput) {
-      passwordInput.value = ""
-      passwordInput.focus()
+      passwordInput.value = "";
+      passwordInput.focus();
     }
   }
 }
@@ -2305,9 +2372,11 @@ function mostrarPropinaDetalle(idx) {
   calcMostrarDetalles(venta.metodoPago);
 }
 
-function pedirPasswordRecuperarBackup() {
+async function pedirPasswordRecuperarBackup() {
   const pass = prompt("Ingrese la contraseña de administrador para recuperar el último registro:");
-  if (pass !== "admin123") {
+  if (!contrasenasDinamicas) await cargarContrasenasDinamicas();
+  const passAdmin = contrasenasDinamicas?.admin || "admin123";
+  if (pass !== passAdmin) {
     alert("Contraseña incorrecta. No se realizó la acción.");
     return;
   }
@@ -3921,6 +3990,7 @@ document.addEventListener("DOMContentLoaded", () => {
     panel.classList.remove("abierto");
     document.body.classList.remove("overflow-hidden");
     if (overlay) overlay.style.display = "none";
+    btnMenu.classList.remove("oculto");
     if (btnMenu) {
       setTimeout(() => {
         btnMenu.classList.remove("oculto");
@@ -4112,29 +4182,30 @@ document.getElementById("btnCancelarLimpiarBD").onclick = function() {
 };
 
 document.getElementById("btnConfirmarLimpiarBD").onclick = async function() {
-    const pass = document.getElementById("inputPasswordLimpiarBD").value;
-    const msg = document.getElementById("msgLimpiarBD");
-    if (pass !== "admin123") {
-        msg.textContent = "Contraseña incorrecta.";
-        return;
-    }
-    if (!window.firebaseInitialized || !window.firebaseDatabase) {
-        msg.textContent = "Firebase no disponible.";
-        return;
-    }
-    if (!confirm("¿Seguro que deseas borrar TODA la base de datos? Esta acción no se puede deshacer.")) return;
-    try {
-        const db = window.firebaseDatabase;
-        const refRoot = window.firebaseRef(db, "/");
-        await window.firebaseSet(refRoot, null);
-        msg.textContent = "Base de datos limpiada correctamente.";
-        setTimeout(() => {
-            document.getElementById("modalLimpiarBaseDatos").style.display = "none";
-            location.reload();
-        }, 1200);
-    } catch (e) {
-        msg.textContent = "Error al limpiar la base de datos.";
-    }
+  const pass = document.getElementById("inputPasswordLimpiarBD").value;
+  const msg = document.getElementById("msgLimpiarBD");
+  if (!contrasenasDinamicas) await cargarContrasenasDinamicas();
+  const passAdmin = contrasenasDinamicas?.admin || "admin123";
+  if (pass !== passAdmin) {
+    msg.textContent = "Contraseña incorrecta.";
+    return;
+  }
+  if (!window.firebaseInitialized || !window.firebaseDatabase) {
+    msg.textContent = "Firebase no disponible.";
+    return;
+  }
+  if (!confirm("¿Seguro que deseas borrar TODA la base de datos? Esta acción no se puede deshacer.")) return;
+  try {
+    const db = window.firebaseDatabase;
+    const refRoot = window.firebaseRef(db, "/");
+    await window.firebaseSet(refRoot, null);
+    msg.textContent = "Base de datos limpiada correctamente.";
+    setTimeout(() => {
+      document.getElementById("modalLimpiarBaseDatos").style.display = "none";
+    }, 1200);
+  } catch (e) {
+    msg.textContent = "Error al limpiar la base de datos.";
+  }
 };
 
 document.getElementById("inputPasswordLimpiarBD").addEventListener("keydown", function(e) {
@@ -4373,3 +4444,191 @@ document.getElementById("btnExportarRegistroMesImpresorasPDF").onclick = async f
 
   doc.save(`Registro_Contadores_Impresoras_${mes}.pdf`);
 };
+
+// Cargar contraseñas actuales al abrir el panel
+async function cargarContrasenasPanel() {
+  const msg = document.getElementById("msgCambiarContrasenas");
+  msg.textContent = "";
+  if (window.firebaseInitialized && window.firebaseDatabase) {
+    const ref = window.firebaseRef(window.firebaseDatabase, "contrasenas");
+    const snap = await window.firebaseGet(ref);
+    if (snap.exists()) {
+      const data = snap.val();
+      document.getElementById("passSalud").value = data?.salud || "";
+      document.getElementById("passSociales").value = data?.sociales || "";
+      document.getElementById("passIngenieria").value = data?.ingenieria || "";
+      document.getElementById("passHEC").value = data?.hec_salud || "";
+      document.getElementById("passAdmin").value = data?.admin || "";
+    }
+  } else {
+    // LocalStorage fallback
+    document.getElementById("passSalud").value = localStorage.getItem("passSalud") || "";
+    document.getElementById("passSociales").value = localStorage.getItem("passSociales") || "";
+    document.getElementById("passIngenieria").value = localStorage.getItem("passIngenieria") || "";
+    document.getElementById("passHEC").value = localStorage.getItem("passHEC") || "";
+    document.getElementById("passAdmin").value = localStorage.getItem("passAdmin") || "";
+  }
+}
+
+// Guardar cambios de contraseñas
+document.getElementById("formCambiarContrasenas").onsubmit = async function(e) {
+  e.preventDefault();
+  const msg = document.getElementById("msgCambiarContrasenas");
+  msg.textContent = "";
+  msg.style.color = "#ef4444";
+
+  if (!contrasenasDinamicas) await cargarContrasenasDinamicas();
+
+  // Obtener valores actuales y nuevos
+  const actual = {
+    salud: document.getElementById("passSaludActual").value.trim(),
+    sociales: document.getElementById("passSocialesActual").value.trim(),
+    ingenieria: document.getElementById("passIngenieriaActual").value.trim(),
+    hec_salud: document.getElementById("passHECActual").value.trim(),
+    admin: document.getElementById("passAdminActual").value.trim()
+  };
+  const nueva = {
+    salud: document.getElementById("passSaludNueva").value.trim(),
+    sociales: document.getElementById("passSocialesNueva").value.trim(),
+    ingenieria: document.getElementById("passIngenieriaNueva").value.trim(),
+    hec_salud: document.getElementById("passHECNueva").value.trim(),
+    admin: document.getElementById("passAdminNueva").value.trim()
+  };
+
+  // Validar que si se quiere cambiar una contraseña, se ingrese la actual y la nueva
+  for (const key of Object.keys(actual)) {
+    if ((actual[key] || nueva[key]) && (!actual[key] || !nueva[key])) {
+      msg.textContent = "Debes ingresar la contraseña actual y la nueva para cada campo que quieras cambiar.";
+      return;
+    }
+  }
+
+  // Validar contraseñas actuales
+  for (const key of Object.keys(actual)) {
+    if (actual[key] && nueva[key]) {
+      const actualCorrecta = contrasenasDinamicas?.[key]?.actual || (
+        key === "salud" ? "salud123" :
+        key === "sociales" ? "sociales123" :
+        key === "ingenieria" ? "ingenieria123" :
+        key === "hec_salud" ? "hec123" :
+        key === "admin" ? "admin123" : ""
+      );
+      if (actual[key] !== actualCorrecta) {
+        msg.textContent = `La contraseña actual de ${key === "hec_salud" ? "HEC Salud" : key.charAt(0).toUpperCase() + key.slice(1)} es incorrecta.`;
+        return;
+      }
+    }
+  }
+
+  // Si no hay cambios, avisar
+  if (!Object.values(nueva).some(v => v)) {
+    msg.textContent = "No hay cambios para guardar.";
+    return;
+  }
+
+  // Construir nuevo objeto de contraseñas
+  const nuevasContrasenas = { ...contrasenasDinamicas };
+  for (const key of Object.keys(nueva)) {
+    if (actual[key] && nueva[key]) {
+      nuevasContrasenas[key] = {
+        actual: nueva[key],
+        anterior: contrasenasDinamicas[key]?.actual || (
+          key === "salud" ? "salud123" :
+          key === "sociales" ? "sociales123" :
+          key === "ingenieria" ? "ingenieria123" :
+          key === "hec_salud" ? "hec123" :
+          key === "admin" ? "admin123" : ""
+        )
+      };
+    }
+  }
+
+  // Guardar en Firebase o localStorage
+  if (window.firebaseInitialized && window.firebaseDatabase) {
+    const ref = window.firebaseRef(window.firebaseDatabase, "contrasenas");
+    await window.firebaseSet(ref, nuevasContrasenas);
+    msg.textContent = "Contraseñas actualizadas correctamente.";
+    msg.style.color = "#059669";
+  } else {
+    // LocalStorage fallback
+    for (const key of Object.keys(nueva)) {
+      if (actual[key] && nueva[key]) {
+        localStorage.setItem(
+          key === "hec_salud" ? "passHEC" : "pass" + key.charAt(0).toUpperCase() + key.slice(1),
+          JSON.stringify({
+            actual: nueva[key],
+            anterior: contrasenasDinamicas[key]?.actual || (
+              key === "salud" ? "salud123" :
+              key === "sociales" ? "sociales123" :
+              key === "ingenieria" ? "ingenieria123" :
+              key === "hec_salud" ? "hec123" :
+              key === "admin" ? "admin123" : ""
+            )
+          })
+        );
+      }
+    }
+    msg.textContent = "Contraseñas guardadas localmente.";
+    msg.style.color = "#059669";
+  }
+
+  // Limpiar campos
+  for (const key of Object.keys(actual)) {
+    document.getElementById("pass" + (key === "hec_salud" ? "HEC" : key.charAt(0).toUpperCase() + key.slice(1)) + "Actual").value = "";
+    document.getElementById("pass" + (key === "hec_salud" ? "HEC" : key.charAt(0).toUpperCase() + key.slice(1)) + "Nueva").value = "";
+  }
+
+  // Recargar contraseñas dinámicas
+  await cargarContrasenasDinamicas();
+  mostrarContrasenasEnCard();
+};
+
+// Cancelar cambios
+document.getElementById("btnCancelarCambiarContrasenas").onclick = function() {
+  [
+    "passSaludActual", "passSaludNueva",
+    "passSocialesActual", "passSocialesNueva",
+    "passIngenieriaActual", "passIngenieriaNueva",
+    "passHECActual", "passHECNueva",
+    "passAdminActual", "passAdminNueva"
+  ].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+  document.getElementById("msgCambiarContrasenas").textContent = "";
+};
+
+// Cargar contraseñas al mostrar el panel
+document.addEventListener("DOMContentLoaded", () => {
+  if (document.getElementById("cardCambiarContrasenas")) {
+    cargarContrasenasPanel();
+  }
+});
+
+function mostrarContrasenasEnCard() {
+  if (!contrasenasDinamicas) return;
+  const map = {
+    salud: "Salud",
+    sociales: "Sociales",
+    ingenieria: "Ingeniería",
+    hec_salud: "HEC Salud",
+    admin: "Administrador"
+  };
+  for (const key of Object.keys(map)) {
+    const actual = contrasenasDinamicas[key]?.actual || (
+      key === "salud" ? "salud123" :
+      key === "sociales" ? "sociales123" :
+      key === "ingenieria" ? "ingenieria123" :
+      key === "hec_salud" ? "hec123" :
+      key === "admin" ? "admin123" : ""
+    );
+    const anterior = contrasenasDinamicas[key]?.anterior || "";
+    const el = document.getElementById("verPass" + (key === "hec_salud" ? "HEC" : key.charAt(0).toUpperCase() + key.slice(1)));
+    if (el) {
+      el.innerHTML = `
+        <span style="font-size:0.98em;color:#059669;">Actual: <b>${actual}</b></span><br>
+        <span style="font-size:0.95em;color:#64748b;">Anterior: <b>${anterior ? anterior : "(sin cambios previos)"}</b></span>
+      `;
+    }
+  }
+}

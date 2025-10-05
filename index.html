@@ -557,6 +557,66 @@
                 </div>
             </div>
 
+            <div class="calc-card" id="cardCambiarContrasenas" style="margin-top:32px;">
+              <div class="calc-card-header">
+                <div class="calc-card-title">Cambiar contraseñas</div>
+              </div>
+              <div class="calc-card-content">
+                <form id="formCambiarContrasenas" autocomplete="off">
+                  <fieldset>
+                    <legend>Contraseñas de copiados</legend>
+                    <div class="calc-grid calc-grid-cols-2" style="margin-bottom: 12px;">
+                      <div>
+                        <label class="calc-label" for="passSaludActual">Salud (actual)</label>
+                        <input type="password" id="passSaludActual" class="calc-input" autocomplete="current-password" placeholder="Contraseña actual">
+                        <label class="calc-label" for="passSaludNueva" style="margin-top:8px;">Salud (nueva)</label>
+                        <input type="password" id="passSaludNueva" class="calc-input" autocomplete="new-password" placeholder="Nueva contraseña">
+                        <div id="verPassSalud" style="margin-top:6px;font-size:0.97em;"></div>
+                      </div>
+                      <div>
+                        <label class="calc-label" for="passSocialesActual">Sociales (actual)</label>
+                        <input type="password" id="passSocialesActual" class="calc-input" autocomplete="current-password" placeholder="Contraseña actual">
+                        <label class="calc-label" for="passSocialesNueva" style="margin-top:8px;">Sociales (nueva)</label>
+                        <input type="password" id="passSocialesNueva" class="calc-input" autocomplete="new-password" placeholder="Nueva contraseña">
+                        <div id="verPassSociales" style="margin-top:6px;font-size:0.97em;"></div>
+                      </div>
+                      <div>
+                        <label class="calc-label" for="passIngenieriaActual">Ingeniería (actual)</label>
+                        <input type="password" id="passIngenieriaActual" class="calc-input" autocomplete="current-password" placeholder="Contraseña actual">
+                        <label class="calc-label" for="passIngenieriaNueva" style="margin-top:8px;">Ingeniería (nueva)</label>
+                        <input type="password" id="passIngenieriaNueva" class="calc-input" autocomplete="new-password" placeholder="Nueva contraseña">
+                        <div id="verPassIngenieria" style="margin-top:6px;font-size:0.97em;"></div>
+                      </div>
+                      <div>
+                        <label class="calc-label" for="passHECActual">HEC Salud (actual)</label>
+                        <input type="password" id="passHECActual" class="calc-input" autocomplete="current-password" placeholder="Contraseña actual">
+                        <label class="calc-label" for="passHECNueva" style="margin-top:8px;">HEC Salud (nueva)</label>
+                        <input type="password" id="passHECNueva" class="calc-input" autocomplete="new-password" placeholder="Nueva contraseña">
+                        <div id="verPassHEC" style="margin-top:6px;font-size:0.97em;"></div>
+                      </div>
+                    </div>
+                  </fieldset>
+                  <fieldset>
+                    <legend>Contraseña de administrador</legend>
+                    <div class="calc-grid" style="margin-bottom: 12px;">
+                      <div style="grid-column: span 2; background:var(--bg-card-header);border-radius:10px;padding:18px 16px 10px 16px;box-shadow:0 1px 4px var(--shadow);margin-bottom:0;">
+                        <label class="calc-label" for="passAdminActual">Administrador (actual)</label>
+                        <input type="password" id="passAdminActual" class="calc-input" autocomplete="current-password" placeholder="Contraseña actual">
+                        <label class="calc-label" for="passAdminNueva" style="margin-top:8px;">Administrador (nueva)</label>
+                        <input type="password" id="passAdminNueva" class="calc-input" autocomplete="new-password" placeholder="Nueva contraseña">
+                        <div id="verPassAdmin" style="margin-top:6px;font-size:0.97em;"></div>
+                      </div>
+                    </div>
+                  </fieldset>
+                  <div style="margin-top:18px;display:flex;gap:12px;">
+                    <button type="submit" class="calc-btn calc-btn-success">Guardar cambios</button>
+                    <button type="button" class="calc-btn calc-btn-secondary" id="btnCancelarCambiarContrasenas">Cancelar</button>
+                  </div>
+                  <div id="msgCambiarContrasenas" style="margin-top:12px;font-size:0.98rem;"></div>
+                </form>
+              </div>
+            </div>
+
             <div id="panelRegistroImpresoras" class="calc-card" style="margin-top:32px;">
                 <div class="calc-card-header">
                     <div class="calc-card-title">Registro de uso de impresoras</div>
