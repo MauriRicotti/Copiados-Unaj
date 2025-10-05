@@ -909,15 +909,14 @@ function calcVolverDesdeComparativa() {
     if (cameFromLogin) {
       document.getElementById("loginScreen").style.display = "flex";
       cameFromLogin = false;
+      const btnMenu = document.getElementById("btnMenuHamburguesa");
+      if (btnMenu) btnMenu.classList.remove("oculto");
     } else {
       calculatorScreen.style.display = "block";
       calculatorScreen.classList.add("animated-fadeInUp");
       setTimeout(() => {
         calculatorScreen.classList.remove("animated-fadeInUp");
       }, 500);
-      if (document.getElementById("calculatorScreen").style.display === "block") {
-        document.getElementById("turnoSelectorFixed").style.display = "flex";
-      }
     }
   }, 400);
 
@@ -1545,6 +1544,9 @@ function showLoginScreen() {
   calculatorScreen.style.display = "none";
 
   document.getElementById("turnoSelectorFixed").style.display = "none";
+
+  const btnMenu = document.getElementById("btnMenuHamburguesa");
+  if (btnMenu) btnMenu.classList.remove("oculto");
 }
 
 function showCalculatorScreen() {
