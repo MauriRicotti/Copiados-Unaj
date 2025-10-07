@@ -787,7 +787,7 @@ async function calcRestablecerVentas() {
   const password = prompt("Ingresa la contraseña de administrador para restablecer las ventas:");
   if (password === null || password === "") return;
   if (!contrasenasDinamicas) await cargarContrasenasDinamicas();
-  const passAdmin = contrasenasDinamicas?.admin || "admin123";
+  const passAdmin = contrasenasDinamicas?.admin?.actual || "admin123";
   if (password !== passAdmin) {
     alert("Contraseña incorrecta. No se puede restablecer el registro de ventas.");
     return;
@@ -846,10 +846,10 @@ async function calcRestablecerVentas() {
       };
       window.firebaseSet(fotocopiadoRef, resetData)
         .then(() => {
-          updateSyncStatus("🟢", "Ventas restablecidas y sincronizadas");
+          showSyncNotification("Registro restablecido correctamente.");
         })
         .catch((error) => {
-          console.error("Error sincronizando reset:", error);
+          showSyncNotification("Error al restablecer en Firebase.");
         });
     }
   }
@@ -2361,7 +2361,7 @@ function mostrarPropinaDetalle(idx) {
 async function pedirPasswordRecuperarBackup() {
   const pass = prompt("Ingrese la contraseña de administrador para recuperar el último registro:");
   if (!contrasenasDinamicas) await cargarContrasenasDinamicas();
-  const passAdmin = contrasenasDinamicas?.admin || "admin123";
+  const passAdmin = contrasenasDinamicas?.admin?.actual || "admin123";
   if (pass !== passAdmin) {
     alert("Contraseña incorrecta. No se realizó la acción.");
     return;
@@ -2864,104 +2864,65 @@ async function consultarHistorico() {
     if (snap.exists()) {
       const registros = snap.val();
       for (const key in registros) {
-        const f = registros[key].fecha;
+        const r = registros[key];
         if (
-          f === fecha1 ||
-          f === fecha2 ||
-          f === fecha3 ||
-          f === fecha4
+          r.fecha === fecha1 ||
+          r.fecha === fecha2 ||
+          r.fecha === fecha3 ||
+          r.fecha === fecha4
         ) {
-          encontrados.push(registros[key]);
+          encontrados.push(r);
         }
       }
     }
     if (encontrados.length > 0) {
-      let totalEfectivo = 0, totalTransferencia = 0, totalDividido = 0;
-      let ventas = [], perdidas = [], extras = [];
-      let ventasDividido = [];
-      encontrados.forEach(r => {
-        totalEfectivo += r.efectivo || 0;
-        totalTransferencia += r.transferencia || 0;
-        ventas = ventas.concat(r.ventas || []);
-        perdidas = perdidas.concat(r.perdidas || []);
-        extras = extras.concat(r.extras || []);
-      });
-      ventasDividido = ventas.filter(v => v.metodoPago === "dividido");
-      totalDividido = ventasDividido.reduce((acc, v) => acc + ((v.dividido?.efectivo || 0) + (v.dividido?.transferencia || 0)), 0);
+      const ultimo = encontrados.reduce((a, b) => (a.timestamp > b.timestamp ? a : b));
+      let totalEfectivo = ultimo.efectivo || 0;
+      let totalTransferencia = ultimo.transferencia || 0;
+      let ventas = ultimo.ventas || [];
+      let perdidas = ultimo.perdidas || [];
+      let extras = ultimo.extras || [];
+      let ventasDividido = ventas.filter(v => v.metodoPago === "dividido");
+      let totalDividido = ventasDividido.reduce((acc, v) => acc + ((v.dividido?.efectivo || 0) + (v.dividido?.transferencia || 0)), 0);
       const totalPerdidas = perdidas.reduce((acc, p) => acc + (p.total || 0), 0);
       const totalExtras = extras.reduce((acc, e) => acc + (e.precio || 0), 0);
 
       resultadoDiv.innerHTML = `
-        <div class="historico-resumen">
-          <h3>Resumen del día</h3>
-          <div><span class="historico-label">Copiado:</span> <span class="historico-valor">${calcInstitutos[tipo]?.name || tipo}</span></div>
-          <div><span class="historico-label">Fecha:</span> <span class="historico-valor">${fecha1}</span></div>
-          <div><span class="historico-label">Turno:</span> <span class="historico-valor">${obtenerNombreTurno(turno)}</span></div>
-          <div><span class="historico-label">Efectivo:</span> <span class="historico-valor">$${totalEfectivo.toLocaleString("es-AR")}</span></div>
-          <div><span class="historico-label">Transferencia:</span> <span class="historico-valor">$${totalTransferencia.toLocaleString("es-AR")}</span></div>
-          <div><span class="historico-label">Pagos divididos:</span> <span class="historico-valor">$${totalDividido.toLocaleString("es-AR")}</span></div>
-          <div><span class="historico-label">Total:</span> <span class="historico-valor">$${(totalEfectivo + totalTransferencia + totalDividido).toLocaleString("es-AR")}</span></div>
-          <div><span class="historico-label">Ventas:</span> <span class="historico-valor">${ventas.length}</span></div>
-          <div><span class="historico-label">Ventas en efectivo:</span> <span class="historico-valor">${ventas.filter(v => v.metodoPago === "efectivo").length}</span></div>
-          <div><span class="historico-label">Ventas por transferencia:</span> <span class="historico-valor">${ventas.filter(v => v.metodoPago === "transferencia").length}</span></div>
-          <div><span class="historico-label">Ventas divididas:</span> <span class="historico-valor">${ventasDividido.length}</span></div>
-          ${ventasDividido.length > 0 ? `
-            <hr>
-            <div><b>Detalle de pagos divididos:</b></div>
-            <ul class="historico-lista">
-              ${ventasDividido.map((v, i) => `
-                <li>
-                  <b>#${i + 1}</b> - <b>Fecha:</b> ${v.fecha || "-"} <b>Hora:</b> ${v.hora || "-"}
-                  <br><b>Total:</b> $${v.total.toLocaleString("es-AR")}
-                  <br><b>Efectivo:</b> $${v.dividido?.efectivo?.toLocaleString("es-AR") || 0}
-                  <b>Transferencia:</b> $${v.dividido?.transferencia?.toLocaleString("es-AR") || 0}
-                  ${v.propina && v.propina > 0 ? `<br><b>Propina:</b> $${v.propina}` : ""}
-                </li>
-              `).join("")}
-            </ul>
-          ` : ""}
-          <hr>
-          <div><b>Pérdidas:</b> ${perdidas.length}</div>
-          ${perdidas.length > 0 ? `
-            <ul class="historico-lista">
-              ${perdidas.map(p => `<li>
-                <b>${p.cantidad}</b> carillas (${p.tipo === "color" ? "Color" : "BN"}) - $${(p.total || 0).toLocaleString("es-AR")}
-                ${p.motivo ? `- Motivo: ${p.motivo}` : ""}
-              </li>`).join("")}
-            </ul>
-            <div class="historico-total"><b>Total pérdidas:</b> $${totalPerdidas.toLocaleString("es-AR")}</div>
-          ` : `<div class="historico-vacio">No hay pérdidas registradas.</div>`}
-          <hr>
-          <div><b>Extras:</b> ${extras.length}</div>
-          ${extras.length > 0 ? `
-            <ul class="historico-lista">
-              ${extras.map(e => `<li>
-                <b>${e.cantidad}</b> carillas (${e.tipo === "color" ? "Color" : "BN"}) - $${(e.precio || 0).toLocaleString("es-AR")}
-                ${e.motivo ? `- Motivo: ${e.motivo}` : ""}
-              </li>`).join("")}
-            </ul>
-            <div class="historico-total"><b>Total extras:</b> $${totalExtras.toLocaleString("es-AR")}</div>
-          ` : `<div class="historico-vacio">No hay extras registrados.</div>`}
+        <div style="font-weight:600;font-size:1.08rem;margin-bottom:10px;">
+          <span>Registro de <b>${calcInstitutos[tipo]?.name || tipo}</b></span><br>
+          <span>Fecha: <b>${fecha1}</b></span><br>
+          <span>Turno: <b>${obtenerNombreTurno(turno)}</b></span>
+        </div>
+        <div style="margin-bottom:10px;">
+          <b>Total en efectivo:</b> $${totalEfectivo.toLocaleString("es-AR")}<br>
+          <b>Total en transferencia:</b> $${totalTransferencia.toLocaleString("es-AR")}<br>
+          <b>Total pagos divididos:</b> $${totalDividido.toLocaleString("es-AR")}<br>
+          <b>Total general:</b> $${(totalEfectivo + totalTransferencia + totalDividido).toLocaleString("es-AR")}
+        </div>
+        <div style="margin-bottom:10px;">
+          <b>Número de ventas:</b> ${ventas.length}<br>
+          <b>Pérdidas:</b> ${perdidas.length} ($${totalPerdidas.toLocaleString("es-AR")})<br>
+          <b>Extras:</b> ${extras.length} ($${totalExtras.toLocaleString("es-AR")})
         </div>
       `;
-      
       if (btnExportar) btnExportar.style.display = "inline-block";
       window._historicoDatosParaPDF = {
         copiado: tipo,
         copiadoNombre: calcInstitutos[tipo]?.name || tipo,
         fecha: fecha1,
         turno,
+        ventas,
+        ventasDividido,
         efectivo: totalEfectivo,
         transferencia: totalTransferencia,
         dividido: totalDividido,
-        ventas,
-        ventasDividido,
         perdidas,
         totalPerdidas,
-        extras
+        extras,
+        totalExtras
       };
     } else {
-      resultadoDiv.innerHTML = "<span style='color:#ef4444;'>No se encontraron registros para esa fecha y turno.</span>";
+      resultadoDiv.innerHTML = "<span style='color:#ef4444;'>No hay registros históricos para esa fecha y turno.</span>";
       if (btnExportar) btnExportar.style.display = "none";
       window._historicoDatosParaPDF = null;
     }
