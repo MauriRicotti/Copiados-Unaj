@@ -4016,3 +4016,47 @@ body.overflow-hidden {
     height: 150px;
   }
 }
+
+.impresora-trash-btn {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.06);
+  padding: 6px;
+  border-radius: 8px;
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  cursor: pointer;
+}
+.impresora-trash-btn:hover {
+  background: rgba(239,68,68,0.08);
+  color: #ef4444;
+  border-color: rgba(239,68,68,0.15);
+}
+@media (max-width:700px) {
+  .impresora-trash-btn { min-width:34px; padding:4px; }
+}
+
+#listaImpresorasGestion {
+  display: none !important;
+}
+
+#listaInstruccionesImpresoras {
+  line-height: 0.2;
+  color: var(--text-secondary);
+  margin-top: 8px;
+  margin-bottom: 10px;
+}
+
+#listaInstruccionesImpresoras p,
+#listaInstruccionesImpresoras {
+  max-width: 38rem;
+  font-size: 0.01rem;
+}
+
+#listaInstruccionesImpresoras {
+  font-size: 0.80rem !important;
+  line-height: 1.18 !important;
+}
+

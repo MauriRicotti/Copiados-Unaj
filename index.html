@@ -616,7 +616,6 @@
                       Solo el administrador puede cambiarlas.
                     </span>
                     <button id="btnDesplegarContrasenas" class="btn-flecha-desplegar" aria-label="Mostrar contraseñas" style="margin:0 auto;">
-                      <!-- Icono de ojo SVG -->
                       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/>
                         <circle cx="12" cy="12" r="3"/>
@@ -737,6 +736,7 @@
       <div class="modal-registro-impresoras-content">
         <div class="registro-form-col">
           <h2>Registro de contadores</h2>
+
           <label>Copiado:</label>
           <select id="registroCopiado" class="calc-select">
             <option value="salud">Salud</option>
@@ -746,21 +746,41 @@
             <option value="becas_ingenieria">Becas Ingeniería</option>
             <option value="hec">HEC</option>
           </select>
+
           <label>Turno:</label>
           <select id="registroTurno" class="calc-select">
             <option value="TM">Mañana</option>
             <option value="TT">Tarde</option>
             <option value="TU">Turno único</option>
           </select>
+
           <label>Fecha:</label>
           <input type="date" id="registroFecha" class="calc-input">
+
           <label>Impresoras:</label>
-          <div id="registroImpresorasLista"></div>
-          <div style="margin-top:18px;">
+          <div id="registroImpresorasLista" style="margin-bottom:8px;max-height:220px;overflow:auto;"></div>
+
+          <hr style="margin:12px 0;border-color:var(--border-color)">
+
+          <label style="font-weight:700;margin-bottom:6px;display:block;">Gestionar lista de impresoras</label>
+
+          <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">
+            <input id="inputNuevaImpresora" class="calc-input" placeholder="NUEVA IMPRESORA" style="flex:1;text-transform:uppercase; font-size: 0.80rem;" />
+            <button id="btnAgregarImpresora" class="calc-btn calc-btn-primary">Agregar</button>
+          </div>
+
+          <div id="listaInstruccionesImpresoras" style="color:var(--text-secondary);font-size:0.95rem;margin-bottom:8px;">
+            IMPORTANTE:. Para una impresora a color agrega la palabra <b>COLOR</b> al final del nombre (ej. <i>MAURO COLOR</i>). Para blanco y negro no incluyas la palabra <b>COLOR</b> (ej. <i>MAURO</i> o <i>MAURO B/N</i>).
+          </div>
+
+          <div id="listaImpresorasGestion" style="margin-bottom:10px;color:var(--text-secondary);max-height:170px;overflow:auto;"></div>
+
+          <div style="margin-top:8px;">
             <button class="calc-btn calc-btn-primary" id="btnGuardarRegistroImpresoras">Guardar</button>
             <button class="calc-btn calc-btn-secondary" id="btnCancelarRegistroImpresoras">Cancelar</button>
           </div>
         </div>
+
         <div class="registro-impresoras-col" id="registroImpresorasArchivos"></div>
       </div>
     </div>

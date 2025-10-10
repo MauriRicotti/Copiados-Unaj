@@ -3257,7 +3257,7 @@ async function mostrarReportesPanelControl() {
   document.getElementById("filtroEstadoReporte").value = "revision";
 }
 
-const IMPRESORAS_TODAS = [
+let IMPRESORAS_TODAS = [
   "MAR",
   "LUME",
   "DOHKO",
@@ -3280,6 +3280,141 @@ const IMPRESORAS_TODAS = [
   "POCHA B/N",
   "POCHA COLOR"
 ];
+
+async function cargarImpresorasConfiguradas() {
+  const localKey = "config_impresoras";
+  try {
+    if (window.firebaseInitialized && window.firebaseDatabase) {
+      const cfgRef = window.firebaseRef(window.firebaseDatabase, "config/impresoras");
+      window.firebaseOnValue(cfgRef, (snap) => {
+        const val = snap.val();
+        if (Array.isArray(val)) {
+          IMPRESORAS_TODAS = val;
+        } else if (val && typeof val === "object") {
+          IMPRESORAS_TODAS = Object.values(val);
+        } else {
+        }
+        if (typeof renderImpresorasCheckbox === "function") renderImpresorasCheckbox();
+        if (typeof renderGestionImpresoras === "function") renderGestionImpresoras();
+      });
+
+      try {
+        const snap = await window.firebaseGet(cfgRef);
+        if (snap && snap.exists()) {
+          const v = snap.val();
+          if (Array.isArray(v)) IMPRESORAS_TODAS = v;
+          else if (v && typeof v === "object") IMPRESORAS_TODAS = Object.values(v);
+        }
+      } catch(e) {
+        console.warn("No se pudo leer lista de impresoras desde Firebase (initial get).", e);
+      }
+    } else {
+      const raw = localStorage.getItem(localKey);
+      if (raw) {
+        try {
+          const arr = JSON.parse(raw);
+          if (Array.isArray(arr)) IMPRESORAS_TODAS = arr;
+        } catch(e){}
+      }
+    }
+  } catch(e) {
+    console.error("Error en cargarImpresorasConfiguradas:", e);
+  } finally {
+    if (typeof renderImpresorasCheckbox === "function") renderImpresorasCheckbox();
+    if (typeof renderGestionImpresoras === "function") renderGestionImpresoras();
+  }
+}
+
+async function guardarImpresorasConfiguradas() {
+  const localKey = "config_impresoras";
+  try {
+    const arr = IMPRESORAS_TODAS;
+    if (window.firebaseInitialized && window.firebaseDatabase) {
+      const cfgRef = window.firebaseRef(window.firebaseDatabase, "config/impresoras");
+      await window.firebaseSet(cfgRef, arr);
+      console.log("[impresoras] guardado en Firebase");
+    } else {
+      localStorage.setItem(localKey, JSON.stringify(arr));
+      console.log("[impresoras] guardado en localStorage (sin Firebase)");
+    }
+  } catch (e) {
+    console.error("Error guardando impresoras:", e);
+    localStorage.setItem(localKey, JSON.stringify(IMPRESORAS_TODAS));
+  }
+}
+
+function agregarImpresora(nombre) {
+  nombre = (nombre || "").trim().toUpperCase();
+  if (!nombre) {
+    alert("Ingresa el nombre de la impresora (en MAYÚSCULAS).");
+    return;
+  }
+  if (IMPRESORAS_TODAS.some(n => n.toUpperCase() === nombre)) {
+    alert("La impresora ya existe.");
+    return;
+  }
+  IMPRESORAS_TODAS.push(nombre);
+  guardarImpresorasConfiguradas();
+  if (typeof renderImpresorasCheckbox === "function") renderImpresorasCheckbox();
+  if (typeof renderGestionImpresoras === "function") renderGestionImpresoras();
+}
+
+function eliminarImpresora(nombre) {
+  nombre = (nombre || "").toString();
+  if (!nombre) return;
+  const confirmMsg = `¿Estás seguro de que deseas ELIMINAR la impresora "${nombre}" de la lista? Esta acción la quitará para todos los equipos.`;
+  if (!confirm(confirmMsg)) return;
+  IMPRESORAS_TODAS = IMPRESORAS_TODAS.filter(n => n !== nombre);
+  guardarImpresorasConfiguradas();
+  if (typeof renderImpresorasCheckbox === "function") renderImpresorasCheckbox();
+  if (typeof renderGestionImpresoras === "function") renderGestionImpresoras();
+}
+
+function renderGestionImpresoras() {
+  const cont = document.getElementById("listaImpresorasGestion");
+  if (!cont) return;
+  cont.innerHTML = "";
+  if (!IMPRESORAS_TODAS || IMPRESORAS_TODAS.length === 0) {
+    cont.innerHTML = `<div style="color:var(--text-secondary)">No hay impresoras configuradas.</div>`;
+    return;
+  }
+  IMPRESORAS_TODAS.forEach(nombre => {
+    const row = document.createElement("div");
+    row.style.cssText = "display:flex;align-items:center;gap:8px;margin-bottom:6px;";
+    const span = document.createElement("span");
+    span.style.flex = "1";
+    span.textContent = nombre;
+    const btn = document.createElement("button");
+    btn.className = "calc-btn calc-btn-outline";
+    btn.textContent = "Eliminar";
+    btn.onclick = () => eliminarImpresora(nombre);
+    row.appendChild(span);
+    row.appendChild(btn);
+    cont.appendChild(row);
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const btnAgregar = document.getElementById("btnAgregarImpresora");
+  const inputNueva = document.getElementById("inputNuevaImpresora");
+  if (btnAgregar && inputNueva) {
+    btnAgregar.onclick = () => {
+      const val = inputNueva.value || "";
+      agregarImpresora(val);
+      inputNueva.value = "";
+      inputNueva.focus();
+    };
+    inputNueva.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        btnAgregar.click();
+      }
+    });
+  }
+
+  setTimeout(() => {
+    try { cargarImpresorasConfiguradas(); } catch(e) { console.warn(e); }
+  }, 50);
+});
 
 let storage = null;
 let storageRef = null;
@@ -3371,47 +3506,30 @@ document.getElementById("btnRegistrarImpresoras").onclick = function() {
   document.getElementById("registroFecha").value = new Date().toISOString().slice(0,10);
   renderImpresorasCheckbox();
   renderImpresorasArchivos();
+  if (typeof renderGestionImpresoras === "function") renderGestionImpresoras();
 };
 
 document.getElementById("btnCancelarRegistroImpresoras").onclick = function() {
   document.getElementById("modalRegistroImpresoras").style.display = "none";
 };
 
-function renderImpresorasCheckbox() {
-  const cont = document.getElementById("registroImpresorasLista");
-  cont.innerHTML = `<div id="impresorasCheckboxes"></div>`;
-
-  const grupos = {
-    "Blanco y Negro": [],
-    "Color": [],
-    "HEC": [],
-    "Otros": []
-  };
-  IMPRESORAS_TODAS.forEach(nombre => {
-    if (nombre.includes("COLOR")) grupos["Color"].push(nombre);
-    else if (nombre.includes("B/N")) grupos["Blanco y Negro"].push(nombre);
-    else if (nombre.includes("HEC")) grupos["HEC"].push(nombre);
-    else grupos["Otros"].push(nombre);
-  });
-
-  function renderLista() {
-    const seleccionadas = Array.from(document.querySelectorAll(".impresora-checkbox:checked")).map(cb => cb.value);
-
-    let html = "";
-    Object.entries(grupos).forEach(([grupo, lista]) => {
-      if (lista.length === 0) return;
-      html += `<div style="margin-bottom:6px;font-weight:600;color:var(--text-heading);font-size:1rem;">${grupo}</div>`;
-      html += lista.map(nombre => `
-        <label style="display:flex;align-items:center;margin-bottom:4px;gap:6px;">
-          <input type="checkbox" class="impresora-checkbox" value="${nombre}" ${seleccionadas.includes(nombre) ? "checked" : ""} onchange="renderImpresorasArchivos()">
-          <span>${nombre}</span>
-        </label>
-      `).join("");
-    });
-    document.getElementById("impresorasCheckboxes").innerHTML = html;
+function renderGestionImpresoras() {
+  const cont = document.getElementById("listaImpresorasGestion");
+  if (!cont) return;
+  cont.innerHTML = "";
+  if (!IMPRESORAS_TODAS || IMPRESORAS_TODAS.length === 0) {
+    cont.innerHTML = `<div style="color:var(--text-secondary)">No hay impresoras configuradas.</div>`;
+    return;
   }
-
-  renderLista();
+  IMPRESORAS_TODAS.forEach(nombre => {
+    const row = document.createElement("div");
+    row.style.cssText = "display:flex;align-items:center;gap:8px;margin-bottom:6px;";
+    const span = document.createElement("span");
+    span.style.flex = "1";
+    span.textContent = nombre;
+    row.appendChild(span);
+    cont.appendChild(row);
+  });
 }
 
 window.renderImpresorasArchivos = function() {
@@ -4595,3 +4713,96 @@ document.addEventListener("DOMContentLoaded", function() {
     };
   }
 });
+
+function renderImpresorasCheckbox() {
+  const cont = document.getElementById("registroImpresorasLista");
+  if (!cont) return;
+  cont.innerHTML = "";
+
+  const grupos = {
+    "Blanco y Negro": [],
+    "Color": [],
+    "HEC": [],
+    "Otros": []
+  };
+
+  (IMPRESORAS_TODAS || []).forEach(nombre => {
+    if (typeof nombre !== "string") return;
+    if (nombre.includes("COLOR")) grupos["Color"].push(nombre);
+    else if (nombre.includes("B/N")) grupos["Blanco y Negro"].push(nombre);
+    else if (nombre.includes("HEC")) grupos["HEC"].push(nombre);
+    else grupos["Otros"].push(nombre);
+  });
+
+  const crearSvgBasura = () => {
+    return `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:block;">
+      <polyline points="3 6 5 6 21 6"></polyline>
+      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+      <path d="M10 11v6"></path>
+      <path d="M14 11v6"></path>
+      <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path>
+    </svg>`;
+  };
+
+  Object.entries(grupos).forEach(([grupo, lista]) => {
+    if (!lista || lista.length === 0) return;
+
+    const titulo = document.createElement("div");
+    titulo.style.cssText = "margin-bottom:6px;font-weight:600;color:var(--text-heading);font-size:1rem;";
+    titulo.textContent = grupo;
+    cont.appendChild(titulo);
+
+    lista.forEach(nombre => {
+      const row = document.createElement("div");
+      row.style.cssText = "display:flex;align-items:center;gap:10px;justify-content:space-between;margin-bottom:6px;";
+
+      const left = document.createElement("div");
+      left.style.cssText = "display:flex;align-items:center;gap:8px;flex:1;min-width:0;";
+
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.className = "impresora-checkbox";
+      checkbox.value = nombre;
+
+      checkbox.addEventListener("change", function() {
+        if (typeof window.renderImpresorasArchivos === "function") {
+          try { window.renderImpresorasArchivos(); } catch (e) { console.warn(e); }
+        }
+      });
+
+      const span = document.createElement("span");
+      span.style.cssText = "user-select:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;";
+      span.textContent = nombre;
+
+      left.appendChild(checkbox);
+      left.appendChild(span);
+
+      const btn = document.createElement("button");
+      btn.className = "impresora-trash-btn";
+      btn.type = "button";
+      btn.title = `Eliminar ${nombre}`;
+      btn.style.cssText = "flex:0 0 auto;";
+      btn.innerHTML = crearSvgBasura();
+
+      btn.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        if (typeof eliminarImpresora === "function") {
+          eliminarImpresora(nombre);
+        } else {
+          const confirmMsg = `¿Estás seguro de que deseas ELIMINAR la impresora "${nombre}" de la lista? Esta acción la quitará para todos los equipos.`;
+          if (!confirm(confirmMsg)) return;
+          IMPRESORAS_TODAS = IMPRESORAS_TODAS.filter(n => n !== nombre);
+          if (typeof guardarImpresorasConfiguradas === "function") guardarImpresorasConfiguradas();
+          renderImpresorasCheckbox();
+          if (typeof renderGestionImpresoras === "function") renderGestionImpresoras();
+          if (typeof window.renderImpresorasArchivos === "function") window.renderImpresorasArchivos();
+        }
+      });
+
+      row.appendChild(left);
+      row.appendChild(btn);
+
+      cont.appendChild(row);
+    });
+  });
+}
