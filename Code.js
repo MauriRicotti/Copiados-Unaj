@@ -192,14 +192,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
-document.addEventListener("DOMContentLoaded", () => {
-  const fechaInput = document.getElementById("registroFecha");
-  if (fechaInput) {
-    const hoy = new Date();
-    fechaInput.value = hoy.toISOString().split('T')[0];
-  }
-});
-
 function initializeFirebase() {
   try {
     console.log("[v0] Intentando inicializar Firebase...")
@@ -2273,12 +2265,12 @@ calcMostrarDetalles = function(tipo) {
             ${metodoPagoHtml}
             <br><b>Precios:</b> BN $${venta.precioHojaBN} / Color $${venta.precioHojaColor}
           </div>
-          <div style="margin-top:10px; margin-bottom:10px;"><b>Archivos de la venta:</b></div>
+          <div style="margin-top:10px;"><b>Archivos de la venta:</b></div>
           ${archivosHtml}
           <div style="display:flex;gap:10px;margin-top:14px;">
-            <button style="font-size: 0.92rem;" class="calc-btn calc-btn-danger" onclick="eliminarVentaPorIndice(${getVentaIndiceGlobal(venta)}, '${tipo}')">Eliminar</button>
-            ${venta.metodoPago !== "dividido" ? `<button style="font-size: 0.92rem;" class="calc-btn calc-btn-secondary" onclick="cambiarMetodoPagoVenta(${getVentaIndiceGlobal(venta)}, '${tipo}')">Cambiar método de pago</button>` : ""}
-            <button style="font-size: 0.92rem;" class="calc-btn calc-btn-success" onclick="mostrarPropinaDetalle(${getVentaIndiceGlobal(venta)})">Agregar/Modificar propina</button>
+            <button style="font-size:0.92rem;" class="calc-btn calc-btn-danger" onclick="eliminarVentaPorIndice(${getVentaIndiceGlobal(venta)}, '${tipo}')">Eliminar</button>
+            ${venta.metodoPago !== "dividido" ? `<button style="font-size:0.92rem;" class="calc-btn calc-btn-secondary" onclick="cambiarMetodoPagoVenta(${getVentaIndiceGlobal(venta)}, '${tipo}')">Cambiar método de pago</button>` : ""}
+            <button style="font-size:0.92rem;" class="calc-btn calc-btn-success" onclick="mostrarPropinaDetalle(${getVentaIndiceGlobal(venta)})">Agregar/Modificar propina</button>
           </div>
         </div>
         `;
@@ -2939,26 +2931,6 @@ async function consultarHistorico() {
     if (btnExportar) btnExportar.style.display = "none";
     window._historicoDatosParaPDF = null;
   }
-}
-
-
-// Función auxiliar para mostrar los registros (ajusta según tu implementación)
-function mostrarRegistrosEnTabla(registros) {
-  // Ejemplo: renderizar en una tabla con id="tablaHistoricoBody"
-  const tbody = document.getElementById("tablaHistoricoBody");
-  if (!tbody) return;
-  tbody.innerHTML = "";
-  registros.forEach(r => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${r.fecha}</td>
-      <td>${r.fotocopiado}</td>
-      <td>${r.turno}</td>
-      <td>${r.detalle || ""}</td>
-      <td>${r.total || ""}</td>
-    `;
-    tbody.appendChild(tr);
-  });
 }
 
 document.getElementById("btnExportarHistoricoPDF").onclick = function() {
@@ -4844,17 +4816,21 @@ async function limpiarBaseDatosExceptoContrasenas() {
     return;
   }
   try {
+    // Importa helpers de la API modular
     const database = window.firebaseDatabase;
     const ref = window.firebaseRef;
     const set = window.firebaseSet;
     const get = window.firebaseGet;
 
+    // Lee las contraseñas actuales
     const contrasenasRef = ref(database, "contrasenas");
     const snapshot = await get(contrasenasRef);
     const contrasenas = snapshot.exists() ? snapshot.val() : null;
 
+    // Borra toda la base de datos
     await set(ref(database, "/"), null);
 
+    // Restaura las contraseñas
     if (contrasenas) {
       await set(contrasenasRef, contrasenas);
     }
@@ -4866,9 +4842,6 @@ async function limpiarBaseDatosExceptoContrasenas() {
 }
 
 document.getElementById("btnLimpiarBaseDatos").onclick = limpiarBaseDatosExceptoContrasenas;
-
-
-
 
 let formulariosCierreTurno = {};
 

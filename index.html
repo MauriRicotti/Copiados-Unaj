@@ -141,9 +141,9 @@
                 </div>
                 <div class="fotocopiado-card hec-salud-fullwidth" onclick="selectFotocopiado('hec_salud')">
                     <div class="fotocopiado-icon">
-                        <img src="/imagenes/82119bf6-9777-4039-b9fb-d843a9d3cdd1.png" alt="HEC" class="instituto-logo">
+                        <img src="/imagenes/82119bf6-9777-4039-b9fb-d843a9d3cdd1.png" alt="HEC Salud" class="instituto-logo">
                     </div>
-                    <h3>Fotocopiado HEC</h3>
+                    <h3>Fotocopiado HEC Salud</h3>
                     <p>Hospital del Cruce<p>
                     <div id="passwordSection-hec_salud" class="password-section-inline" style="display: none;">
                         <div class="password-card-inline">
@@ -478,7 +478,10 @@
                         Drive
                     </button>
                     <button class="calc-btn calc-btn-outline header-btn" onclick="abrirModalHistorico()">Ver historial</button>
-                    <!-- <button id="btnLimpiarBaseDatos" class="calc-btn calc-btn-danger">Limpiar Base de Datos</button> -->
+                    <!-- <button onclick="mostrarModalLimpiarBaseDatos()" class="calc-btn calc-btn-danger">
+                        Limpiar base de datos
+                    </button> -->
+                    <button id="btnLimpiarBaseDatos" class="calc-btn calc-btn-danger">Limpiar Base de Datos</button>
                     <button onclick="calcVolverDesdeComparativa()" class="calc-btn calc-btn-outline header-btn" title="Volver">
                         Volver
                     </button>
@@ -591,7 +594,7 @@
                       <span id="labelLinkHEC" class="form-link-label"></span>
                       <button type="button" class="btn-ir-link" id="btnIrHEC" title="Ir al formulario">IR</button>
                     </label>
-                    <input type="text" id="inputFormularioHEC" placeholder="Nuevo link para HEC">
+                    <input type="text" id="inputFormularioHEC" placeholder="Nuevo link para HEC Salud">
                   </div>
                   <div class="form-row form-row-btn">
                     <button class="calc-btn calc-btn-primary" id="btnGuardarFormulariosCierreTurno" style="width:100%;">Guardar</button>
@@ -692,9 +695,9 @@
                             <div id="verPassIngenieria" style="margin-top:6px;font-size:0.97em;"></div>
                           </div>
                           <div>
-                            <label class="calc-label" for="passHECActual">HEC (actual)</label>
+                            <label class="calc-label" for="passHECActual">HEC Salud (actual)</label>
                             <input type="password" id="passHECActual" class="calc-input" autocomplete="current-password" placeholder="Contraseña actual">
-                            <label class="calc-label" for="passHECNueva" style="margin-top:8px;">HEC (nueva)</label>
+                            <label class="calc-label" for="passHECNueva" style="margin-top:8px;">HEC Salud (nueva)</label>
                             <input type="password" id="passHECNueva" class="calc-input" autocomplete="new-password" placeholder="Nueva contraseña">
                             <div id="verPassHEC" style="margin-top:6px;font-size:0.97em;"></div>
                           </div>
@@ -734,8 +737,8 @@
             <option value="sociales">Sociales</option>
             <option value="ingenieria">Ingeniería</option>
             <option value="hec_salud">HEC</option>
-        </select>
-        <label>Fecha:</label>
+          </select>
+          <label>Fecha:</label>
           <input type="date" id="historicoFecha" class="calc-input">
           <label>Turno:</label>
           <select id="historicoTurno" class="calc-select">
@@ -797,10 +800,8 @@
             <option value="TU">Turno único</option>
           </select>
 
-          <div style="margin-bottom: 12px;">
-            <label for="registroFecha" style="font-weight:600;">Fecha del registro:</label>
-            <input type="date" id="registroFecha" class="calc-input" style="width:auto;">
-          </div>
+          <label>Fecha:</label>
+          <input type="date" id="registroFecha" class="calc-input">
 
           <label>Impresoras:</label>
           <div id="registroImpresorasLista" style="margin-bottom:8px;max-height:220px;overflow:auto;"></div>
