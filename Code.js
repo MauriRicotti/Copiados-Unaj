@@ -192,6 +192,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
+document.addEventListener("DOMContentLoaded", () => {
+  const fechaInput = document.getElementById("registroFecha");
+  if (fechaInput) {
+    const hoy = new Date();
+    fechaInput.value = hoy.toISOString().split('T')[0];
+  }
+});
+
 function initializeFirebase() {
   try {
     console.log("[v0] Intentando inicializar Firebase...")
@@ -2265,12 +2273,12 @@ calcMostrarDetalles = function(tipo) {
             ${metodoPagoHtml}
             <br><b>Precios:</b> BN $${venta.precioHojaBN} / Color $${venta.precioHojaColor}
           </div>
-          <div style="margin-top:10px;"><b>Archivos de la venta:</b></div>
+          <div style="margin-top:10px; margin-bottom:10px;"><b>Archivos de la venta:</b></div>
           ${archivosHtml}
           <div style="display:flex;gap:10px;margin-top:14px;">
-            <button class="calc-btn calc-btn-danger" onclick="eliminarVentaPorIndice(${getVentaIndiceGlobal(venta)}, '${tipo}')">Eliminar</button>
-            ${venta.metodoPago !== "dividido" ? `<button class="calc-btn calc-btn-secondary" onclick="cambiarMetodoPagoVenta(${getVentaIndiceGlobal(venta)}, '${tipo}')">Cambiar método de pago</button>` : ""}
-            <button class="calc-btn calc-btn-success" onclick="mostrarPropinaDetalle(${getVentaIndiceGlobal(venta)})">Agregar/Modificar propina</button>
+            <button style="font-size: 0.92rem;" class="calc-btn calc-btn-danger" onclick="eliminarVentaPorIndice(${getVentaIndiceGlobal(venta)}, '${tipo}')">Eliminar</button>
+            ${venta.metodoPago !== "dividido" ? `<button style="font-size: 0.92rem;" class="calc-btn calc-btn-secondary" onclick="cambiarMetodoPagoVenta(${getVentaIndiceGlobal(venta)}, '${tipo}')">Cambiar método de pago</button>` : ""}
+            <button style="font-size: 0.92rem;" class="calc-btn calc-btn-success" onclick="mostrarPropinaDetalle(${getVentaIndiceGlobal(venta)})">Agregar/Modificar propina</button>
           </div>
         </div>
         `;
@@ -2931,6 +2939,26 @@ async function consultarHistorico() {
     if (btnExportar) btnExportar.style.display = "none";
     window._historicoDatosParaPDF = null;
   }
+}
+
+
+// Función auxiliar para mostrar los registros (ajusta según tu implementación)
+function mostrarRegistrosEnTabla(registros) {
+  // Ejemplo: renderizar en una tabla con id="tablaHistoricoBody"
+  const tbody = document.getElementById("tablaHistoricoBody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+  registros.forEach(r => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${r.fecha}</td>
+      <td>${r.fotocopiado}</td>
+      <td>${r.turno}</td>
+      <td>${r.detalle || ""}</td>
+      <td>${r.total || ""}</td>
+    `;
+    tbody.appendChild(tr);
+  });
 }
 
 document.getElementById("btnExportarHistoricoPDF").onclick = function() {
@@ -4806,3 +4834,135 @@ function renderImpresorasCheckbox() {
     });
   });
 }
+
+async function limpiarBaseDatosExceptoContrasenas() {
+  if (!window.firebaseInitialized || !window.firebaseDatabase) {
+    alert("Firebase no está inicializado.");
+    return;
+  }
+  if (!confirm("¿Estás seguro de que quieres limpiar toda la base de datos excepto las contraseñas? Esta acción no se puede deshacer.")) {
+    return;
+  }
+  try {
+    const database = window.firebaseDatabase;
+    const ref = window.firebaseRef;
+    const set = window.firebaseSet;
+    const get = window.firebaseGet;
+
+    const contrasenasRef = ref(database, "contrasenas");
+    const snapshot = await get(contrasenasRef);
+    const contrasenas = snapshot.exists() ? snapshot.val() : null;
+
+    await set(ref(database, "/"), null);
+
+    if (contrasenas) {
+      await set(contrasenasRef, contrasenas);
+    }
+    alert("¡Base de datos limpiada exitosamente (excepto contraseñas)!");
+  } catch (error) {
+    alert("Error al limpiar la base de datos: " + (error && error.message ? error.message : JSON.stringify(error)));
+    console.error(error);
+  }
+}
+
+document.getElementById("btnLimpiarBaseDatos").onclick = limpiarBaseDatosExceptoContrasenas;
+
+
+
+
+let formulariosCierreTurno = {};
+
+async function cargarFormulariosCierreTurno() {
+  if (!window.firebaseDatabase || !window.firebaseRef || !window.firebaseGet) return;
+  const refFormularios = window.firebaseRef(window.firebaseDatabase, "formulariosCierreTurno");
+  try {
+    const snapshot = await window.firebaseGet(refFormularios);
+    if (snapshot.exists()) {
+      formulariosCierreTurno = snapshot.val();
+    }
+  } catch (e) {
+    console.error("Error cargando formularios de cierre de turno:", e);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", cargarFormulariosCierreTurno);
+
+document.getElementById("btnCierreTurno").onclick = function() {
+  let copiado = selectedFotocopiado;
+  if (!copiado && typeof currentFotocopiado !== "undefined") copiado = currentFotocopiado;
+  if (!copiado) {
+    alert("No se pudo detectar el copiado actual.");
+    return;
+  }
+  const url = formulariosCierreTurno[copiado];
+  if (url && url.startsWith("http")) {
+    window.open(url, "_blank");
+  } else if (url) {
+    window.open("https://" + url, "_blank");
+  } else {
+    alert("No se ha configurado el formulario de cierre de turno para este copiado.");
+  }
+};
+
+async function mostrarFormulariosCierreTurnoPanel() {
+  await cargarFormulariosCierreTurno();
+  document.getElementById("labelLinkSalud").textContent = formulariosCierreTurno.salud || "Sin link";
+  document.getElementById("labelLinkSociales").textContent = formulariosCierreTurno.sociales || "Sin link";
+  document.getElementById("labelLinkIngenieria").textContent = formulariosCierreTurno.ingenieria || "Sin link";
+  document.getElementById("labelLinkHEC").textContent = formulariosCierreTurno.hec_salud || "Sin link";
+
+  document.getElementById("inputFormularioSalud").value = "";
+  document.getElementById("inputFormularioSociales").value = "";
+  document.getElementById("inputFormularioIngenieria").value = "";
+  document.getElementById("inputFormularioHEC").value = "";
+}
+
+document.getElementById("btnIrSalud").onclick = function() {
+  const url = formulariosCierreTurno.salud;
+  if (url) window.open(url, "_blank");
+};
+document.getElementById("btnIrSociales").onclick = function() {
+  const url = formulariosCierreTurno.sociales;
+  if (url) window.open(url, "_blank");
+};
+document.getElementById("btnIrIngenieria").onclick = function() {
+  const url = formulariosCierreTurno.ingenieria;
+  if (url) window.open(url, "_blank");
+};
+document.getElementById("btnIrHEC").onclick = function() {
+  const url = formulariosCierreTurno.hec_salud;
+  if (url) window.open(url, "_blank");
+};
+
+document.getElementById("btnGuardarFormulariosCierreTurno").onclick = async function() {
+  const refFormularios = window.firebaseRef(window.firebaseDatabase, "formulariosCierreTurno");
+  let actuales = {};
+  try {
+    const snapshot = await window.firebaseGet(refFormularios);
+    if (snapshot.exists()) {
+      actuales = snapshot.val();
+    }
+  } catch (e) {
+    actuales = {};
+  }
+
+  const nuevoSalud = document.getElementById("inputFormularioSalud").value.trim();
+  const nuevoSociales = document.getElementById("inputFormularioSociales").value.trim();
+  const nuevoIngenieria = document.getElementById("inputFormularioIngenieria").value.trim();
+  const nuevoHEC = document.getElementById("inputFormularioHEC").value.trim();
+
+  const nuevosLinks = {
+    salud: nuevoSalud || actuales.salud || "",
+    sociales: nuevoSociales || actuales.sociales || "",
+    ingenieria: nuevoIngenieria || actuales.ingenieria || "",
+    hec_salud: nuevoHEC || actuales.hec_salud || ""
+  };
+
+  try {
+    await window.firebaseSet(refFormularios, nuevosLinks);
+    alert("Links guardados correctamente.");
+    await cargarFormulariosCierreTurno();
+  } catch (e) {
+    alert("Error al guardar los links.");
+  }
+};
