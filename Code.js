@@ -4841,7 +4841,10 @@ async function limpiarBaseDatosExceptoContrasenas() {
   }
 }
 
-document.getElementById("btnLimpiarBaseDatos").onclick = limpiarBaseDatosExceptoContrasenas;
+const btnLimpiarBaseDatos = document.getElementById("btnLimpiarBaseDatos");
+if (btnLimpiarBaseDatos) {
+  btnLimpiarBaseDatos.onclick = limpiarBaseDatosExceptoContrasenas;
+}
 
 let formulariosCierreTurno = {};
 
