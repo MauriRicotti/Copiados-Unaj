@@ -1264,7 +1264,7 @@ async function cargarOpcionesMesesFacturacion() {
     cont.innerHTML = "Firebase no disponible.";
     return;
   }
-  const institutos = ["salud", "sociales", "ingenieria"];
+  const institutos = ["salud", "sociales", "ingenieria", "hec_salud"];
   let mesesSet = new Set();
   for (const tipo of institutos) {
     const historicosRef = window.firebaseRef(database, `historicos/${tipo}`);
@@ -1327,7 +1327,7 @@ async function compararFacturacionMeses() {
     return;
   }
 
-  const institutos = ["salud", "sociales", "ingenieria"];
+  const institutos = ["salud", "sociales", "ingenieria", "hec_salud"];
   const datosPorMes = {};
   for (const mes of seleccionados) {
     let total = 0;
@@ -4942,3 +4942,4 @@ document.getElementById("btnGuardarFormulariosCierreTurno").onclick = async func
     alert("Error al guardar los links.");
   }
 };
+
