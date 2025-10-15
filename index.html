@@ -143,7 +143,7 @@
                     <div class="fotocopiado-icon">
                         <img src="/imagenes/82119bf6-9777-4039-b9fb-d843a9d3cdd1.png" alt="HEC Salud" class="instituto-logo">
                     </div>
-                    <h3>Fotocopiado HEC Salud</h3>
+                    <h3>Fotocopiado HEC</h3>
                     <p>Hospital del Cruce<p>
                     <div id="passwordSection-hec_salud" class="password-section-inline" style="display: none;">
                         <div class="password-card-inline">
@@ -468,7 +468,7 @@
                         <button onclick="exportarTodosLosRegistrosPDFZip()" class="calc-btn calc-btn-outline header-btn" title="Descargar registros de los 3 copiados en ZIP">
                             Descargar .ZIP
                         </button>
-                        <button class="calc-btn calc-btn-outline header-btn" onclick="abrirCompararMesesFacturacion()">Comparar meses</button>
+                        <button class="calc-btn calc-btn-outline header-btn" onclick="abrirCompararMesesFacturacion()">Comparacion mensual</button>
                         <button id="calcThemeToggleComp" class="calc-theme-toggle header-btn" onclick="calcToggleTheme()" title="Cambiar tema">
                             <span id="themeTextComp" class="calc-theme-text">🌙 Oscuro</span>
                         </button>
@@ -477,7 +477,7 @@
                         title="Abrir carpeta de Drive">
                         Drive
                     </button>
-                    <button class="calc-btn calc-btn-outline header-btn" onclick="abrirModalHistorico()">Ver historial</button>
+                    <button class="calc-btn calc-btn-outline header-btn" onclick="abrirModalHistorico()">Consulta de ingresos</button>
 
                     <!-- <button id="btnLimpiarBaseDatos" class="calc-btn calc-btn-danger">
                         Limpiar Base de Datos
@@ -731,18 +731,18 @@
     <div id="modalHistorico" style="display:none;position:fixed;z-index:4000;top:0;left:0;width:100vw;height:100vh;background:rgba(30,41,59,0.45);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
       <div class="modal-historico-horizontal">
         <div class="modal-historico-col selector">
-          <h2>Consultar estadísticas históricas</h2>
+          <h2 style="margin-bottom: 15px;"><b> Consultar Ingresos</b></h2>
           <label>Fotocopiado:</label>
-          <select id="historicoFotocopiado" class="calc-select">
+          <select style="margin-bottom: 5px; margin-top: 5px;" id="historicoFotocopiado" class="calc-select">
             <option value="salud">Salud</option>
             <option value="sociales">Sociales</option>
             <option value="ingenieria">Ingeniería</option>
             <option value="hec_salud">HEC</option>
           </select>
           <label>Fecha:</label>
-          <input type="date" id="historicoFecha" class="calc-input">
+          <input style="margin-bottom: 5px; margin-top: 5px;" type="date" id="historicoFecha" class="calc-input">
           <label>Turno:</label>
-          <select id="historicoTurno" class="calc-select">
+          <select style="margin-bottom: 5px; margin-top: 5px;" id="historicoTurno" class="calc-select">
             <option value="TM">Mañana</option>
             <option value="TT">Tarde</option>
             <option value="TU">Turno único</option>

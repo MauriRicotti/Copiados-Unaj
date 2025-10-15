@@ -4158,7 +4158,7 @@ body.overflow-hidden {
   overflow-x: auto;
   font-size: 0.98em;
   color: #2563eb;
-  background: #f1f5f9;
+  background: #3b82f6;
   border-radius: 5px;
   padding: 2px 7px;
   margin: 0 7px 0 4px;
@@ -4249,3 +4249,31 @@ body.overflow-hidden {
     padding: 8px 0 !important;
   }
 }
+
+[data-theme="light"] .card-formularios-cierre-turno {
+  background: #f8fafc;
+  color: #1e293b;
+  border-color: #e2e8f0;
+}
+
+[data-theme="light"] .card-formularios-cierre-turno .calc-btn{
+  background: #3b82f6;
+  color: #fff;
+}
+[data-theme="light"] .card-formularios-cierre-turno .ir-btn {
+  background: #e0e7ef;
+  color: #1e293b;
+}
+
+[data-theme="light"] .card-formularios-cierre-turno input,
+[data-theme="light"] .card-formularios-cierre-turno button {
+  background: #fff;
+  color: #1e293b;
+  border-color: #cbd5e1;
+}
+
+[data-theme="light"] .card-formularios-cierre-turno input::placeholder {
+  color: #64748b;
+  opacity: 1;
+}
+

@@ -67,7 +67,7 @@ const calcInstitutos = {
     password: "ingenieria123",
   },
   hec_salud: {
-    name: "Copiado de HEC Salud",
+    name: "Copiado del HEC",
     fullName: "Calculadora de cobro y registro de ventas",
     password: "hec123",
   },
@@ -821,7 +821,7 @@ async function calcRestablecerVentas() {
     }
   }
 
-  if (confirm("¿Estás seguro de que deseas restablecer todas las ventas del día?")) {
+  if (confirm("¿Estás seguro de que deseas restablecer todas las ventas del turno?")) {
     const resetTimestamp = Date.now();
     calcRegistroVentas = {
       efectivo: 0,
@@ -1054,7 +1054,7 @@ function calcMostrarDatosComparativa(datos) {
     explicacion.style.cssText = "margin-top:10px;font-size:0.93rem;color:var(--text-secondary);text-align:center;opacity:0.85;"
     grid.parentNode.appendChild(explicacion)
   }
-  explicacion.innerHTML = `<em>Al darle click a cualquiera de las tarjetas de los copiados, o al icono <span style="font-size:1.1em;">↗</span> en la esquina, se puede acceder al registro del fotocopiado seleccionado.</em>`
+  explicacion.innerHTML = `<em>Al darle click a cualquiera de las tarjetas de los copiados, o al icono <span style="font-size:1.1em;">↗</span> en la esquina, puede acceder al registro del fotocopiado seleccionado.</em>`
 }
 
 function calcCrearGraficoIngresos(datos) {
@@ -4943,3 +4943,96 @@ document.getElementById("btnGuardarFormulariosCierreTurno").onclick = async func
   }
 };
 
+
+
+
+
+document.getElementById("btnConsultarHistorico").onclick = async function() {
+  const copiado = document.getElementById("historicoFotocopiado").value;
+  const desde = document.getElementById("historicoFechaDesde").value;
+  const hasta = document.getElementById("historicoFechaHasta").value;
+  const resultadosDiv = document.getElementById("historicoResultados");
+  resultadosDiv.innerHTML = "Cargando...";
+
+  // Validación básica
+  if (!desde || !hasta) {
+    resultadosDiv.innerHTML = "<span style='color:red'>Selecciona ambas fechas.</span>";
+    return;
+  }
+
+  // Llama a la función que obtiene los datos
+  const datos = await consultarFacturacionPeriodo(copiado, desde, hasta);
+
+  // Renderiza los resultados
+  resultadosDiv.innerHTML = renderizarResultadosHistorico(datos, copiado, desde, hasta);
+};
+
+async function consultarFacturacionPeriodo(copiado, desde, hasta) {
+  // Esta función debe consultar la base de datos (Firebase o local) y devolver los datos agregados
+  // por copiado y por turno, en el rango de fechas.
+  // Aquí va un ejemplo de estructura de retorno:
+  // {
+  //   "salud": { "manana": 1000, "tarde": 1200, "total": 2200 },
+  //   "sociales": { ... },
+  //   ...
+  //   "global": { "manana": 3000, "tarde": 3500, "total": 6500 }
+  // }
+  // Debes adaptar esto a tu lógica de obtención de datos.
+  let datos = {};
+  // --- Lógica de consulta aquí ---
+  // Ejemplo: recorre los días y suma los totales por copiado y turno
+  // (Debes adaptar esto a tu estructura real de datos)
+  // ...
+  return datos;
+}
+
+function renderizarResultadosHistorico(datos, copiado, desde, hasta) {
+  let html = `<h3>Facturación del ${formatearFecha(desde)} al ${formatearFecha(hasta)}</h3>`;
+  if (!datos || Object.keys(datos).length === 0) {
+    return html + "<p>No hay datos para el período seleccionado.</p>";
+  }
+
+  html += `<table class="calc-table"><thead>
+    <tr>
+      <th>Copiado</th>
+      <th>Mañana</th>
+      <th>Tarde</th>
+      <th>Total Día</th>
+    </tr>
+  </thead><tbody>`;
+
+  let totalGlobalManana = 0, totalGlobalTarde = 0, totalGlobal = 0;
+
+  for (const [cop, info] of Object.entries(datos)) {
+    if (cop === "global") continue;
+    html += `<tr>
+      <td>${cop}</td>
+      <td>$${info.manana || 0}</td>
+      <td>$${info.tarde || 0}</td>
+      <td><b>$${info.total || 0}</b></td>
+    </tr>`;
+    totalGlobalManana += info.manana || 0;
+    totalGlobalTarde += info.tarde || 0;
+    totalGlobal += info.total || 0;
+  }
+
+  html += `<tr style="background:#d1fae5">
+    <td><b>TOTAL</b></td>
+    <td><b>$${totalGlobalManana}</b></td>
+    <td><b>$${totalGlobalTarde}</b></td>
+    <td><b>$${totalGlobal}</b></td>
+  </tr>`;
+
+  html += "</tbody></table>";
+  return html;
+}
+
+function formatearFecha(fecha) {
+  if (!fecha) return "";
+  const [y, m, d] = fecha.split("-");
+  return `${d}/${m}/${y}`;
+}
+
+document.getElementById("btnCerrarHistorico").onclick = function() {
+  document.getElementById("modalHistorico").style.display = "none";
+};
