@@ -3651,13 +3651,15 @@ document.getElementById("btnCerrarRegistroMesImpresoras").onclick = function() {
   document.getElementById("modalVerRegistroMesImpresoras").style.display = "none";
 };
 
+
 async function cargarTablaRegistroMes() {
   const mes = document.getElementById("mesRegistroImpresoras").value;
   const fechaFiltro = document.getElementById("fechaRegistroImpresoras").value;
   const copiado = document.getElementById("copiadoRegistroImpresoras").value;
   const turno = document.getElementById("turnoRegistroImpresoras").value;
   const tbody = document.querySelector("#tablaRegistroMesImpresoras tbody");
-  tbody.innerHTML = "<tr><td colspan='7'>Cargando...</td></tr>";
+  if (!tbody) return;
+  tbody.innerHTML = "<tr><td colspan='8'>Cargando...</td></tr>";
   if (!window.firebaseInitialized || !window.firebaseDatabase) return;
   const ref = window.firebaseRef(window.firebaseDatabase, `registro_impresoras`);
   const snap = await window.firebaseGet(ref);
@@ -3673,17 +3675,18 @@ async function cargarTablaRegistroMes() {
           if (turno !== "todos" && turn !== turno) return;
           const impresoras = data[fecha][cop][turn];
           if (Array.isArray(impresoras)) {
-            impresoras.forEach(imp => {
+            impresoras.forEach((imp, idx) => {
               filas.push({
                 fecha,
-                maquina: imp.nombre,
+                maquina: imp.nombre || imp.maquina || "",
                 copiado: cop,
                 turno: turn,
                 apertura: imp.apertura ?? "-",
                 cierre: imp.cierre ?? "-",
                 diferencia: (typeof imp.apertura === "number" && typeof imp.cierre === "number")
                   ? (imp.cierre - imp.apertura)
-                  : "-"
+                  : "-",
+                index: idx
               });
             });
           }
@@ -3692,20 +3695,91 @@ async function cargarTablaRegistroMes() {
     });
   }
   if (filas.length === 0) {
-    tbody.innerHTML = "<tr><td colspan='7'>No hay registros para este mes.</td></tr>";
+    tbody.innerHTML = "<tr><td colspan='8'>No hay registros para este mes.</td></tr>";
     return;
   }
+
   tbody.innerHTML = filas.map(r => `
     <tr>
+      <td class="delete-cell">
+        <button type="button" class="btn-eliminar-registro" 
+          data-fecha="${r.fecha}" data-copiado="${r.copiado}" data-turno="${r.turno}" data-index="${r.index}"
+          title="Eliminar registro de ${r.maquina}" aria-label="Eliminar registro">
+          <!-- SVG tacho (fill=currentColor para heredar color) -->
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+            <path d="M9 3v1H4v2h16V4h-5V3H9zm2 6v8h2V9h-2zm4 0v8h2V9h-2zM7 9v8h2V9H7z"/>
+          </svg>
+        </button>
+      </td>
       <td>${r.fecha}</td>
       <td>${r.maquina}</td>
       <td>${r.copiado}</td>
       <td>${obtenerNombreTurno(r.turno)}</td>
       <td>${r.apertura}</td>
       <td>${r.cierre}</td>
-      <td style="font-weight:600;color:${r.diferencia < 0 ? '#dc2626' : '#059669'};">${r.diferencia}</td>
+      <td style="font-weight:600;color:${(typeof r.diferencia === 'number' && r.diferencia < 0) ? '#dc2626' : '#059669'};">${r.diferencia}</td>
     </tr>
   `).join("");
+
+  tbody.querySelectorAll(".btn-eliminar-registro").forEach(btn => {
+    btn.onclick = function() {
+      const fecha = this.dataset.fecha;
+      const copia = this.dataset.copiado;
+      const turnoBtn = this.dataset.turno;
+      const idx = Number(this.dataset.index);
+
+      if (!confirm("¿Seguro que deseas eliminar este registro?")) return;
+      eliminarRegistroContador(fecha, copia, turnoBtn, idx);
+    };
+  });
+}
+
+async function eliminarRegistroContador(fecha, copiado, turno, indice) {
+  try {
+
+    if (!fecha || !copiado || typeof indice !== "number" || isNaN(indice)) {
+      alert("Parámetros inválidos al intentar eliminar el registro.");
+      return;
+    }
+    if (!window.firebaseInitialized || !window.firebaseDatabase) {
+      alert("Firebase no disponible.");
+      return;
+    }
+
+    const refPath = `registro_impresoras/${fecha}/${copiado}/${turno}`;
+    const ref = window.firebaseRef(window.firebaseDatabase, refPath);
+    const snap = await window.firebaseGet(ref);
+    if (!snap.exists()) {
+      alert("No se encontró el registro en la base de datos.");
+
+      cargarTablaRegistroMes();
+      return;
+    }
+
+    const lista = snap.val();
+    if (!Array.isArray(lista)) {
+      alert("Estructura inesperada en la base de datos (no es un array).");
+      return;
+    }
+
+    if (!confirm("Esta acción eliminará el registro seleccionado. ¿Continuar?")) return;
+
+    
+    const nuevaLista = lista.slice(0, indice).concat(lista.slice(indice + 1));
+
+    
+    if (nuevaLista.length === 0) {
+      await window.firebaseSet(ref, null);
+    } else {
+      await window.firebaseSet(ref, nuevaLista);
+    }
+
+    
+    cargarTablaRegistroMes();
+  } catch (e) {
+    console.error("Error eliminando registro contador:", e);
+    alert("Ocurrió un error al eliminar el registro.");
+  }
 }
 
 async function descargarPDFImpresora(maquina, fecha, copiado, turno, tipo, urlImagen) {
@@ -4431,16 +4505,17 @@ document.getElementById("btnExportarRegistroMesImpresorasPDF").onclick = async f
   const tbody = document.querySelector("#tablaRegistroMesImpresoras tbody");
   const filas = Array.from(tbody.querySelectorAll("tr")).map(tr => {
     const tds = tr.querySelectorAll("td");
+    const offset = (tds.length >= 8 ? 1 : 0);
     return {
-      fecha: tds[0]?.textContent || "",
-      maquina: tds[1]?.textContent || "",
-      copiado: tds[2]?.textContent || "",
-      turno: tds[3]?.textContent || "",
-      apertura: tds[4]?.textContent || "",
-      cierre: tds[5]?.textContent || "",
-      diferencia: tds[6]?.textContent || ""
+      fecha: tds[0 + offset]?.textContent?.trim() || "",
+      maquina: tds[1 + offset]?.textContent?.trim() || "",
+      copiado: tds[2 + offset]?.textContent?.trim() || "",
+      turno: tds[3 + offset]?.textContent?.trim() || "",
+      apertura: tds[4 + offset]?.textContent?.trim() || "",
+      cierre: tds[5 + offset]?.textContent?.trim() || "",
+      diferencia: tds[6 + offset]?.textContent?.trim() || ""
     };
-  });
+  }).filter(f => f && f.fecha);
 
   if (filas.length === 0) {
     alert("No hay datos para exportar.");
@@ -4816,21 +4891,17 @@ async function limpiarBaseDatosExceptoContrasenas() {
     return;
   }
   try {
-    // Importa helpers de la API modular
     const database = window.firebaseDatabase;
     const ref = window.firebaseRef;
     const set = window.firebaseSet;
     const get = window.firebaseGet;
 
-    // Lee las contraseñas actuales
     const contrasenasRef = ref(database, "contrasenas");
     const snapshot = await get(contrasenasRef);
     const contrasenas = snapshot.exists() ? snapshot.val() : null;
 
-    // Borra toda la base de datos
     await set(ref(database, "/"), null);
 
-    // Restaura las contraseñas
     if (contrasenas) {
       await set(contrasenasRef, contrasenas);
     }
@@ -4954,37 +5025,18 @@ document.getElementById("btnConsultarHistorico").onclick = async function() {
   const resultadosDiv = document.getElementById("historicoResultados");
   resultadosDiv.innerHTML = "Cargando...";
 
-  // Validación básica
+  
   if (!desde || !hasta) {
     resultadosDiv.innerHTML = "<span style='color:red'>Selecciona ambas fechas.</span>";
     return;
   }
 
-  // Llama a la función que obtiene los datos
+  
   const datos = await consultarFacturacionPeriodo(copiado, desde, hasta);
 
-  // Renderiza los resultados
+  
   resultadosDiv.innerHTML = renderizarResultadosHistorico(datos, copiado, desde, hasta);
 };
-
-async function consultarFacturacionPeriodo(copiado, desde, hasta) {
-  // Esta función debe consultar la base de datos (Firebase o local) y devolver los datos agregados
-  // por copiado y por turno, en el rango de fechas.
-  // Aquí va un ejemplo de estructura de retorno:
-  // {
-  //   "salud": { "manana": 1000, "tarde": 1200, "total": 2200 },
-  //   "sociales": { ... },
-  //   ...
-  //   "global": { "manana": 3000, "tarde": 3500, "total": 6500 }
-  // }
-  // Debes adaptar esto a tu lógica de obtención de datos.
-  let datos = {};
-  // --- Lógica de consulta aquí ---
-  // Ejemplo: recorre los días y suma los totales por copiado y turno
-  // (Debes adaptar esto a tu estructura real de datos)
-  // ...
-  return datos;
-}
 
 function renderizarResultadosHistorico(datos, copiado, desde, hasta) {
   let html = `<h3>Facturación del ${formatearFecha(desde)} al ${formatearFecha(hasta)}</h3>`;

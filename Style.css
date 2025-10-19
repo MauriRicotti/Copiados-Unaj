@@ -4277,3 +4277,264 @@ body.overflow-hidden {
   opacity: 1;
 }
 
+.btn-eliminar-contador {
+  background: none;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  font-size: 1.2em;
+}
+.btn-eliminar-contador:hover {
+  color: #b91c1c;
+}
+
+#tablaRegistroMesImpresoras td.delete-cell,
+#tablaRegistroMesImpresoras th.delete-cell {
+  width: 54px;
+  text-align: center;
+  padding: 6px 8px;
+}
+
+.btn-eliminar-registro {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,0.08);
+  background: transparent;
+  color: var(--text-danger, #ef4444);
+  cursor: pointer;
+  transition: transform .12s ease, background .12s ease, box-shadow .12s ease;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.03), inset 0 0 0 0 rgba(0,0,0,0.02);
+  font-size: 16px;
+  line-height: 0;
+  padding: 0;
+}
+
+.btn-eliminar-registro:hover,
+.btn-eliminar-registro:focus {
+  transform: translateY(-1px);
+  background: rgba(239,68,68,0.08);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.06);
+  outline: none;
+}
+
+.btn-eliminar-registro:active {
+  transform: translateY(0);
+  background: rgba(239,68,68,0.12);
+}
+
+.btn-eliminar-registro svg {
+  width: 18px;
+  height: 18px;
+  display:block;
+  fill: currentColor;
+}
+
+[data-theme="dark"] .btn-eliminar-registro {
+  border-color: rgba(255,255,255,0.04);
+}
+
+@media (max-width: 700px) {
+  #tablaRegistroMesImpresoras td.delete-cell,
+  #tablaRegistroMesImpresoras th.delete-cell {
+    width: 44px;
+    padding: 4px 6px;
+  }
+  .btn-eliminar-registro {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+  }
+}
+
+#modalVerRegistroMesImpresoras table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;
+  font-size: 0.95rem;
+}
+
+#modalVerRegistroMesImpresoras thead th {
+  background: var(--bg-card-header, #3b82f6);
+  color: #fff;
+  font-weight: 700;
+  padding: 10px 12px;
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+
+#modalVerRegistroMesImpresoras tbody td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(0,0,0,0.04);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+#tablaRegistroMesImpresoras th.delete-cell,
+#tablaRegistroMesImpresoras td.delete-cell {
+  width: 56px;
+  text-align: center;
+  padding: 6px 8px;
+}
+
+.btn-eliminar-registro {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid rgba(0,0,0,0.06);
+  background: transparent;
+  color: var(--danger, #ef4444);
+  cursor: pointer;
+  transition: transform .12s ease, background .12s ease, box-shadow .12s ease;
+  padding: 0;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.02);
+}
+
+.btn-eliminar-registro:hover,
+.btn-eliminar-registro:focus {
+  transform: translateY(-2px);
+  background: rgba(239,68,68,0.08);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.08);
+  outline: none;
+}
+
+
+.btn-eliminar-registro:active {
+  transform: translateY(0);
+  background: rgba(239,68,68,0.12);
+}
+
+.btn-eliminar-registro svg {
+  width: 18px;
+  height: 18px;
+  display:block;
+  fill: currentColor;
+}
+
+[data-theme="dark"] #modalVerRegistroMesImpresoras thead th {
+  background: #1f2937;
+}
+[data-theme="dark"] .btn-eliminar-registro {
+  border-color: rgba(255,255,255,0.04);
+  color: #ff7b7b;
+}
+
+@media (max-width: 700px) {
+  #tablaRegistroMesImpresoras th.delete-cell,
+  #tablaRegistroMesImpresoras td.delete-cell {
+    width: 44px;
+    padding: 4px 6px;
+  }
+  .btn-eliminar-registro { width: 32px; height: 32px; border-radius: 7px; }
+}
+
+.calc-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.calc-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  margin-top: 16px;
+  min-width: 700px;
+  box-sizing: border-box;
+}
+
+.calc-table th,
+.calc-table td {
+  box-sizing: border-box;
+  padding: 12px 10px;
+  text-align: left;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border-color);
+  word-wrap: break-word;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.calc-table th {
+  background: var(--bg-card-header);
+  font-weight: 600;
+  color: var(--text-heading);
+  font-size: 0.9rem;
+  position: sticky;
+  top: 0;
+  z-index: 3;
+}
+
+@media (max-width: 768px) {
+  .calc-table {
+    display: table !important;
+    min-width: 600px;
+  }
+  .calc-table-mobile {
+    display: none !important;
+  }
+}
+
+.calc-table tr:nth-child(even) td {
+  background: transparent;
+}
+
+#tablaRegistroMesImpresoras thead th:first-child,
+#tablaRegistroMesImpresoras tbody td.delete-cell {
+  width: 56px;
+  text-align: center;
+  padding: 10px 6px;
+  box-sizing: border-box;
+}
+
+.btn-eliminar-registro {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1.5px solid rgba(255,255,255,0.04);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.08s ease;
+  padding: 4px;
+}
+
+.btn-eliminar-registro svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+}
+
+/* Hover / active */
+.btn-eliminar-registro:hover {
+  background: rgba(220, 38, 38, 0.12);
+  color: #ef4444; /* rojo */
+  transform: translateY(-1px);
+}
+.btn-eliminar-registro:active {
+  transform: translateY(0);
+}
+
+/* Ajuste responsive: si la tabla se vuelve scrollable, mantener la columna visible */
+@media (max-width: 900px) {
+  #tablaRegistroMesImpresoras thead th:first-child,
+  #tablaRegistroMesImpresoras tbody td.delete-cell {
+    width: 48px;
+    padding: 8px 4px;
+  }
+  .btn-eliminar-registro {
+    width: 32px;
+    height: 32px;
+  }
+}
